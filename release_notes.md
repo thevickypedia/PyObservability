@@ -1,8 +1,15 @@
 Release Notes
 =============
 
-v0.0.0a2 (11/25/2025)
----------------------
+v0.0.1 (11/25/2025)
+-------------------
+- [8b0f494](https://github.com/thevickypedia/PyObservability/commit/8b0f4940042050830db026228725d959f8a75b8d) chore: Release ``v0.0.1``
+- [15d2720](https://github.com/thevickypedia/PyObservability/commit/15d2720b9bd9e1b9aaaae975cba885a283159f7c) docs: Update README.md
+- [217aa5a](https://github.com/thevickypedia/PyObservability/commit/217aa5a95d7c88aafaca1e5fda7391cb898b4792) feat: Make env vars accept alias choices
+- [bf831db](https://github.com/thevickypedia/PyObservability/commit/bf831db0dab4cfe36da2774e52c712c03905122c) revert: Default factory for pydantic env config
+- [fd43528](https://github.com/thevickypedia/PyObservability/commit/fd435287196067dbfea4844a856387e0ba790944) feat: Make env vars case in-sensitive along with multiple options
+- [3208d29](https://github.com/thevickypedia/PyObservability/commit/3208d2934ebedd8269b139ddf864c4291ba76c31) feat: Improve security for observability hosting with UI auth
+- [5786768](https://github.com/thevickypedia/PyObservability/commit/5786768e3a086727fecf9fceca55af1652fa14bf) chore: Update release notes for v0.0.0a2
 - [8d12f2e](https://github.com/thevickypedia/PyObservability/commit/8d12f2e5c3ad6aca290e5123480b23f30608ad6a) chore: Release ``v0.0.0a2``
 - [dac0fdf](https://github.com/thevickypedia/PyObservability/commit/dac0fdf78e22755bc696cd11119b8368ed1bf0cb) fix: Avoid attribute error for env_file open
 - [bbc3d26](https://github.com/thevickypedia/PyObservability/commit/bbc3d26916418ee6f59cd1ea7aed65d6462dca28) fix: Fix CLI entrypoint function
@@ -13,9 +20,6 @@ v0.0.0a2 (11/25/2025)
 - [c7fcea5](https://github.com/thevickypedia/PyObservability/commit/c7fcea507f487919742002e587ef26236f926fa6) lint: Run linter
 - [f394ed8](https://github.com/thevickypedia/PyObservability/commit/f394ed8b0b3c94a6fac789fac20b8659455b87dd) feat: Onboard ``pydantic`` to load and parse env vars
 - [d84e788](https://github.com/thevickypedia/PyObservability/commit/d84e7886bffd1db348a26d29e9515968b0b76598) chore: Update release notes for v0.0.0a1
-
-v0.0.0a1 (11/24/2025)
----------------------
 - [ed65493](https://github.com/thevickypedia/PyObservability/commit/ed654937a9f01de6ffbe2088b0a32ccf6874cb1e) chore: Release ``v0.0.0a1``
 - [c06f9eb](https://github.com/thevickypedia/PyObservability/commit/c06f9ebe8c4c54aa488c4e51cc6cfd58400a676e) lint: Add a linter
 - [cb303b4](https://github.com/thevickypedia/PyObservability/commit/cb303b4c46198f57a9738b963142a62b8f65af07) style: Remove quoted strings and round off floating values to 2 decimal points
