@@ -83,11 +83,11 @@ def env_loader(**kwargs) -> EnvConfig:
         env_file = pathlib.Path(env_file)
         assert env_file.is_file(), f"\n\tenv_file: [{env_file.resolve()!r}] does not exist"
         if env_file.suffix.lower() == ".json":
-            with open(env_file.filepath) as stream:
+            with env_file.open() as stream:
                 env_data = json.load(stream)
             return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
         elif env_file.suffix.lower() in (".yaml", ".yml"):
-            with open(env_file.filepath) as stream:
+            with env_file.open() as stream:
                 env_data = yaml.load(stream, yaml.FullLoader)
             return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
         elif not env_file.suffix or env_file.suffix.lower() in (
@@ -96,11 +96,10 @@ def env_loader(**kwargs) -> EnvConfig:
             ".env",
             "",
         ):
-            return EnvConfig.from_env_file(env_file.filepath)
+            return EnvConfig.from_env_file(env_file)
         else:
             raise ValueError(
-                f"\n\tUnsupported format for {env_file.filepath!r}, "
-                "can be one of (.json, .yaml, .yml, .txt, .text, .env)"
+                f"\n\tUnsupported format for {env_file!r}, " "can be one of (.json, .yaml, .yml, .txt, .text, .env)"
             )
     # Load env config with regular kwargs
     return EnvConfig(**kwargs)
