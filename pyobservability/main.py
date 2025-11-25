@@ -1,7 +1,6 @@
 import logging
 import pathlib
 
-import dotenv
 import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.routing import APIRoute, APIWebSocketRoute
@@ -10,7 +9,6 @@ from fastapi.templating import Jinja2Templates
 
 from pyobservability.config import settings
 from pyobservability.monitor import Monitor
-
 
 LOGGER = logging.getLogger("uvicorn.default")
 
