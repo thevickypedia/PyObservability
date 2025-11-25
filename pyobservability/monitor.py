@@ -1,14 +1,13 @@
 # app/monitor.py
 
 import asyncio
-import json
 import logging
-import os
 from asyncio import CancelledError
 from typing import Any, Dict, List
 from urllib.parse import urlparse
 
 import aiohttp
+
 from pyobservability.config import MonitorTarget
 
 LOGGER = logging.getLogger("uvicorn.default")
@@ -137,10 +136,7 @@ class Monitor:
         base = target["base_url"]
         apikey = target["apikey"]
         session = self.sessions[base]
-        headers = {
-            "Accept": "application/json",
-            "Authorization": f"Bearer {apikey}"
-        }
+        headers = {"Accept": "application/json", "Authorization": f"Bearer {apikey}"}
 
         result = {"name": target["name"], "base_url": base, "metrics": {}}
 

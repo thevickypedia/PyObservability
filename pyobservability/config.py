@@ -1,8 +1,9 @@
 import os
 import socket
+from typing import List
+
 from pydantic import BaseModel, HttpUrl, PositiveInt
 from pydantic_settings import BaseSettings
-from typing import List
 
 
 class PydanticEnvConfig(BaseSettings):
