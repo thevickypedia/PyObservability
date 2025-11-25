@@ -210,6 +210,19 @@
     return Number.isFinite(n) ? n : null;
   }
 
+  function formatStringOrObject(x) {
+    if (x == null) return "—";
+    if (typeof x === "string" || typeof x === "number") return x;
+    return Object.entries(x)
+      .map(([k,v]) => `${k}: ${v}`)
+      .join("\n");
+  }
+
+  function round2(x) {
+    const n = Number(x);
+    return Number.isFinite(n) ? n.toFixed(2) : "—";
+  }
+
   // ------------------------------------------------------------
   // METRICS HANDLER
   // ------------------------------------------------------------
@@ -222,14 +235,22 @@
 
       // ------------------- BASIC INFO -------------------
       ipEl.textContent = m.ip?.ip || m.ip || "—";
-      gpuEl.textContent = JSON.stringify(m.gpu ?? "—", null, 2);
-      diskEl.textContent = m.disk ? JSON.stringify(m.disk, null, 0) : "—";
+      gpuEl.textContent = formatStringOrObject(m.gpu ?? m.cpu ?? "—");
+      if (m.disk) {
+        const total = m.disk.total ?? "—";
+        const used  = m.disk.used ?? "—";
+        const free  = m.disk.free ?? "—";
+        diskEl.textContent = `Total: ${total}\nUsed: ${used}\nFree: ${free}`;
+      } else {
+        diskEl.textContent = "—";
+      }
 
       // ------------------- MEMORY -------------------
       if (m.memory) {
         const used = m.memory.ram_used || m.memory.used || "";
         const percent = m.memory.ram_usage ?? m.memory.usage ?? m.memory.percent ?? "—";
-        memEl.textContent = `used: ${used} (${percent}%)`;
+        const totalMem = m.memory.ram_total ?? m.memory.total ?? "—";
+        memEl.textContent = `Total: ${totalMem}\nUsed: ${used}\nPercent: ${percent}%`;
         pushPoint(memChart, num(percent));
       }
 
@@ -279,7 +300,7 @@
           const m5  = load.m5 ?? load[1];
           const m15 = load.m15 ?? load[2];
 
-          loadEl.textContent = `${m1} / ${m5} / ${m15}`;
+          loadEl.textContent = `${round2(m1)} / ${round2(m5)} / ${round2(m15)}`;
           pushPoint(loadChart, num(m1) ?? 0);
         } else {
           loadEl.textContent = load;
