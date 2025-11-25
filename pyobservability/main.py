@@ -32,7 +32,7 @@ async def index(request: Request):
     Args:
         request: FastAPI request object.
     """
-    return templates.TemplateResponse("index.html", {"request": request, "targets": settings.env.monitor_targets})
+    return templates.TemplateResponse("index.html", {"request": request, "targets": settings.env.targets})
 
 
 async def websocket_endpoint(websocket: WebSocket):
@@ -41,7 +41,7 @@ async def websocket_endpoint(websocket: WebSocket):
     Args:
         websocket: FastAPI websocket object.
     """
-    monitor = Monitor(targets=settings.env.monitor_targets, poll_interval=settings.env.poll_interval)
+    monitor = Monitor(targets=settings.env.targets, poll_interval=settings.env.interval)
     await websocket.accept()
     await monitor.start()
     q = monitor.subscribe()
@@ -100,8 +100,8 @@ def include_routes():
 
 def start(**kwargs):
     settings.env = settings.env_loader(**kwargs)
-    settings.env.monitor_targets = [
-        {k: str(v) for k, v in target.model_dump().items()} for target in settings.env.monitor_targets
+    settings.env.targets = [
+        {k: str(v) for k, v in target.model_dump().items()} for target in settings.env.targets
     ]
     include_routes()
     uvicorn_args = dict(
