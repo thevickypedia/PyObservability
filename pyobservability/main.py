@@ -1,13 +1,15 @@
 import logging
 import pathlib
+import warnings
 
+import uiauth
 import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.routing import APIRoute, APIWebSocketRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from pyobservability.config import settings
+from pyobservability.config import enums, settings
 from pyobservability.monitor import Monitor
 
 LOGGER = logging.getLogger("uvicorn.default")
@@ -59,20 +61,41 @@ async def websocket_endpoint(websocket: WebSocket):
     await monitor.stop()
 
 
-PyObservability.routes.append(
-    APIRoute(
-        path="/",  # enums.APIEndpoints.root,
-        endpoint=index,
-        methods=["GET"],
-        include_in_schema=False,
-    ),
-)
-PyObservability.routes.append(
-    APIWebSocketRoute(
-        path="/ws",
-        endpoint=websocket_endpoint,
-    )
-)
+def include_routes():
+    if all((settings.env.username, settings.env.password)):
+        uiauth.protect(
+            app=PyObservability,
+            username=settings.env.username,
+            password=settings.env.password,
+            params=[
+                uiauth.Parameters(
+                    path=enums.APIEndpoints.root,
+                    function=index,
+                    methods=["GET"],
+                ),
+                uiauth.Parameters(
+                    path=enums.APIEndpoints.ws,
+                    function=websocket_endpoint,
+                    route=APIWebSocketRoute,
+                ),
+            ],
+        )
+    else:
+        warnings.warn("\n\tRunning PyObservability without any protection.", UserWarning)
+        PyObservability.routes.append(
+            APIRoute(
+                path=enums.APIEndpoints.root,
+                endpoint=index,
+                methods=["GET"],
+                include_in_schema=False,
+            ),
+        )
+        PyObservability.routes.append(
+            APIWebSocketRoute(
+                path=enums.APIEndpoints.ws,
+                endpoint=websocket_endpoint,
+            )
+        )
 
 
 def start(**kwargs):
@@ -80,6 +103,7 @@ def start(**kwargs):
     settings.env.monitor_targets = [
         {k: str(v) for k, v in target.model_dump().items()} for target in settings.env.monitor_targets
     ]
+    include_routes()
     uvicorn_args = dict(
         host=settings.env.host,
         port=settings.env.port,

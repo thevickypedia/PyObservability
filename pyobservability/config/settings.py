@@ -47,6 +47,9 @@ class EnvConfig(PydanticEnvConfig):
     monitor_targets: List[MonitorTarget]
     poll_interval: PositiveInt = 3
 
+    username: str | None = None
+    password: str | None = None
+
     class Config:
         """Environment variables configuration."""
 
