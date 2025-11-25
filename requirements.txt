@@ -1,0 +1,5 @@
+fastapi
+uvicorn[standard]
+aiohttp
+jinja2
+python-dotenv

@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Node Monitor — Single Node View</title>
+
+  <link rel="stylesheet" href="/static/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Node Monitor</div>
+
+    <div class="controls">
+      <label for="node-select">Node:</label>
+      <select id="node-select" aria-label="Select node"></select>
+      <button id="refresh-btn" title="Force refresh">Refresh</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="meta-row">
+      <div class="meta-card">
+        <div class="meta-title">IP</div>
+        <div id="ip" class="meta-value">—</div>
+      </div>
+
+      <div class="meta-card">
+        <div class="meta-title">GPU / CPU Model</div>
+        <div id="gpu" class="meta-value pre">—</div>
+      </div>
+
+      <div class="meta-card">
+        <div class="meta-title">CPU Load (1/5/15)</div>
+        <div id="cpuload" class="meta-value">—</div>
+      </div>
+
+      <div class="meta-card">
+        <div class="meta-title">Disk ( / )</div>
+        <div id="disk" class="meta-value pre">—</div>
+      </div>
+
+      <div class="meta-card">
+        <div class="meta-title">Memory</div>
+        <div id="memory" class="meta-value pre">—</div>
+      </div>
+    </section>
+
+    <section class="charts-row">
+      <div class="panel">
+        <div class="panel-header">
+          <h3>CPU (Average)</h3>
+          <div class="panel-actions">
+            <label><input type="checkbox" id="show-cores" /> Show per-core</label>
+          </div>
+        </div>
+        <canvas id="cpu-avg-chart" class="chart"></canvas>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3>Memory (%)</h3></div>
+        <canvas id="mem-chart" class="chart"></canvas>
+      </div>
+    </section>
+
+    <section class="details-row">
+      <div class="panel wide">
+        <div class="panel-header"><h3>Per-Core (sparklines)</h3></div>
+        <div id="cores-grid" class="cores-grid"></div>
+      </div>
+
+      <div class="panel narrow">
+        <div class="panel-header"><h3>CPU Load History</h3></div>
+        <canvas id="load-chart" class="chart-small"></canvas>
+      </div>
+    </section>
+
+    <section class="tables-row">
+      <div class="panel">
+        <div class="panel-header"><h3>Services</h3></div>
+        <div class="panel-body service-controls">
+          <input id="svc-filter" placeholder="filter service name..." />
+        </div>
+        <table class="table" id="services-table">
+          <thead><tr><th>PID</th><th>Name</th><th>Status</th><th>CPU</th><th>Memory</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3>Docker / Containers</h3></div>
+        <div class="panel-body">
+          <pre id="docker-stats" class="pre"></pre>
+          <h4>Containers</h4>
+          <ul id="containers-list" class="list"></ul>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3>Disks</h3></div>
+        <div class="panel-body">
+          <table class="table" id="disks-table">
+            <thead><tr><th>Name</th><th>Size</th><th>Mounts</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3>Certificates</h3></div>
+        <div class="panel-body">
+          <pre id="certificates" class="pre">—</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>OpenAPI: <code>/static/openapi.json</code> (uploaded file available at <code>/mnt/data/openapi.json</code>)</div>
+  </footer>
+
+  <script>
+    // inject server-side targets
+    window.MONITOR_TARGETS = {{ targets | tojson }};
+  </script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
