@@ -1,5 +1,5 @@
-fastapi
-uvicorn[standard]
 aiohttp
+fastapi
 jinja2
 python-dotenv
+uvicorn[standard]

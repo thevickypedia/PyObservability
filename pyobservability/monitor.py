@@ -1,13 +1,14 @@
 # app/monitor.py
 
 import asyncio
-import os
 import json
 import logging
-from typing import Any, Dict, List
-import aiohttp
+import os
 from asyncio import CancelledError
+from typing import Any, Dict, List
 from urllib.parse import urlparse
+
+import aiohttp
 
 LOGGER = logging.getLogger("uvicorn.default")
 
@@ -55,7 +56,7 @@ ENDPOINTS = {
     "certificates": {
         "path": "/get-certificates",
         "params": {},
-    }
+    },
 }
 
 
@@ -63,7 +64,14 @@ ENDPOINTS = {
 # LOAD TARGETS FROM ENV
 ###############################################################################
 
+
 def load_targets_from_env() -> List[Dict[str, Any]]:
+    """Loads monitor targets from environment variables and parses it.
+
+    Returns:
+        List[Dict[str, Any]]:
+        Returns the parsed list of the monitor targets.
+    """
     raw = os.getenv("MONITOR_TARGETS", "[]")
 
     try:
@@ -77,11 +85,13 @@ def load_targets_from_env() -> List[Dict[str, Any]]:
         if isinstance(entry, str):
             parsed.append({"name": entry, "base_url": entry, "apikey": None})
         elif isinstance(entry, dict):
-            parsed.append({
-                "name": entry.get("name") or entry["base_url"],
-                "base_url": entry["base_url"],
-                "apikey": entry.get("apikey")
-            })
+            parsed.append(
+                {
+                    "name": entry.get("name") or entry["base_url"],
+                    "base_url": entry["base_url"],
+                    "apikey": entry.get("apikey"),
+                }
+            )
 
     return parsed
 
@@ -89,6 +99,7 @@ def load_targets_from_env() -> List[Dict[str, Any]]:
 ###############################################################################
 # MONITOR CLASS
 ###############################################################################
+
 
 class Monitor:
 
@@ -166,24 +177,14 @@ class Monitor:
         apikey = target.get("apikey")
         session = self.sessions[base]
 
-        result = {
-            "name": target["name"],
-            "base_url": base,
-            "metrics": {}
-        }
+        result = {"name": target["name"], "base_url": base, "metrics": {}}
 
         # Fire ALL requests concurrently
         tasks = {}
 
         for key, cfg in ENDPOINTS.items():
             tasks[key] = asyncio.create_task(
-                self._fetch(
-                    session,
-                    base,
-                    cfg["path"],
-                    apikey=apikey,
-                    params=cfg["params"]
-                )
+                self._fetch(session, base, cfg["path"], apikey=apikey, params=cfg["params"])
             )
 
         # Wait for all endpoints
@@ -223,11 +224,7 @@ class Monitor:
         while not self._stop.is_set():
             metrics = await self._poll_all()
 
-            payload = {
-                "type": "metrics",
-                "ts": asyncio.get_event_loop().time(),
-                "data": metrics
-            }
+            payload = {"type": "metrics", "ts": asyncio.get_event_loop().time(), "data": metrics}
 
             for q in list(self._ws_subscribers):
                 try:
