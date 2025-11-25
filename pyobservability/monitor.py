@@ -3,10 +3,13 @@
 import asyncio
 import os
 import json
+import logging
 from typing import Any, Dict, List
 import aiohttp
 from asyncio import CancelledError
+from urllib.parse import urlparse
 
+LOGGER = logging.getLogger("uvicorn.default")
 
 ###############################################################################
 # ENDPOINT DEFINITIONS (PyNinja Correct)
@@ -145,11 +148,15 @@ class Monitor:
                 if resp.status == 200:
                     try:
                         return await resp.json()
-                    except Exception:
-                        return {"detail": await resp.text()}
-                return {"error": f"HTTP {resp.status}"}
-        except Exception as e:
-            return {"error": str(e)}
+                    except Exception as err:
+                        LOGGER.debug(err)
+                        return "NO DATA"
+                parsed = urlparse(url)
+                LOGGER.debug("Exception on '%s' - [%d]: %s", parsed.path, resp.status, await resp.text())
+                return "NO DATA"
+        except Exception as err:
+            LOGGER.debug(err)
+            return "NO DATA"
 
     ############################################################################
     # PER-TARGET POLLING
@@ -184,7 +191,7 @@ class Monitor:
 
         for (key, _), resp in zip(tasks.items(), raw_results):
             if isinstance(resp, Exception):
-                result["metrics"][key] = {"error": str(resp)}
+                result["metrics"][key] = "NO DATA"
                 continue
             if isinstance(resp, dict):
                 result["metrics"][key] = resp.get("detail", resp)
@@ -203,6 +210,7 @@ class Monitor:
         out = []
         for r in results:
             if isinstance(r, Exception):
+                LOGGER.error("%s", r)
                 out.append({"error": str(r)})
             else:
                 out.append(r)
