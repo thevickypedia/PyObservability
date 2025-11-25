@@ -20,6 +20,7 @@ requires-python = ">=3.11"
 [tool.setuptools]
 packages = [
     "pyobservability",
+    "pyobservability.config",
     "pyobservability.static",
     "pyobservability.templates",
 ]
@@ -39,9 +40,9 @@ dev = [
     "gitverse"
 ]
 
-# [project.scripts]
-# # sends all the args to commandline function, where the arbitary commands as processed accordingly
-# pyobservability = "pyobservability:commandline"
+[project.scripts]
+# sends all the args to _cli function, where the arbitary commands as processed accordingly
+pyobservability = "pyobservability:_cli"
 
 [build-system]
 requires = ["setuptools", "wheel"]
