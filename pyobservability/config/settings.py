@@ -46,7 +46,8 @@ def alias_choices(variable: str) -> AliasChoices:
         AliasChoices:
         Returns the alias choices for the variable.
     """
-    return AliasChoices(variable, f"MONITOR_{variable}")
+    choices = (variable, variable.lower(), f"MONITOR_{variable}", f"monitor_{variable.lower()}")
+    return AliasChoices(*choices)
 
 
 class EnvConfig(PydanticEnvConfig):
