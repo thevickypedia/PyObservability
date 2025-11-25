@@ -12,4 +12,9 @@ PyObservability.egg-info/
 logging.ini
 *.log
 *.env
+*.json
+*.yaml
+*.yml
+*.txt
+*.text
 temp.py

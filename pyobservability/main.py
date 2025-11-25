@@ -76,7 +76,7 @@ PyObservability.routes.append(
 
 
 def start(**kwargs):
-    settings.env = settings.EnvConfig(**kwargs)
+    settings.env = settings.env_loader(**kwargs)
     settings.env.monitor_targets = [
         {k: str(v) for k, v in target.model_dump().items()} for target in settings.env.monitor_targets
     ]
