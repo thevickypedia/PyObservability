@@ -39,18 +39,21 @@
   // CHART HELPERS
   // ------------------------------------------------------------
   function makeMainChart(ctx, label) {
+    const EMPTY = Array(MAX_POINTS).fill(null);
+    const LABELS = Array(MAX_POINTS).fill("");
+
     return new Chart(ctx, {
       type: "line",
       data: {
-        labels: [],
+        labels: [...LABELS],
         datasets: [
           {
             label,
-            data: [],
+            data: [...EMPTY],
             fill: true,
             tension: 0.2,
             cubicInterpolationMode: "monotone",
-            pointRadius: 0,
+            pointRadius: 0
           }
         ]
       },
@@ -58,9 +61,13 @@
         animation: false,
         responsive: true,
         maintainAspectRatio: false,
+        spanGaps: false,
         scales: {
           x: { display: false },
-          y: { beginAtZero: true }
+          y: {
+            beginAtZero: true,
+            suggestedMax: 100
+          }
         },
         plugins: {
           legend: { display: false }
@@ -70,27 +77,32 @@
   }
 
   function makeCoreSparkline(ctx, coreName) {
+    const EMPTY_LABELS = Array(MAX_POINTS).fill("");
+    const EMPTY_DATA   = Array(MAX_POINTS).fill(null);
+
     return new Chart(ctx, {
       type: "line",
       data: {
-        labels: [],
-        datasets: [
-          {
-            label: coreName,
-            data: [],
-            fill: false,
-            tension: 0.2,
-            pointRadius: 0
-          }
-        ]
+        labels: [...EMPTY_LABELS],
+        datasets: [{
+          label: coreName,
+          data: [...EMPTY_DATA],
+          fill: false,
+          tension: 0.2,
+          pointRadius: 0
+        }]
       },
       options: {
         animation: false,
         responsive: false,
         interaction: false,
         events: [],
+        spanGaps: false,
         plugins: { legend: { display: false } },
-        scales: { x: { display: false }, y: { display: false } }
+        scales: {
+          x: { display: false },
+          y: { display: false, suggestedMax: 100 }
+        }
       }
     });
   }
@@ -140,21 +152,29 @@
   // RESET UI
   // ------------------------------------------------------------
   function resetUI() {
-    // Reset main charts
-    for (const c of [cpuAvgChart, memChart, loadChart]) {
-      c.data.labels = [];
-      c.data.datasets[0].data = [];
-      c.update();
+    // Pre-fill charts with right-anchored null buffers
+    const EMPTY_DATA = Array(MAX_POINTS).fill(null);
+    const EMPTY_LABELS = Array(MAX_POINTS).fill("");
+
+    function resetChart(chart) {
+      chart.data.labels = [...EMPTY_LABELS];
+      chart.data.datasets[0].data = [...EMPTY_DATA];
+      chart.update();
     }
 
-    // Remove all core mini charts
+    // Reset main charts (CPU Avg, Memory %, CPU Load)
+    resetChart(cpuAvgChart);
+    resetChart(memChart);
+    resetChart(loadChart);
+
+    // Remove all per-core mini charts
     for (const name of Object.keys(coreMini)) {
       try { coreMini[name].chart.destroy(); } catch {}
       coreMini[name].el.remove();
       delete coreMini[name];
     }
 
-    // Text UI
+    // Reset static UI fields
     ipEl.textContent = "—";
     gpuEl.textContent = "—";
     memEl.textContent = "—";
