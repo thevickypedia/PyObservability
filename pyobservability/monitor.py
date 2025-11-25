@@ -119,13 +119,13 @@ class Monitor:
                         return await resp.json()
                     except Exception as err:
                         LOGGER.debug(err)
-                        return "NO DATA"
+                        return
                 parsed = urlparse(url)
                 LOGGER.debug("Exception on '%s' - [%d]: %s", parsed.path, resp.status, await resp.text())
-                return "NO DATA"
+                return
         except Exception as err:
             LOGGER.debug(err)
-            return "NO DATA"
+            return
 
     ############################################################################
     # PER-TARGET POLLING
@@ -151,7 +151,7 @@ class Monitor:
 
         for (key, _), resp in zip(tasks.items(), raw_results):
             if isinstance(resp, Exception):
-                result["metrics"][key] = "NO DATA"
+                result["metrics"][key] = None
                 continue
             if isinstance(resp, dict):
                 result["metrics"][key] = resp.get("detail", resp)

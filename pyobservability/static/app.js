@@ -242,7 +242,7 @@
         const free  = m.disk.free ?? "—";
         diskEl.textContent = `Total: ${total}\nUsed: ${used}\nFree: ${free}`;
       } else {
-        diskEl.textContent = "—";
+        diskEl.textContent = "NO DATA";
       }
 
       // ------------------- MEMORY -------------------
@@ -252,6 +252,8 @@
         const totalMem = m.memory.ram_total ?? m.memory.total ?? "—";
         memEl.textContent = `Total: ${totalMem}\nUsed: ${used}\nPercent: ${percent}%`;
         pushPoint(memChart, num(percent));
+      } else {
+        memEl.textContent = "NO DATA"
       }
 
       // ------------------- CPU -------------------
@@ -306,6 +308,8 @@
           loadEl.textContent = load;
           pushPoint(loadChart, num(load));
         }
+      } else {
+        loadEl.textContent = "NO DATA"
       }
 
       // ------------------- SERVICES -------------------
@@ -328,31 +332,31 @@
           `;
           servicesTableBody.appendChild(tr);
         }
+      } else {
+        servicesTableBody.innerHTML = `<tr><td colspan="5">NO DATA</td></tr>`;
       }
 
       // ------------------- DOCKER -------------------
       const dockerList = m.docker_stats;
 
-      if (Array.isArray(dockerList) && dockerTableHead && dockerTableBody) {
-        dockerTableHead.innerHTML = "";
-        dockerTableBody.innerHTML = "";
+      dockerTableHead.innerHTML = "";
+      dockerTableBody.innerHTML = "";
 
-        if (dockerList.length > 0) {
-          // Table header
-          const columns = Object.keys(dockerList[0]);
-          dockerTableHead.innerHTML =
-            "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
-
-          // Table rows
-          dockerList.forEach(c => {
-            const row = "<tr>" +
-              columns.map(col => `<td>${c[col] ?? ""}</td>`).join("") +
-              "</tr>";
-            dockerTableBody.insertAdjacentHTML("beforeend", row);
-          });
-        }
+      if (!Array.isArray(dockerList) || dockerList.length === 0) {
+        dockerTableBody.innerHTML = `<tr><td colspan="10">NO DATA</td></tr>`;
       } else {
-        console.warn("Cannot render Docker table:", dockerList, dockerTableHead, dockerTableBody);
+        // Create header
+        const columns = Object.keys(dockerList[0]);
+        dockerTableHead.innerHTML =
+          "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
+
+        // Create rows
+        dockerList.forEach(c => {
+          const row = "<tr>" +
+            columns.map(col => `<td>${c[col] ?? ""}</td>`).join("") +
+            "</tr>";
+          dockerTableBody.insertAdjacentHTML("beforeend", row);
+        });
       }
 
       // ------------------- DISKS -------------------
@@ -367,11 +371,15 @@
           `;
           disksTableBody.appendChild(tr);
         }
+      } else {
+        disksTableBody.innerHTML = `<tr><td colspan="3">NO DATA</td></tr>`;
       }
 
       // ------------------- CERTIFICATES -------------------
       if (m.certificates) {
         certsEl.textContent = JSON.stringify(m.certificates, null, 2);
+      } else {
+        certsEl.textContent = "NO DATA"
       }
     }
   }
