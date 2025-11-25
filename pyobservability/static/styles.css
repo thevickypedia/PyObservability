@@ -39,7 +39,7 @@ html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system,
 .chart-small { height:120px !important; width:100% !important; }
 
 .details-row { display:flex; gap:12px; }
-.cores-grid { display:grid; grid-template-columns: repeat(auto-fill,minmax(120px,1fr)); gap:8px; }
+.cores-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(120px,1fr)); gap:8px; width:100%; overflow:hidden; }
 .core-mini { background:var(--glass); padding:6px; border-radius:6px; text-align:center; font-size:12px; }
 .core-mini .label { color:var(--muted); font-size:11px; }
 .core-mini .value { font-weight:700; margin-top:6px; }
