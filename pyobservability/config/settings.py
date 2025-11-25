@@ -1,10 +1,11 @@
 import json
+import os
 import pathlib
 import socket
-from typing import List
+from typing import Any, List
 
 import yaml
-from pydantic import BaseModel, HttpUrl, PositiveInt
+from pydantic import BaseModel, Field, HttpUrl, PositiveInt
 from pydantic_settings import BaseSettings
 
 
@@ -34,6 +35,17 @@ class MonitorTarget(BaseModel):
     apikey: str
 
 
+def getenv(*keys, default: Any = None):
+    for key in keys:
+        if value := os.getenv(key):
+            return value
+        if value := os.getenv(key.lower()):
+            return value
+        if value := os.getenv(key.upper()):
+            return value
+    return default
+
+
 class EnvConfig(PydanticEnvConfig):
     """Configuration settings for the server.
 
@@ -41,14 +53,16 @@ class EnvConfig(PydanticEnvConfig):
 
     """
 
-    host: str = socket.gethostbyname("localhost") or "0.0.0.0"
-    port: PositiveInt = 8080
+    host: str = Field(
+        default_factory=lambda: getenv("host", "monitor_host", default=socket.gethostbyname("localhost") or "0.0.0.0")
+    )
+    port: PositiveInt = Field(default_factory=lambda: getenv("port", "monitor_port", default=8080))
 
-    monitor_targets: List[MonitorTarget]
-    poll_interval: PositiveInt = 3
+    targets: List[MonitorTarget] = Field(default_factory=lambda: getenv("targets", "monitor_targets"))
+    interval: PositiveInt = Field(default_factory=lambda: getenv("interval", "monitor_interval", default=3))
 
-    username: str | None = None
-    password: str | None = None
+    username: str | None = Field(default_factory=lambda: getenv("username", "monitor_username"))
+    password: str | None = Field(default_factory=lambda: getenv("password", "monitor_password"))
 
     class Config:
         """Environment variables configuration."""
@@ -82,28 +96,27 @@ def env_loader(**kwargs) -> EnvConfig:
     if not kwargs:
         return EnvConfig.from_env_file(".env")
     # Look for the kwarg env_file and process accordingly
-    if env_file := kwargs.get("env_file"):
+    if env_file := kwargs.get("env_file") or getenv("env_file"):
         env_file = pathlib.Path(env_file)
         assert env_file.is_file(), f"\n\tenv_file: [{env_file.resolve()!r}] does not exist"
         if env_file.suffix.lower() == ".json":
             with env_file.open() as stream:
                 env_data = json.load(stream)
             return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
-        elif env_file.suffix.lower() in (".yaml", ".yml"):
+        if env_file.suffix.lower() in (".yaml", ".yml"):
             with env_file.open() as stream:
                 env_data = yaml.load(stream, yaml.FullLoader)
             return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
-        elif not env_file.suffix or env_file.suffix.lower() in (
+        if not env_file.suffix or env_file.suffix.lower() in (
             ".text",
             ".txt",
             ".env",
             "",
         ):
             return EnvConfig.from_env_file(env_file)
-        else:
-            raise ValueError(
-                f"\n\tUnsupported format for {env_file!r}, " "can be one of (.json, .yaml, .yml, .txt, .text, .env)"
-            )
+        raise ValueError(
+            f"\n\tUnsupported format for {env_file!r}, " "can be one of (.json, .yaml, .yml, .txt, .text, .env)"
+        )
     # Load env config with regular kwargs
     return EnvConfig(**kwargs)
 
