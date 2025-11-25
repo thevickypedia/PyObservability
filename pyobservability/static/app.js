@@ -1,4 +1,3 @@
-// app/static/app.js
 (function () {
   // --- config
   const MAX_POINTS = 60;
@@ -53,7 +52,7 @@
     const c = new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: { labels: [], datasets: [{ label: name, data: [], fill: false, pointRadius: 0, tension: 0.2 }] },
-      options: { animation: false, responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: false } }, plugins: { legend: { display: false } } }
+      options: { animation: false, responsive: true, interaction: false, events: [], plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } }, }
     });
     coreMini[name] = { chart: c, el: wrapper, valEl };
     return coreMini[name];
@@ -87,7 +86,12 @@
     loadChart.data.labels = []; loadChart.data.datasets[0].data = [];
     cpuAvgChart.update(); memChart.update(); loadChart.update();
 
-    Object.values(coreMini).forEach(o => { o.chart.data.labels = []; o.chart.data.datasets[0].data = []; o.chart.update(); o.valEl.textContent = '—'; });
+    // destroy all core charts completely
+    for (const name of Object.keys(coreMini)) {
+        try { coreMini[name].chart.destroy(); } catch {}
+        coreMini[name].el.remove();
+        delete coreMini[name];
+    }
     servicesTableBody.innerHTML = '';
     dockerStatsEl.textContent = '—';
     containersList.innerHTML = '';
@@ -130,6 +134,19 @@
     return Number.isFinite(n) ? n : null;
   }
 
+  function pruneOldCores(latestCoreNames) {
+    for (const name of Object.keys(coreMini)) {
+      if (!latestCoreNames.includes(name)) {
+        // destroy chart.js instance
+        try { coreMini[name].chart.destroy(); } catch {}
+        // remove dom
+        coreMini[name].el.remove();
+        // delete ref
+        delete coreMini[name];
+      }
+    }
+  }
+
   function handleMetrics(hostsArray) {
     // hostsArray: [{ name, base_url, metrics: { cpu: ..., memory: ..., ... } }, ...]
     const now = new Date().toLocaleTimeString();
@@ -159,12 +176,10 @@
       let cpuAvg = null;
       if (m.cpu) {
         const cpuDetail = (m.cpu && m.cpu.detail) ? m.cpu.detail : m.cpu;
-        if (typeof cpuDetail === 'object') {
-          const values = Object.values(cpuDetail).map(v => Number(v));
-          const sum = values.reduce((a,b)=>a+(isFinite(b)?b:0),0);
-          const count = values.length || 1;
-          cpuAvg = sum / count;
-          // update per-core charts
+        if (typeof cpuDetail === "object") {
+          const coreNames = Object.keys(cpuDetail);
+          // Remove cores that no longer exist
+          pruneOldCores(coreNames);
           Object.entries(cpuDetail).forEach(([core, val]) => {
             const coreObj = ensureCoreChart(core);
             const ts = now;
