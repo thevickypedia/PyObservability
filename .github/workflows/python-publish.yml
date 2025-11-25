@@ -1,0 +1,38 @@
+name: pypi-publish
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "**/version.py"
+
+jobs:
+  pypi-publisher:
+    runs-on: thevickypedia-default
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: thevickypedia/pypi-publisher@v5
+        id: publish
+        env:
+          token: ${{ secrets.PYPI_TOKEN }}
+
+  release:
+    needs: pypi-publisher
+    uses: ./.github/workflows/release.yml
+    with:
+      project_version: ${{ needs.pypi-publisher.outputs.version }}
+    secrets: inherit
+
+  release-notes:
+    needs:
+      - release
+      - pypi-publisher
+    if: ${{ needs.release.outputs.release_exists == 'false' }}
+    uses: ./.github/workflows/notes.yml
+    with:
+      project_version: ${{ needs.pypi-publisher.outputs.version }}
+    secrets: inherit
