@@ -8,8 +8,6 @@ from urllib.parse import urlparse
 
 import aiohttp
 
-from pyobservability.config import MonitorTarget
-
 LOGGER = logging.getLogger("uvicorn.default")
 
 ###############################################################################
@@ -67,8 +65,8 @@ ENDPOINTS = {
 
 class Monitor:
 
-    def __init__(self, targets: List[MonitorTarget], poll_interval: float):
-        self.targets = [{k: str(v) for k, v in target.model_dump().items()} for target in targets]
+    def __init__(self, targets: List[Dict[str, str]], poll_interval: float):
+        self.targets = targets
         self.poll_interval = poll_interval
         self.sessions: Dict[str, aiohttp.ClientSession] = {}
         self._ws_subscribers: List[asyncio.Queue] = []

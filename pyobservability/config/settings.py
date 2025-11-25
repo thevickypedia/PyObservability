@@ -53,4 +53,4 @@ class EnvConfig(PydanticEnvConfig):
         extra = "forbid"
 
 
-env = EnvConfig()
+env: EnvConfig
