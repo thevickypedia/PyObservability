@@ -1,0 +1,55 @@
+[project]
+name = "PyObservability"
+dynamic = ["version", "dependencies"]
+description = "Lightweight OS-agnostic observability UI for PyNinja"
+readme = "README.md"
+authors = [{ name = "Vignesh Rao", email = "svignesh1793@gmail.com" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",  # TODO: Change it to `Development Status :: 5 - Production/Stable`
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: System :: Monitoring",
+]
+keywords = ["PyObservability", "observability", "system-monitor", "PyNinja"]
+requires-python = ">=3.11"
+
+[tool.setuptools]
+packages = [
+    "pyobservability",
+    "pyobservability.static",
+    "pyobservability.templates",
+]
+[tool.setuptools.package-data]
+"pyobservability.templates" = ["*.html"]
+"pyobservability.static" = ["*.js", "*.css"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pyobservability.version.__version__" }
+dependencies = { file = ["requirements.txt"] }
+
+[project.optional-dependencies]
+dev = [
+    "sphinx==5.1.1",
+    "pre-commit",
+    "recommonmark",
+    "gitverse"
+]
+
+# [project.scripts]
+# # sends all the args to commandline function, where the arbitary commands as processed accordingly
+# pyobservability = "pyobservability:commandline"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.urls]
+Homepage = "https://github.com/thevickypedia/PyObservability"
+Docs = "https://thevickypedia.github.io/PyObservability"
+Source = "https://github.com/thevickypedia/PyObservability"
+"Bug Tracker" = "https://github.com/thevickypedia/PyObservability/issues"
+"Release Notes" = "https://github.com/thevickypedia/PyObservability/blob/main/release_notes.rst"
