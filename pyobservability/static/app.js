@@ -27,8 +27,9 @@
   const servicesTableBody = document.querySelector("#services-table tbody");
   const svcFilter = document.getElementById("svc-filter");
 
-  const dockerStatsEl = document.getElementById("docker-stats");
-  const containersList = document.getElementById("containers-list");
+  const dockerTable = document.getElementById("docker-table");
+  const dockerTableHead = dockerTable.querySelector("thead");
+  const dockerTableBody = dockerTable.querySelector("tbody");
 
   const disksTableBody = document.querySelector("#disks-table tbody");
   const certsEl = document.getElementById("certificates");
@@ -182,8 +183,8 @@
     loadEl.textContent = "—";
 
     servicesTableBody.innerHTML = "";
-    dockerStatsEl.textContent = "—";
-    containersList.innerHTML = "";
+    dockerTableHead.innerHTML = "";
+    dockerTableBody.innerHTML = "";
     disksTableBody.innerHTML = "";
     certsEl.textContent = "—";
   }
@@ -309,16 +310,28 @@
       }
 
       // ------------------- DOCKER -------------------
-      if (m.docker_stats)
-        dockerStatsEl.textContent = JSON.stringify(m.docker_stats, null, 2);
+      const dockerList = m.docker_stats;
 
-      if (Array.isArray(m.containers)) {
-        containersList.innerHTML = "";
-        for (const c of m.containers) {
-          const li = document.createElement("li");
-          li.textContent = c["Container Name"] || c.name || JSON.stringify(c);
-          containersList.appendChild(li);
+      if (Array.isArray(dockerList) && dockerTableHead && dockerTableBody) {
+        dockerTableHead.innerHTML = "";
+        dockerTableBody.innerHTML = "";
+
+        if (dockerList.length > 0) {
+          // Table header
+          const columns = Object.keys(dockerList[0]);
+          dockerTableHead.innerHTML =
+            "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
+
+          // Table rows
+          dockerList.forEach(c => {
+            const row = "<tr>" +
+              columns.map(col => `<td>${c[col] ?? ""}</td>`).join("") +
+              "</tr>";
+            dockerTableBody.insertAdjacentHTML("beforeend", row);
+          });
         }
+      } else {
+        console.warn("Cannot render Docker table:", dockerList, dockerTableHead, dockerTableBody);
       }
 
       // ------------------- DISKS -------------------
