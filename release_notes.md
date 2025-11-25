@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v0.0.2 (11/25/2025)
+-------------------
+- [8a98ac1](https://github.com/thevickypedia/PyObservability/commit/8a98ac12547f882cb9e54821c3c0589e4aee1d28) chore: Release ``v0.0.2``
+- [f1c43c9](https://github.com/thevickypedia/PyObservability/commit/f1c43c9bd1702d855e9b5a0c0d4213b66305112e) fix: Avoid potential attribute errors
+- [9f8120c](https://github.com/thevickypedia/PyObservability/commit/9f8120c1fcb3bef8be254414048ceffeb1692502) perf: Improve alias choices
+- [f40d302](https://github.com/thevickypedia/PyObservability/commit/f40d30208b3991029babe8b0daea42501a181636) chore: Update release notes for v0.0.1
+
 v0.0.1 (11/25/2025)
 -------------------
 - [8b0f494](https://github.com/thevickypedia/PyObservability/commit/8b0f4940042050830db026228725d959f8a75b8d) chore: Release ``v0.0.1``
