@@ -44,7 +44,7 @@ html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system,
 .core-mini .label { color:var(--muted); font-size:11px; }
 .core-mini .value { font-weight:700; margin-top:6px; }
 
-.tables-row { display:grid; grid-template-columns: repeat(2, 1fr); gap:12px; }
+.tables-row { display:grid; grid-template-columns:1fr; grid-auto-rows:auto; gap:12px; }
 .table { width:100%; border-collapse:collapse; font-size:13px; }
 .table th, .table td { padding:8px; border-bottom:1px solid rgba(255,255,255,0.03); text-align:left; }
 .pre { background:rgba(255,255,255,0.02); padding:8px; border-radius:6px; overflow:auto; white-space:pre-wrap; font-family:monospace; font-size:13px; }
