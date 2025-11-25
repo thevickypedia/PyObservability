@@ -9,6 +9,7 @@ from typing import Any, Dict, List
 from urllib.parse import urlparse
 
 import aiohttp
+from pyobservability.config import MonitorTarget
 
 LOGGER = logging.getLogger("uvicorn.default")
 
@@ -61,51 +62,15 @@ ENDPOINTS = {
 
 
 ###############################################################################
-# LOAD TARGETS FROM ENV
-###############################################################################
-
-
-def load_targets_from_env() -> List[Dict[str, Any]]:
-    """Loads monitor targets from environment variables and parses it.
-
-    Returns:
-        List[Dict[str, Any]]:
-        Returns the parsed list of the monitor targets.
-    """
-    raw = os.getenv("MONITOR_TARGETS", "[]")
-
-    try:
-        data = json.loads(raw)
-    except Exception:
-        data = [raw] if raw else []
-
-    parsed = []
-
-    for entry in data:
-        if isinstance(entry, str):
-            parsed.append({"name": entry, "base_url": entry, "apikey": None})
-        elif isinstance(entry, dict):
-            parsed.append(
-                {
-                    "name": entry.get("name") or entry["base_url"],
-                    "base_url": entry["base_url"],
-                    "apikey": entry.get("apikey"),
-                }
-            )
-
-    return parsed
-
-
-###############################################################################
 # MONITOR CLASS
 ###############################################################################
 
 
 class Monitor:
 
-    def __init__(self, poll_interval: float = 2.0):
-        self.targets = load_targets_from_env()
-        self.poll_interval = float(os.getenv("POLL_INTERVAL", poll_interval))
+    def __init__(self, targets: List[MonitorTarget], poll_interval: float):
+        self.targets = [{k: str(v) for k, v in target.model_dump().items()} for target in targets]
+        self.poll_interval = poll_interval
         self.sessions: Dict[str, aiohttp.ClientSession] = {}
         self._ws_subscribers: List[asyncio.Queue] = []
         self._task = None
@@ -115,8 +80,8 @@ class Monitor:
     # LIFECYCLE
     ############################################################################
     async def start(self):
-        for t in self.targets:
-            self.sessions[t["base_url"]] = aiohttp.ClientSession()
+        for target in self.targets:
+            self.sessions[target["base_url"]] = aiohttp.ClientSession()
         self._task = asyncio.create_task(self._run_loop())
 
     async def stop(self):
@@ -148,12 +113,8 @@ class Monitor:
     ############################################################################
     # FETCH WRAPPER
     ############################################################################
-    async def _fetch(self, session, base_url, ep, apikey=None, params=None):
+    async def _fetch(self, session, base_url, ep, headers: Dict[str, str], params=None):
         url = base_url.rstrip("/") + ep
-        headers = {"accept": "application/json"}
-        if apikey:
-            headers["Authorization"] = f"Bearer {apikey}"
-
         try:
             async with session.get(url, headers=headers, params=params, timeout=10) as resp:
                 if resp.status == 200:
@@ -174,8 +135,12 @@ class Monitor:
     ############################################################################
     async def _poll_target(self, target: Dict[str, Any]) -> Dict[str, Any]:
         base = target["base_url"]
-        apikey = target.get("apikey")
+        apikey = target["apikey"]
         session = self.sessions[base]
+        headers = {
+            "Accept": "application/json",
+            "Authorization": f"Bearer {apikey}"
+        }
 
         result = {"name": target["name"], "base_url": base, "metrics": {}}
 
@@ -184,7 +149,7 @@ class Monitor:
 
         for key, cfg in ENDPOINTS.items():
             tasks[key] = asyncio.create_task(
-                self._fetch(session, base, cfg["path"], apikey=apikey, params=cfg["params"])
+                self._fetch(session, base, cfg["path"], headers=headers, params=cfg["params"])
             )
 
         # Wait for all endpoints
@@ -206,7 +171,7 @@ class Monitor:
     # POLL ALL HOSTS
     ############################################################################
     async def _poll_all(self) -> List[Dict[str, Any]]:
-        tasks = [self._poll_target(t) for t in self.targets]
+        tasks = [self._poll_target(target) for target in self.targets]
         results = await asyncio.gather(*tasks, return_exceptions=True)
         out = []
         for r in results:

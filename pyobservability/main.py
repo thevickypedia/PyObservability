@@ -3,27 +3,33 @@ import os
 import pathlib
 
 import dotenv
+import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi.routing import APIRoute, APIWebSocketRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from pyobservability.config import env
 from pyobservability.monitor import Monitor
 
 dotenv.load_dotenv()
 
 LOGGER = logging.getLogger("uvicorn.default")
 
-app = FastAPI(title="Monitor UI")
+PyObservability = FastAPI(title="PyObservability")
+PyObservability.__name__ = "PyObservability"
+PyObservability.description = "Observability page for nodes running PyNinja"
+
 root = pathlib.Path(__file__).parent
 templates_dir = root / "templates"
-static_dir = root / "static"
 templates = Jinja2Templates(directory=templates_dir)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-monitor = Monitor(poll_interval=float(os.getenv("POLL_INTERVAL", 2)))
+static_dir = root / "static"
+PyObservability.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+monitor = Monitor(targets=env.monitor_targets, poll_interval=env.poll_interval)
 
 
-@app.get("/")
 async def index(request: Request):
     """Pass configured targets to the template so frontend can prebuild UI.
 
@@ -33,7 +39,6 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "targets": monitor.targets})
 
 
-@app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     """Websocket endpoint to render the metrics.
 
@@ -58,3 +63,28 @@ async def websocket_endpoint(websocket: WebSocket):
             LOGGER.warning(err)
             pass
     await monitor.stop()
+
+
+PyObservability.routes.append(
+    APIRoute(
+        path="/",  # enums.APIEndpoints.root,
+        endpoint=index,
+        methods=["GET"],
+        include_in_schema=False,
+    ),
+)
+PyObservability.routes.append(
+    APIWebSocketRoute(
+        path="/ws",
+        endpoint=websocket_endpoint,
+    )
+)
+
+
+def start():
+    uvicorn_args = dict(
+        host=env.host,
+        port=env.port,
+        app=PyObservability,
+    )
+    uvicorn.run(**uvicorn_args)
