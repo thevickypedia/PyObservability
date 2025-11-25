@@ -45,16 +45,24 @@ def _cli() -> None:
         exit(0)
     elif any(arg in args for arg in ["env", "--env", "E", "-e"]):
         extra_index = next(
-            (index for index, arg in enumerate(args) if arg in ["extra", "--extra", "E", "-e"]),
+            (index for index, arg in enumerate(args) if arg in ["env", "--env", "E", "-e"]),
             None,
         )
         try:
             env_file = sys.argv[extra_index + 2]
-        except IndexError:
+        except (IndexError, TypeError):
             print("Cannot proceed without a valid extra environment file path.")
             exit(1)
     elif any(arg in args for arg in ("start",)):
-        start(env_file=env_file)
+        pass
     else:
         print(f"Unknown Option: {sys.argv[1]}\nArbitrary commands must be one of {choices}")
+        exit(1)
+    if any(arg in args for arg in ("start",)):
+        start(env_file=env_file)
+    else:
+        print(
+            "Insufficient Arguments:\n\tNo command received to initiate the PyObservability. "
+            f"Please choose from {choices}"
+        )
         exit(1)
