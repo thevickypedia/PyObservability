@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v0.0.0a2 (11/25/2025)
+---------------------
+- [8d12f2e](https://github.com/thevickypedia/PyObservability/commit/8d12f2e5c3ad6aca290e5123480b23f30608ad6a) chore: Release ``v0.0.0a2``
+- [dac0fdf](https://github.com/thevickypedia/PyObservability/commit/dac0fdf78e22755bc696cd11119b8368ed1bf0cb) fix: Avoid attribute error for env_file open
+- [bbc3d26](https://github.com/thevickypedia/PyObservability/commit/bbc3d26916418ee6f59cd1ea7aed65d6462dca28) fix: Fix CLI entrypoint function
+- [f2e3c8c](https://github.com/thevickypedia/PyObservability/commit/f2e3c8c7e565651fa60cee8fb93e1fe9622559bd) feat: Enable CLI through pip commands
+- [87d328f](https://github.com/thevickypedia/PyObservability/commit/87d328f0e5b154089be759f8a38a2c1e43ea45bd) feat: Create an env loader to support different file types like ``yaml``, ``json`` and plaintext
+- [735bc7e](https://github.com/thevickypedia/PyObservability/commit/735bc7eb77969d35675d91bed4edf29c0b54aabd) feat: Include CLI functionality
+- [2126e24](https://github.com/thevickypedia/PyObservability/commit/2126e245aa8ef8cba1f34c30eac59dd494d99ea3) refactor: Allow env vars to be sent during instantiation
+- [c7fcea5](https://github.com/thevickypedia/PyObservability/commit/c7fcea507f487919742002e587ef26236f926fa6) lint: Run linter
+- [f394ed8](https://github.com/thevickypedia/PyObservability/commit/f394ed8b0b3c94a6fac789fac20b8659455b87dd) feat: Onboard ``pydantic`` to load and parse env vars
+- [d84e788](https://github.com/thevickypedia/PyObservability/commit/d84e7886bffd1db348a26d29e9515968b0b76598) chore: Update release notes for v0.0.0a1
+
 v0.0.0a1 (11/24/2025)
 ---------------------
 - [ed65493](https://github.com/thevickypedia/PyObservability/commit/ed654937a9f01de6ffbe2088b0a32ccf6874cb1e) chore: Release ``v0.0.0a1``
