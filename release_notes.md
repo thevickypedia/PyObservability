@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v0.0.3 (11/25/2025)
+-------------------
+- [24a15bf](https://github.com/thevickypedia/PyObservability/commit/24a15bfd9bee2cfa5024997a66c2d3e2d1b20eb7) chore: Release ``v0.0.3``
+- [546be8d](https://github.com/thevickypedia/PyObservability/commit/546be8d80edf00211a09a042eb4d39cca247c7f7) refactor: Move "NO DATA" propagation to the UI instead of rendering it from the API
+- [7448b3d](https://github.com/thevickypedia/PyObservability/commit/7448b3dd240b445273472b89b4870588a113247e) chore: Update release notes for v0.0.2
+
 v0.0.2 (11/25/2025)
 -------------------
 - [8a98ac1](https://github.com/thevickypedia/PyObservability/commit/8a98ac12547f882cb9e54821c3c0589e4aee1d28) chore: Release ``v0.0.2``
