@@ -12,16 +12,10 @@
   const nodeSelect = document.getElementById("node-select");
   const refreshBtn = document.getElementById("refresh-btn");
 
-  const nodeEl = document.getElementById("node");
   const systemEl = document.getElementById("system");
-  const architectureEl = document.getElementById("architecture");
-  const coresEl = document.getElementById("cores");
-  const uptimeEl = document.getElementById("uptime");
+  const ipEl = document.getElementById("ip-info");
+  const processorEl = document.getElementById("processor");
 
-  const ipElPri = document.getElementById("private-ip");
-  const ipElPub = document.getElementById("public-ip");
-  const gpuEl = document.getElementById("gpu");
-  const cpuEl = document.getElementById("cpu");
   const memEl = document.getElementById("memory");
   const diskEl = document.getElementById("disk");
   const loadEl = document.getElementById("cpuload");
@@ -188,15 +182,9 @@
     }
 
     // Reset static UI fields
-    nodeEl.textContent = "-";
     systemEl.textContent = "-";
-    architectureEl.textContent = "-";
-    coresEl.textContent = "—";
-    uptimeEl.textContent = "—";
-    ipElPri.textContent = "—";
-    ipElPub.textContent = "—";
-    cpuEl.textContent = "-";
-    gpuEl.textContent = "—";
+    ipEl.textContent = "—";
+    processorEl.textContent = "—";
     memEl.textContent = "—";
     diskEl.textContent = "—";
     loadEl.textContent = "—";
@@ -259,45 +247,26 @@
       const m = host.metrics || {};
 
       // ------------------- System -------------------
-      // TODO: Make all elements into one and write with \n like disks
-      if (m.node) {
-        nodeEl.textContent = `Node: ${m.node}`;
-      }
-      if (m.system) {
-        systemEl.textContent = `OS: ${m.system}`;
-      }
-      if (m.architecture) {
-        architectureEl.textContent = `Architecture: ${m.architecture}`;
-      }
-      if (m.cores) {
-        coresEl.textContent = `CPU Cores: ${m.cores}`;
-      }
-      if (m.uptime) {
-        uptimeEl.textContent = `Up Time: ${m.uptime}`;
-      }
+      systemEl.textContent = 
+        `Node: ${m.node || "-"}\n` +
+        `OS: ${m.system || "-"}\n` +
+        `Architecture: ${m.architecture || "-"}\n\n` +
+        `CPU Cores: ${m.cores || "-"}\n` +
+        `Up Time: ${m.uptime || "-"}\n`;
 
       // ------------------- IP -------------------
-      // TODO: Make all elements into one and write with \n like disks
       if (m.ip_info) {
-        ipElPri.textContent = `Private: ${m.ip_info.private || "-"}`
-        ipElPub.textContent = `Public: ${m.ip_info.public || "-"}`
+        ipEl.textContent = 
+          `Private: ${m.ip_info.private || "-"}\n\n` +
+          `Public: ${m.ip_info.public || "-"}`;
       } else {
-        ipElPri.textContent = "—";
-        ipElPub.textContent = "—";
+        ipEl.textContent = "-";
       }
 
       // ------------------- CPU / GPU -------------------
-      // TODO: Make all elements into one and write with \n like disks
-      if (m.cpu_name) {
-        cpuEl.textContent = `CPU: ${m.cpu_name}`
-      } else {
-        cpuEl.textContent = "-";
-      }
-      if (m.gpu_name) {
-        gpuEl.textContent = `GPU: ${m.gpu_name}`
-      } else {
-        gpuEl.textContent = "—";
-      }
+      processorEl.textContent =
+        `CPU: ${m.cpu_name || "-"}\n\n` +
+        `GPU: ${m.gpu_name || "-"}`;
 
       // ------------------- DISKS (OLD “disk” card) -------------------
       if (Array.isArray(m.disk_info) && m.disk_info.length > 0) {
