@@ -38,7 +38,7 @@
 
   const disksTableBody = document.querySelector("#disks-table tbody");
   const pyudiskTableBody = document.querySelector("#pyudisk-table tbody")
-  const certsEl = document.getElementById("certificates");
+  const certsTableBody = document.querySelector("#certificates-table tbody");
 
   const showCoresCheckbox = document.getElementById("show-cores");
 
@@ -195,7 +195,7 @@
     dockerTableBody.innerHTML = "";
     disksTableBody.innerHTML = "";
     pyudiskTableBody.innerHTML = "";
-    certsEl.textContent = "—";
+    certsTableBody.innerHTML = "";
   }
 
   // ------------------------------------------------------------
@@ -425,6 +425,7 @@
       }
 
       // ------------------- DOCKER -------------------
+      // TODO: Replicate automatic header popluation for all other tables
       const dockerList = m.docker_stats || [];
       dockerTableHead.innerHTML = "";
       dockerTableBody.innerHTML = "";
@@ -485,10 +486,21 @@
       }
 
       // ------------------- CERTIFICATES -------------------
-      if (m.certificates) {
-        certsEl.textContent = JSON.stringify(m.certificates, null, 2);
-      } else {
-        certsEl.textContent = "NO DATA";
+      const certsList = m.certificates || [];
+      certsTableBody.innerHTML = "";
+
+      if (Array.isArray(certsList)) {
+        for (const c of certsList) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${c["Certificate Name"] || ""}</td>
+            <td>${c["Key Type"]}</td>
+            <td>${(c.Domains || []).join(", ")}</td>
+            <td>${c["Expiry Date"]}</td>
+            <td>${c.Validity}</td>
+          `;
+          certsTableBody.appendChild(tr);
+        }
       }
     }
   }
