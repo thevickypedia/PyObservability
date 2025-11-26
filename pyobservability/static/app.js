@@ -36,9 +36,17 @@
   const dockerTableHead = dockerTable.querySelector("thead");
   const dockerTableBody = dockerTable.querySelector("tbody");
 
-  const disksTableBody = document.querySelector("#disks-table tbody");
-  const pyudiskTableBody = document.querySelector("#pyudisk-table tbody")
-  const certsTableBody = document.querySelector("#certificates-table tbody");
+  const disksTable = document.getElementById("disks-table");
+  const disksTableHead = disksTable.querySelector("thead")
+  const disksTableBody = disksTable.querySelector("tbody");
+
+  const pyudiskTable = document.getElementById("pyudisk-table")
+  const pyudiskTableHead = pyudiskTable.querySelector("thead")
+  const pyudiskTableBody = pyudiskTable.querySelector("tbody")
+
+  const certsTable = document.getElementById("certificates-table")
+  const certsTableHead = certsTable.querySelector("thead");
+  const certsTableBody = certsTable.querySelector("tbody");
 
   const showCoresCheckbox = document.getElementById("show-cores");
 
@@ -191,10 +199,17 @@
 
     servicesTableBody.innerHTML = "";
     processesTableBody.innerHTML = "";
+
     dockerTableHead.innerHTML = "";
     dockerTableBody.innerHTML = "";
+
+    disksTableHead.innerHTML = "";
     disksTableBody.innerHTML = "";
+
+    pyudiskTableHead.innerHTML = "";
     pyudiskTableBody.innerHTML = "";
+
+    certsTableHead.innerHTML = "";
     certsTableBody.innerHTML = "";
   }
 
@@ -234,6 +249,25 @@
       i++;
     }
     return n.toFixed(2) + " " + units[i];
+  }
+
+  function tableConstructor(dataList, tableHead, tableBody) {
+    tableHead.innerHTML = "";
+    tableBody.innerHTML = "";
+
+    if (!Array.isArray(dataList) || dataList.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="10">NO DATA</td></tr>`;
+    } else {
+      const columns = Object.keys(dataList[0]);
+      tableHead.innerHTML =
+        "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
+      dataList.forEach(c => {
+        const row = "<tr>" +
+          columns.map(col => `<td>${c[col] ?? ""}</td>`).join("") +
+          "</tr>";
+        tableBody.insertAdjacentHTML("beforeend", row);
+      });
+    }
   }
 
   // ------------------------------------------------------------
@@ -399,7 +433,7 @@
         }
       }
 
-      // ------------------- SERVICES (NEW → OLD) -------------------
+      // ------------------- PROCESSES (NEW → OLD) -------------------
       const processes = m.process_stats || [];
       processesTableBody.innerHTML = "";
       if (Array.isArray(processes)) {
@@ -425,83 +459,21 @@
       }
 
       // ------------------- DOCKER -------------------
-      // TODO: Replicate automatic header popluation for all other tables
       const dockerList = m.docker_stats || [];
-      dockerTableHead.innerHTML = "";
-      dockerTableBody.innerHTML = "";
-
-      if (!Array.isArray(dockerList) || dockerList.length === 0) {
-        dockerTableBody.innerHTML = `<tr><td colspan="10">NO DATA</td></tr>`;
-      } else {
-        const columns = Object.keys(dockerList[0]);
-        dockerTableHead.innerHTML =
-          "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
-
-        dockerList.forEach(c => {
-          const row = "<tr>" +
-            columns.map(col => `<td>${c[col] ?? ""}</td>`).join("") +
-            "</tr>";
-          dockerTableBody.insertAdjacentHTML("beforeend", row);
-        });
-      }
+      tableConstructor(dockerList, dockerTableHead, dockerTableBody);
 
       // ------------------- DISKS (Tables) -------------------
       // TOOD: Remove disk list when pyudisk is available
       const diskList = m.disks_info || [];
-      disksTableBody.innerHTML = "";
-
-      if (Array.isArray(diskList)) {
-        for (const d of diskList) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${d.Name || d.name || ""}</td>
-            <td>${d.Size || d.size || ""}</td>
-            <td>${(d.Mountpoints || d.mountpoints || []).join(", ")}</td>
-          `;
-          disksTableBody.appendChild(tr);
-        }
-      }
+      tableConstructor(diskList, disksTableHead, disksTableBody);
 
       // ------------------- PyUdisk (Tables) -------------------
       const pyudiskList = m.pyudisk_stats || [];
-      pyudiskTableBody.innerHTML = "";
-
-      if (Array.isArray(pyudiskList)) {
-        for (const d of pyudiskList) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${d.Model || ""}</td>
-            <td>${(d.Mountpoint || []).join(", ")}</td>
-            <td>${d.Temperature}</td>
-            <td>${d["Bad Sectors"]}</td>
-            <td>${d["Test Status"]}</td>
-            <td>${d.Uptime}</td>
-            <td>${d.Total}</td>
-            <td>${d.Used}</td>
-            <td>${d.Free}</td>
-            <td>${d.Percent}</td>
-          `;
-          pyudiskTableBody.appendChild(tr);
-        }
-      }
+      tableConstructor(pyudiskList, pyudiskTableHead, pyudiskTableBody);
 
       // ------------------- CERTIFICATES -------------------
       const certsList = m.certificates || [];
-      certsTableBody.innerHTML = "";
-
-      if (Array.isArray(certsList)) {
-        for (const c of certsList) {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${c["Certificate Name"] || ""}</td>
-            <td>${c["Key Type"]}</td>
-            <td>${(c.Domains || []).join(", ")}</td>
-            <td>${c["Expiry Date"]}</td>
-            <td>${c.Validity}</td>
-          `;
-          certsTableBody.appendChild(tr);
-        }
-      }
+      tableConstructor(certsList, certsTableHead, certsTableBody);
     }
   }
 
