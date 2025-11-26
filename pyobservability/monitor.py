@@ -95,21 +95,24 @@ class Monitor:
     # POLL LOOP - SEQUENTIAL OVER ALL TARGETS
     ############################################################################
     async def _stream_target(self, name, base, session, apikey):
-        async for payload in self._fetch_observability(session, base, apikey):
-            result = {
-                "type": "metrics",
-                "ts": asyncio.get_event_loop().time(),
-                "data": [{"name": name, "base_url": base, "metrics": payload}],
-            }
+        while not self._stop.is_set():
+            try:
+                async for payload in self._fetch_observability(session, base, apikey):
+                    result = {
+                        "type": "metrics",
+                        "ts": asyncio.get_event_loop().time(),
+                        "data": [{"name": name, "base_url": base, "metrics": payload}],
+                    }
 
-            # Broadcast to subscribers
-            for q in list(self._ws_subscribers):
-                try:
-                    q.put_nowait(result)
-                except asyncio.QueueFull as debug:
-                    LOGGER.debug(debug)
-                    try:
-                        _ = q.get_nowait()
-                        q.put_nowait(result)
-                    except Exception as warn:
-                        LOGGER.warning(warn)
+                    for q in list(self._ws_subscribers):
+                        try:
+                            q.put_nowait(result)
+                        except asyncio.QueueFull:
+                            try:
+                                _ = q.get_nowait()
+                                q.put_nowait(result)
+                            except Exception as debug:
+                                LOGGER.debug(f"Queue full: {debug}")
+            except Exception as debug:
+                LOGGER.debug(f"Stream failed for {base}, retrying: {debug}")
+            await asyncio.sleep(1)
