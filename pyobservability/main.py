@@ -100,9 +100,7 @@ def include_routes():
 
 def start(**kwargs):
     settings.env = settings.env_loader(**kwargs)
-    settings.env.targets = [
-        {k: str(v) for k, v in target.model_dump().items()} for target in settings.env.targets
-    ]
+    settings.env.targets = [{k: str(v) for k, v in target.model_dump().items()} for target in settings.env.targets]
     include_routes()
     uvicorn_args = dict(
         host=settings.env.host,

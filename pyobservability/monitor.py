@@ -1,76 +1,22 @@
-# app/monitor.py
-
 import asyncio
+import json
 import logging
 from asyncio import CancelledError
-from typing import Any, Dict, List
-from urllib.parse import urlparse
+from typing import Dict, List
 
 import aiohttp
 
 LOGGER = logging.getLogger("uvicorn.default")
-
-###############################################################################
-# ENDPOINT DEFINITIONS (PyNinja Correct)
-###############################################################################
-
-ENDPOINTS = {
-    "ip": {
-        "path": "/get-ip",
-        "params": {"public": "false"},
-    },
-    "cpu": {
-        "path": "/get-cpu",
-        "params": {"interval": 2, "per_cpu": "true"},
-    },
-    "cpu_load": {
-        "path": "/get-cpu-load",
-        "params": {},
-    },
-    "gpu": {
-        "path": "/get-processor",
-        "params": {},
-    },
-    "memory": {
-        "path": "/get-memory",
-        "params": {},
-    },
-    "disk": {
-        "path": "/get-disk-utilization",
-        "params": {"path": "/"},
-    },
-    "disks": {
-        "path": "/get-all-disks",
-        "params": {},
-    },
-    "services": {
-        "path": "/get-all-services",
-        "params": {},
-    },
-    "docker_stats": {
-        "path": "/get-docker-stats",
-        "params": {},
-    },
-    "certificates": {
-        "path": "/get-certificates",
-        "params": {},
-    },
-}
-
-
-###############################################################################
-# MONITOR CLASS
-###############################################################################
+OBS_PATH = "/observability"
 
 
 class Monitor:
-
     def __init__(self, targets: List[Dict[str, str]], poll_interval: float):
         self.targets = targets
         self.poll_interval = poll_interval
         self.sessions: Dict[str, aiohttp.ClientSession] = {}
         self._ws_subscribers: List[asyncio.Queue] = []
-        self._task = None
+        self._task: asyncio.Task | None = None
         self._stop = asyncio.Event()
 
     ############################################################################
@@ -79,7 +25,7 @@ class Monitor:
     async def start(self):
         for target in self.targets:
             self.sessions[target["base_url"]] = aiohttp.ClientSession()
-        self._task = asyncio.create_task(self._run_loop())
+        self._task = asyncio.create_task(self._poll_loop())
 
     async def stop(self):
         self._stop.set()
@@ -108,91 +54,68 @@ class Monitor:
             pass
 
     ############################################################################
-    # FETCH WRAPPER
+    # FETCH OBSERVABILITY FOR SINGLE TARGET
     ############################################################################
-    async def _fetch(self, session, base_url, ep, headers: Dict[str, str], params=None):
-        url = base_url.rstrip("/") + ep
+    async def _fetch_observability(self, session, base_url, apikey):
+        url = base_url.rstrip("/") + OBS_PATH
+        headers = {"accept": "application/json"}
+        if apikey:
+            headers["Authorization"] = f"Bearer {apikey}"
+
         try:
-            async with session.get(url, headers=headers, params=params, timeout=10) as resp:
-                if resp.status == 200:
+            async with session.get(url, headers=headers, timeout=None) as resp:
+                if resp.status != 200:
+                    LOGGER.debug("Exception - [%d]: %s", resp.status, await resp.text())
+                    return None
+                async for line in resp.content:
+                    line = line.decode().strip()
+                    if not line:
+                        continue
                     try:
-                        return await resp.json()
-                    except Exception as err:
-                        LOGGER.debug(err)
-                        return
-                parsed = urlparse(url)
-                LOGGER.debug("Exception on '%s' - [%d]: %s", parsed.path, resp.status, await resp.text())
-                return
+                        payload = json.loads(line)
+                        return payload
+                    except json.JSONDecodeError as err:
+                        LOGGER.debug("JSON decode error: %s | line=%s", err, line)
         except Exception as err:
-            LOGGER.debug(err)
-            return
+            LOGGER.debug("Exception: %s", err)
+            return None
 
     ############################################################################
-    # PER-TARGET POLLING
+    # POLL LOOP - SEQUENTIAL OVER ALL TARGETS
     ############################################################################
-    async def _poll_target(self, target: Dict[str, Any]) -> Dict[str, Any]:
-        base = target["base_url"]
-        apikey = target["apikey"]
-        session = self.sessions[base]
-        headers = {"Accept": "application/json", "Authorization": f"Bearer {apikey}"}
-
-        result = {"name": target["name"], "base_url": base, "metrics": {}}
-
-        # Fire ALL requests concurrently
-        tasks = {}
-
-        for key, cfg in ENDPOINTS.items():
-            tasks[key] = asyncio.create_task(
-                self._fetch(session, base, cfg["path"], headers=headers, params=cfg["params"])
-            )
-
-        # Wait for all endpoints
-        raw_results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-
-        for (key, _), resp in zip(tasks.items(), raw_results):
-            if isinstance(resp, Exception):
-                result["metrics"][key] = None
-                continue
-            if isinstance(resp, dict):
-                result["metrics"][key] = resp.get("detail", resp)
-            else:
-                # raw string / number / list / etc
-                result["metrics"][key] = resp
-
-        return result
-
-    ############################################################################
-    # POLL ALL HOSTS
-    ############################################################################
-    async def _poll_all(self) -> List[Dict[str, Any]]:
-        tasks = [self._poll_target(target) for target in self.targets]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        out = []
-        for r in results:
-            if isinstance(r, Exception):
-                LOGGER.error("%s", r)
-                out.append({"error": str(r)})
-            else:
-                out.append(r)
-        return out
-
-    ############################################################################
-    # MAIN LOOP
-    ############################################################################
-    async def _run_loop(self):
+    async def _poll_loop(self):
         while not self._stop.is_set():
-            metrics = await self._poll_all()
+            all_data = []
 
-            payload = {"type": "metrics", "ts": asyncio.get_event_loop().time(), "data": metrics}
+            for target in self.targets:
+                base = target["base_url"]
+                name = target.get("name")
+                apikey = target.get("apikey")
+                session = self.sessions.get(base)
+                if session is None:
+                    session = aiohttp.ClientSession()
+                    self.sessions[base] = session
 
-            for q in list(self._ws_subscribers):
-                try:
-                    q.put_nowait(payload)
-                except asyncio.QueueFull:
+                payload = await self._fetch_observability(session, base, apikey)
+                if payload:
+                    all_data.append({"name": name, "base_url": base, "metrics": payload})
+                else:
+                    LOGGER.debug("No payload received")
+
+            if all_data:
+                result = {"type": "metrics", "ts": asyncio.get_event_loop().time(), "data": all_data}
+
+                # broadcast to all subscribers
+                for q in list(self._ws_subscribers):
                     try:
-                        _ = q.get_nowait()
-                        q.put_nowait(payload)
-                    except Exception:
-                        pass
+                        q.put_nowait(result)
+                    except asyncio.QueueFull:
+                        try:
+                            _ = q.get_nowait()
+                            q.put_nowait(result)
+                        except Exception:
+                            pass
+            else:
+                LOGGER.debug("No data received")
 
             await asyncio.sleep(self.poll_interval)

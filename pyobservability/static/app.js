@@ -210,17 +210,21 @@
     return Number.isFinite(n) ? n : null;
   }
 
-  function formatStringOrObject(x) {
-    if (x == null) return "—";
-    if (typeof x === "string" || typeof x === "number") return x;
-    return Object.entries(x)
-      .map(([k,v]) => `${k}: ${v}`)
-      .join("\n");
-  }
-
   function round2(x) {
     const n = Number(x);
     return Number.isFinite(n) ? n.toFixed(2) : "—";
+  }
+
+  function formatBytes(x) {
+    if (x == null) return "—";
+    const units = ["B","KB","MB","GB","TB"];
+    let i = 0;
+    let n = Number(x);
+    while (n > 1024 && i < units.length-1) {
+      n /= 1024;
+      i++;
+    }
+    return n.toFixed(2) + " " + units[i];
   }
 
   // ------------------------------------------------------------
@@ -233,41 +237,83 @@
       if (host.base_url !== selectedBase) continue;
       const m = host.metrics || {};
 
-      // ------------------- BASIC INFO -------------------
-      ipEl.textContent = m.ip?.ip || m.ip || "—";
-      gpuEl.textContent = formatStringOrObject(m.gpu ?? m.cpu ?? "—");
-      if (m.disk) {
-        const total = m.disk.total ?? "—";
-        const used  = m.disk.used ?? "—";
-        const free  = m.disk.free ?? "—";
-        diskEl.textContent = `Total: ${total}\nUsed: ${used}\nFree: ${free}`;
+      // ------------------- IP -------------------
+      if (m.ip_info) {
+        ipEl.textContent = m.ip_info.private || m.ip_info.public || "—";
+      } else {
+        ipEl.textContent = m.ip || "—";
+      }
+
+      // ------------------- GPU -------------------
+      gpuEl.textContent = m.gpu_name || m.gpu || m.cpu || "—";
+
+      // ------------------- DISKS (OLD “disk” card) -------------------
+      if (Array.isArray(m.disk_info) && m.disk_info.length > 0) {
+        const d = m.disk_info[0];
+        diskEl.textContent =
+          `Total: ${formatBytes(d.total)}\n` +
+          `Used: ${formatBytes(d.used)}\n` +
+          `Free: ${formatBytes(d.free)}`;
+      } else if (m.disk) {
+        diskEl.textContent =
+          `Total: ${m.disk.total}\nUsed: ${m.disk.used}\nFree: ${m.disk.free}`;
       } else {
         diskEl.textContent = "NO DATA";
       }
 
       // ------------------- MEMORY -------------------
-      if (m.memory) {
-        const used = m.memory.ram_used || m.memory.used || "";
-        const percent = m.memory.ram_usage ?? m.memory.usage ?? m.memory.percent ?? "—";
+      if (m.memory_info) {
+        const total = formatBytes(m.memory_info.total);
+        const used  = formatBytes(m.memory_info.used);
+        const percent = round2(m.memory_info.percent);
+
+        memEl.textContent = `Total: ${total}\nUsed: ${used}\nPercent: ${percent}%`;
+        pushPoint(memChart, num(m.memory_info.percent));
+
+      } else if (m.memory) {
+        // fallback to old
+        const used = m.memory.ram_used || "";
+        const percent = m.memory.ram_usage ?? m.memory.percent ?? "—";
         const totalMem = m.memory.ram_total ?? m.memory.total ?? "—";
         memEl.textContent = `Total: ${totalMem}\nUsed: ${used}\nPercent: ${percent}%`;
         pushPoint(memChart, num(percent));
       } else {
-        memEl.textContent = "NO DATA"
+        memEl.textContent = "NO DATA";
       }
 
-      // ------------------- CPU -------------------
+      // ------------------- CPU (NEW — cpu_usage[]) -------------------
       let avg = null;
 
-      if (m.cpu) {
-        const detail = m.cpu.detail || m.cpu;
+      if (Array.isArray(m.cpu_usage)) {
+        const values = m.cpu_usage.map(num);
+        avg = values.reduce((a, b) => a + (b ?? 0), 0) / values.length;
 
+        pruneOldCores(values.map((_, i) => "cpu" + (i + 1)));
+
+        values.forEach((v, i) => {
+          const coreName = "cpu" + (i + 1);
+          const c = getCoreChart(coreName);
+
+          c.chart.data.labels.push(now);
+          c.chart.data.datasets[0].data.push(v ?? 0);
+
+          if (c.chart.data.labels.length > MAX_POINTS) {
+            c.chart.data.labels.shift();
+            c.chart.data.datasets[0].data.shift();
+          }
+
+          c.chart.update("none");
+          c.valEl.textContent = `${(v ?? 0).toFixed(1)}%`;
+        });
+
+      } else if (m.cpu) {
+        // fallback to old
+        const detail = m.cpu.detail || m.cpu;
         if (typeof detail === "object") {
           const names = Object.keys(detail);
           pruneOldCores(names);
 
           const values = [];
-
           for (const [core, val] of Object.entries(detail)) {
             const v = num(val);
             values.push(v);
@@ -284,73 +330,63 @@
             c.chart.update("none");
             c.valEl.textContent = `${(v ?? 0).toFixed(1)}%`;
           }
-
           avg = values.reduce((a, b) => a + (b ?? 0), 0) / values.length;
-        }
-        else if (typeof detail === "number") {
-          avg = detail;
         }
       }
 
       if (avg != null) pushPoint(cpuAvgChart, avg);
 
       // ------------------- CPU LOAD -------------------
-      if (m.cpu_load) {
+      if (m.load_averages) {
+        const la = m.load_averages;
+        loadEl.textContent =
+          `${round2(la.m1)} / ${round2(la.m5)} / ${round2(la.m15)}`;
+        pushPoint(loadChart, num(la.m1));
+      } else if (m.cpu_load) {
         const load = m.cpu_load.detail || m.cpu_load;
-        if (typeof load === "object") {
-          const m1  = load.m1 ?? load[0];
-          const m5  = load.m5 ?? load[1];
-          const m15 = load.m15 ?? load[2];
-
-          loadEl.textContent = `${round2(m1)} / ${round2(m5)} / ${round2(m15)}`;
-          pushPoint(loadChart, num(m1) ?? 0);
-        } else {
-          loadEl.textContent = load;
-          pushPoint(loadChart, num(load));
-        }
+        const m1 = load.m1 ?? load[0];
+        const m5 = load.m5 ?? load[1];
+        const m15 = load.m15 ?? load[2];
+        loadEl.textContent = `${round2(m1)} / ${round2(m5)} / ${round2(m15)}`;
+        pushPoint(loadChart, num(m1));
       } else {
-        loadEl.textContent = "NO DATA"
+        loadEl.textContent = "NO DATA";
       }
 
-      // ------------------- SERVICES -------------------
-      if (Array.isArray(m.services)) {
+      // ------------------- SERVICES (NEW → OLD) -------------------
+      const services = m.service_stats || m.services || [];
+      servicesTableBody.innerHTML = "";
+      if (Array.isArray(services)) {
         const filter = svcFilter.value.trim().toLowerCase();
-        servicesTableBody.innerHTML = "";
-
-        for (const s of m.services) {
-          const name = s.pname || s.label || s.name || "";
+        for (const s of services) {
+          const name = s.Name || s.pname || s.label || s.name || "";
 
           if (filter && !name.toLowerCase().includes(filter)) continue;
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${s.pid ?? s.PID ?? ""}</td>
+            <td>${s.PID ?? ""}</td>
             <td>${name}</td>
-            <td>${s.status ?? "—"}</td>
-            <td>${s.cpu ? JSON.stringify(s.cpu) : "—"}</td>
-            <td>${s.memory ? (s.memory.rss || s.memory.pfaults || JSON.stringify(s.memory)) : "—"}</td>
+            <td>${s.Status ?? s.status ?? "—"}</td>
+            <td>${s.CPU ?? s.cpu ?? "—"}</td>
+            <td>${s.Memory ?? s.memory ?? "—"}</td>
           `;
           servicesTableBody.appendChild(tr);
         }
-      } else {
-        servicesTableBody.innerHTML = `<tr><td colspan="5">NO DATA</td></tr>`;
       }
 
       // ------------------- DOCKER -------------------
-      const dockerList = m.docker_stats;
-
+      const dockerList = m.docker_stats || [];
       dockerTableHead.innerHTML = "";
       dockerTableBody.innerHTML = "";
 
       if (!Array.isArray(dockerList) || dockerList.length === 0) {
         dockerTableBody.innerHTML = `<tr><td colspan="10">NO DATA</td></tr>`;
       } else {
-        // Create header
         const columns = Object.keys(dockerList[0]);
         dockerTableHead.innerHTML =
           "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
 
-        // Create rows
         dockerList.forEach(c => {
           const row = "<tr>" +
             columns.map(col => `<td>${c[col] ?? ""}</td>`).join("") +
@@ -359,27 +395,27 @@
         });
       }
 
-      // ------------------- DISKS -------------------
-      if (Array.isArray(m.disks)) {
-        disksTableBody.innerHTML = "";
-        for (const d of m.disks) {
+      // ------------------- DISKS (Tables) -------------------
+      const diskList = m.disks_info || m.pyudisk_stats || m.disks || [];
+      disksTableBody.innerHTML = "";
+
+      if (Array.isArray(diskList)) {
+        for (const d of diskList) {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${d.name || d.device_id || ""}</td>
-            <td>${d.size || d.total || ""}</td>
-            <td>${(d.mountpoints || []).join(", ")}</td>
+            <td>${d.Name || d.name || d.Model || d.device_id || ""}</td>
+            <td>${d.Size || d.size || d.Total || formatBytes(d.total) || ""}</td>
+            <td>${(d.Mountpoints || d.mountpoints || d.Mountpoint || []).join(", ")}</td>
           `;
           disksTableBody.appendChild(tr);
         }
-      } else {
-        disksTableBody.innerHTML = `<tr><td colspan="3">NO DATA</td></tr>`;
       }
 
       // ------------------- CERTIFICATES -------------------
       if (m.certificates) {
         certsEl.textContent = JSON.stringify(m.certificates, null, 2);
       } else {
-        certsEl.textContent = "NO DATA"
+        certsEl.textContent = "NO DATA";
       }
     }
   }
