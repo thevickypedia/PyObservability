@@ -57,7 +57,7 @@ class Monitor:
     # FETCH OBSERVABILITY FOR SINGLE TARGET
     ############################################################################
     async def _fetch_observability(self, session, base_url, apikey):
-        url = base_url.rstrip("/") + OBS_PATH
+        url = base_url.rstrip("/") + OBS_PATH + f"?interval={self.poll_interval}"
         headers = {"accept": "application/json"}
         if apikey:
             headers["Authorization"] = f"Bearer {apikey}"
@@ -87,6 +87,9 @@ class Monitor:
         while not self._stop.is_set():
             all_data = []
 
+            # Build async tasks for all targets
+            tasks = []
+            meta = []  # keep name/base for each task
             for target in self.targets:
                 base = target["base_url"]
                 name = target.get("name")
@@ -96,14 +99,28 @@ class Monitor:
                     session = aiohttp.ClientSession()
                     self.sessions[base] = session
 
-                payload = await self._fetch_observability(session, base, apikey)
+                tasks.append(self._fetch_observability(session, base, apikey))
+                meta.append((name, base))
+
+            # Run all fetches concurrently
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            # Build the aggregated result
+            for (name, base), payload in zip(meta, results):
+                if isinstance(payload, Exception):
+                    LOGGER.debug("Exception while fetching from %s: %s", base, payload)
+                    continue
                 if payload:
                     all_data.append({"name": name, "base_url": base, "metrics": payload})
                 else:
                     LOGGER.debug("No payload received")
 
             if all_data:
-                result = {"type": "metrics", "ts": asyncio.get_event_loop().time(), "data": all_data}
+                result = {
+                    "type": "metrics",
+                    "ts": asyncio.get_event_loop().time(),
+                    "data": all_data
+                }
 
                 # broadcast to all subscribers
                 for q in list(self._ws_subscribers):
@@ -117,5 +134,3 @@ class Monitor:
                             pass
             else:
                 LOGGER.debug("No data received")
-
-            await asyncio.sleep(self.poll_interval)
