@@ -464,6 +464,7 @@
       }
 
       // ------------------- DISKS (Tables) -------------------
+      // TOOD: Remove disk list when pyudisk is available
       const diskList = m.disks_info || [];
       disksTableBody.innerHTML = "";
 
@@ -471,9 +472,9 @@
         for (const d of diskList) {
           const tr = document.createElement("tr");
           tr.innerHTML = `
-            <td>${d.Name || d.name || d.Model || d.device_id || ""}</td>
-            <td>${d.Size || d.size || d.Total || formatBytes(d.total) || ""}</td>
-            <td>${(d.Mountpoints || d.mountpoints || d.Mountpoint || []).join(", ")}</td>
+            <td>${d.Name || d.name || ""}</td>
+            <td>${d.Size || d.size || ""}</td>
+            <td>${(d.Mountpoints || d.mountpoints || []).join(", ")}</td>
           `;
           disksTableBody.appendChild(tr);
         }
