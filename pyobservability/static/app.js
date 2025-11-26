@@ -12,8 +12,16 @@
   const nodeSelect = document.getElementById("node-select");
   const refreshBtn = document.getElementById("refresh-btn");
 
-  const ipEl = document.getElementById("ip");
+  const nodeEl = document.getElementById("node");
+  const systemEl = document.getElementById("system");
+  const architectureEl = document.getElementById("architecture");
+  const coresEl = document.getElementById("cores");
+  const uptimeEl = document.getElementById("uptime");
+
+  const ipElPri = document.getElementById("private-ip");
+  const ipElPub = document.getElementById("public-ip");
   const gpuEl = document.getElementById("gpu");
+  const cpuEl = document.getElementById("cpu");
   const memEl = document.getElementById("memory");
   const diskEl = document.getElementById("disk");
   const loadEl = document.getElementById("cpuload");
@@ -27,11 +35,15 @@
   const servicesTableBody = document.querySelector("#services-table tbody");
   const svcFilter = document.getElementById("svc-filter");
 
+  const processesTableBody = document.querySelector("#processes-table tbody");
+  const procFilter = document.getElementById("proc-filter");
+
   const dockerTable = document.getElementById("docker-table");
   const dockerTableHead = dockerTable.querySelector("thead");
   const dockerTableBody = dockerTable.querySelector("tbody");
 
   const disksTableBody = document.querySelector("#disks-table tbody");
+  const pyudiskTableBody = document.querySelector("#pyudisk-table tbody")
   const certsEl = document.getElementById("certificates");
 
   const showCoresCheckbox = document.getElementById("show-cores");
@@ -176,16 +188,25 @@
     }
 
     // Reset static UI fields
-    ipEl.textContent = "—";
+    nodeEl.textContent = "-";
+    systemEl.textContent = "-";
+    architectureEl.textContent = "-";
+    coresEl.textContent = "—";
+    uptimeEl.textContent = "—";
+    ipElPri.textContent = "—";
+    ipElPub.textContent = "—";
+    cpuEl.textContent = "-";
     gpuEl.textContent = "—";
     memEl.textContent = "—";
     diskEl.textContent = "—";
     loadEl.textContent = "—";
 
     servicesTableBody.innerHTML = "";
+    processesTableBody.innerHTML = "";
     dockerTableHead.innerHTML = "";
     dockerTableBody.innerHTML = "";
     disksTableBody.innerHTML = "";
+    pyudiskTableBody.innerHTML = "";
     certsEl.textContent = "—";
   }
 
@@ -237,15 +258,34 @@
       if (host.base_url !== selectedBase) continue;
       const m = host.metrics || {};
 
+      // ------------------- System -------------------
+      if (m.node) {
+        nodeEl.textContent = `Node: ${m.node}`;
+      }
+      if (m.system) {
+        systemEl.textContent = `OS: ${m.system}`;
+      }
+      if (m.architecture) {
+        architectureEl.textContent = `Architecture: ${m.architecture}`;
+      }
+      if (m.cores) {
+        coresEl.textContent = `CPU Cores: ${m.cores}`;
+      }
+      if (m.uptime) {
+        uptimeEl.textContent = `Up Time: ${m.uptime}`;
+      }
       // ------------------- IP -------------------
       if (m.ip_info) {
-        ipEl.textContent = m.ip_info.private || m.ip_info.public || "—";
+        ipElPri.textContent = `Private: ${m.ip_info.private || "-"}`
+        ipElPub.textContent = `Public: ${m.ip_info.public || "-"}`
       } else {
-        ipEl.textContent = m.ip || "—";
+        ipElPri.textContent = "—";
+        ipElPub.textContent = "—";
       }
 
-      // ------------------- GPU -------------------
-      gpuEl.textContent = m.gpu_name || m.gpu || m.cpu || "—";
+      // ------------------- CPU / GPU -------------------
+      cpuEl.textContent = m.cpu_name || "-";
+      gpuEl.textContent = m.gpu_name || "—";
 
       // ------------------- DISKS (OLD “disk” card) -------------------
       if (Array.isArray(m.disk_info) && m.disk_info.length > 0) {
@@ -359,7 +399,7 @@
       if (Array.isArray(services)) {
         const filter = svcFilter.value.trim().toLowerCase();
         for (const s of services) {
-          const name = s.Name || s.pname || s.label || s.name || "";
+          const name = s.Name || "";
 
           if (filter && !name.toLowerCase().includes(filter)) continue;
 
@@ -370,8 +410,36 @@
             <td>${s.Status ?? s.status ?? "—"}</td>
             <td>${s.CPU ?? s.cpu ?? "—"}</td>
             <td>${s.Memory ?? s.memory ?? "—"}</td>
+            <td>${s.Uptime ?? s.uptime ?? "—"}</td>
+            <td>${s.Threads ?? s.threads ?? "—"}</td>
+            <td>${s["Open Files"] ?? s.open_files ?? "—"}</td>
           `;
           servicesTableBody.appendChild(tr);
+        }
+      }
+
+      // ------------------- SERVICES (NEW → OLD) -------------------
+      const processes = m.process_stats || [];
+      processesTableBody.innerHTML = "";
+      if (Array.isArray(processes)) {
+        const filter = procFilter.value.trim().toLowerCase();
+        for (const p of processes) {
+          const name = p.Name || "";
+
+          if (filter && !name.toLowerCase().includes(filter)) continue;
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${p.PID ?? ""}</td>
+            <td>${name}</td>
+            <td>${p.Status ?? p.status ?? "—"}</td>
+            <td>${p.CPU ?? p.cpu ?? "—"}</td>
+            <td>${p.Memory ?? p.memory ?? "—"}</td>
+            <td>${p.Uptime ?? p.uptime ?? "—"}</td>
+            <td>${p.Threads ?? p.threads ?? "—"}</td>
+            <td>${p["Open Files"] ?? p.open_files ?? "—"}</td>
+          `;
+          processesTableBody.appendChild(tr);
         }
       }
 
@@ -396,7 +464,7 @@
       }
 
       // ------------------- DISKS (Tables) -------------------
-      const diskList = m.disks_info || m.pyudisk_stats || m.disks || [];
+      const diskList = m.disks_info || [];
       disksTableBody.innerHTML = "";
 
       if (Array.isArray(diskList)) {
@@ -408,6 +476,29 @@
             <td>${(d.Mountpoints || d.mountpoints || d.Mountpoint || []).join(", ")}</td>
           `;
           disksTableBody.appendChild(tr);
+        }
+      }
+
+      // ------------------- PyUdisk (Tables) -------------------
+      const pyudiskList = m.pyudisk_stats || [];
+      pyudiskTableBody.innerHTML = "";
+
+      if (Array.isArray(pyudiskList)) {
+        for (const d of pyudiskList) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${d.Model || ""}</td>
+            <td>${(d.Mountpoint || []).join(", ")}</td>
+            <td>${d.Temperature}</td>
+            <td>${d["Bad Sectors"]}</td>
+            <td>${d["Test Status"]}</td>
+            <td>${d.Uptime}</td>
+            <td>${d.Total}</td>
+            <td>${d.Used}</td>
+            <td>${d.Free}</td>
+            <td>${d.Percent}</td>
+          `;
+          pyudiskTableBody.appendChild(tr);
         }
       }
 

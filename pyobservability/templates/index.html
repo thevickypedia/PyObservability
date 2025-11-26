@@ -22,12 +22,23 @@
   <main class="container">
     <section class="meta-row">
       <div class="meta-card">
+        <div class="meta-title">System</div>
+        <div id="node" class="meta-value">—</div>
+        <div id="system" class="meta-value">—</div>
+        <div id="architecture" class="meta-value">—</div>
+        <div id="cores" class="meta-value">—</div>
+        <div id="uptime" class="meta-value">—</div>
+      </div>
+
+      <div class="meta-card">
         <div class="meta-title">IP</div>
-        <div id="ip" class="meta-value">—</div>
+        <div id="private-ip" class="meta-value">—</div>
+        <div id="public-ip" class="meta-value">—</div>
       </div>
 
       <div class="meta-card">
         <div class="meta-title">GPU / CPU Model</div>
+        <div id="cpu" class="meta-value pre">—</div>
         <div id="gpu" class="meta-value pre">—</div>
       </div>
 
@@ -83,7 +94,19 @@
           <input id="svc-filter" placeholder="filter service name..." />
         </div>
         <table class="table" id="services-table">
-          <thead><tr><th>PID</th><th>Name</th><th>Status</th><th>CPU</th><th>Memory</th></tr></thead>
+          <thead><tr><th>PID</th><th>Name</th><th>Status</th><th>CPU</th><th>Memory</th><th>Uptime</th><th>Threads</th><th>Open Files</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+    <section class="tables-row">
+      <div class="panel">
+        <div class="panel-header"><h3>Processes</h3></div>
+        <div class="panel-body service-controls">
+          <input id="proc-filter" placeholder="filter process name..." />
+        </div>
+        <table class="table" id="processes-table">
+          <thead><tr><th>PID</th><th>Name</th><th>Status</th><th>CPU</th><th>Memory</th><th>Uptime</th><th>Threads</th><th>Open Files</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -103,6 +126,16 @@
         <div class="panel-body">
           <table class="table" id="disks-table">
             <thead><tr><th>Name</th><th>Size</th><th>Mounts</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header"><h3>PyUdisk</h3></div>
+        <div class="panel-body">
+          <table class="table" id="pyudisk-table">
+            <thead><tr><th>Model</th><th>Mountpoint</th><th>Temperature</th><th>Bad Sectors</th><th>Test Status</th><th>Uptime</th><th>Total</th><th>Used</th><th>Free</th><th>Percent</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
