@@ -259,6 +259,7 @@
       const m = host.metrics || {};
 
       // ------------------- System -------------------
+      // TODO: Make all elements into one and write with \n like disks
       if (m.node) {
         nodeEl.textContent = `Node: ${m.node}`;
       }
@@ -274,7 +275,9 @@
       if (m.uptime) {
         uptimeEl.textContent = `Up Time: ${m.uptime}`;
       }
+
       // ------------------- IP -------------------
+      // TODO: Make all elements into one and write with \n like disks
       if (m.ip_info) {
         ipElPri.textContent = `Private: ${m.ip_info.private || "-"}`
         ipElPub.textContent = `Public: ${m.ip_info.public || "-"}`
@@ -284,8 +287,17 @@
       }
 
       // ------------------- CPU / GPU -------------------
-      cpuEl.textContent = m.cpu_name || "-";
-      gpuEl.textContent = m.gpu_name || "—";
+      // TODO: Make all elements into one and write with \n like disks
+      if (m.cpu_name) {
+        cpuEl.textContent = `CPU: ${m.cpu_name}`
+      } else {
+        cpuEl.textContent = "-";
+      }
+      if (m.gpu_name) {
+        gpuEl.textContent = `GPU: ${m.gpu_name}`
+      } else {
+        gpuEl.textContent = "—";
+      }
 
       // ------------------- DISKS (OLD “disk” card) -------------------
       if (Array.isArray(m.disk_info) && m.disk_info.length > 0) {
