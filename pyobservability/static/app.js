@@ -247,7 +247,7 @@
       const m = host.metrics || {};
 
       // ------------------- System -------------------
-      systemEl.textContent = 
+      systemEl.textContent =
         `Node: ${m.node || "-"}\n` +
         `OS: ${m.system || "-"}\n` +
         `Architecture: ${m.architecture || "-"}\n\n` +
@@ -256,7 +256,7 @@
 
       // ------------------- IP -------------------
       if (m.ip_info) {
-        ipEl.textContent = 
+        ipEl.textContent =
           `Private: ${m.ip_info.private || "-"}\n\n` +
           `Public: ${m.ip_info.public || "-"}`;
       } else {

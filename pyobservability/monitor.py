@@ -116,11 +116,7 @@ class Monitor:
                     LOGGER.debug("No payload received")
 
             if all_data:
-                result = {
-                    "type": "metrics",
-                    "ts": asyncio.get_event_loop().time(),
-                    "data": all_data
-                }
+                result = {"type": "metrics", "ts": asyncio.get_event_loop().time(), "data": all_data}
 
                 # broadcast to all subscribers
                 for q in list(self._ws_subscribers):
