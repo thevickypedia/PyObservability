@@ -23,21 +23,31 @@ class Monitor:
     # LIFECYCLE
     ############################################################################
     async def start(self):
+        self._tasks = []
+
         for target in self.targets:
-            self.sessions[target["base_url"]] = aiohttp.ClientSession()
-        self._task = asyncio.create_task(self._poll_loop())
+            base = target["base_url"]
+            name = target.get("name")
+            apikey = target.get("apikey")
+
+            session = aiohttp.ClientSession()
+            self.sessions[base] = session
+
+            task = asyncio.create_task(self._stream_target(name, base, session, apikey))
+            self._tasks.append(task)
 
     async def stop(self):
         self._stop.set()
-        if self._task:
-            self._task.cancel()
+
+        for task in self._tasks:
+            task.cancel()
             try:
-                await self._task
+                await task
             except CancelledError:
                 pass
 
-        for sess in self.sessions.values():
-            await sess.close()
+        for session in self.sessions.values():
+            await session.close()
 
     ############################################################################
     # SUBSCRIBE / UNSUBSCRIBE
@@ -66,67 +76,40 @@ class Monitor:
             async with session.get(url, headers=headers, timeout=None) as resp:
                 if resp.status != 200:
                     LOGGER.debug("Exception - [%d]: %s", resp.status, await resp.text())
-                    return None
+                    return
                 async for line in resp.content:
                     line = line.decode().strip()
                     if not line:
                         continue
                     try:
                         payload = json.loads(line)
-                        return payload
+                        # yield each record instead of returning
+                        yield payload
                     except json.JSONDecodeError as err:
                         LOGGER.debug("JSON decode error: %s | line=%s", err, line)
         except Exception as err:
             LOGGER.debug("Exception: %s", err)
-            return None
+            return
 
     ############################################################################
     # POLL LOOP - SEQUENTIAL OVER ALL TARGETS
     ############################################################################
-    async def _poll_loop(self):
-        while not self._stop.is_set():
-            all_data = []
+    async def _stream_target(self, name, base, session, apikey):
+        async for payload in self._fetch_observability(session, base, apikey):
+            result = {
+                "type": "metrics",
+                "ts": asyncio.get_event_loop().time(),
+                "data": [{"name": name, "base_url": base, "metrics": payload}],
+            }
 
-            # Build async tasks for all targets
-            tasks = []
-            meta = []  # keep name/base for each task
-            for target in self.targets:
-                base = target["base_url"]
-                name = target.get("name")
-                apikey = target.get("apikey")
-                session = self.sessions.get(base)
-                if session is None:
-                    session = aiohttp.ClientSession()
-                    self.sessions[base] = session
-
-                tasks.append(self._fetch_observability(session, base, apikey))
-                meta.append((name, base))
-
-            # Run all fetches concurrently
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-
-            # Build the aggregated result
-            for (name, base), payload in zip(meta, results):
-                if isinstance(payload, Exception):
-                    LOGGER.debug("Exception while fetching from %s: %s", base, payload)
-                    continue
-                if payload:
-                    all_data.append({"name": name, "base_url": base, "metrics": payload})
-                else:
-                    LOGGER.debug("No payload received")
-
-            if all_data:
-                result = {"type": "metrics", "ts": asyncio.get_event_loop().time(), "data": all_data}
-
-                # broadcast to all subscribers
-                for q in list(self._ws_subscribers):
+            # Broadcast to subscribers
+            for q in list(self._ws_subscribers):
+                try:
+                    q.put_nowait(result)
+                except asyncio.QueueFull as debug:
+                    LOGGER.debug(debug)
                     try:
+                        _ = q.get_nowait()
                         q.put_nowait(result)
-                    except asyncio.QueueFull:
-                        try:
-                            _ = q.get_nowait()
-                            q.put_nowait(result)
-                        except Exception:
-                            pass
-            else:
-                LOGGER.debug("No data received")
+                    except Exception as warn:
+                        LOGGER.warning(warn)
