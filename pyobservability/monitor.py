@@ -2,7 +2,8 @@ import asyncio
 import json
 import logging
 from asyncio import CancelledError
-from typing import Dict
+from collections.abc import Generator
+from typing import Any, Dict, List
 
 import aiohttp
 
@@ -10,6 +11,16 @@ from pyobservability.config import settings
 
 LOGGER = logging.getLogger("uvicorn.default")
 OBS_PATH = "/observability"
+
+
+def refine_service(service_list: List[Dict[str, Any]]) -> Generator[Dict[str, Dict[str, str]]]:
+    for service in service_list:
+        service["memory"] = dict(rss=service.get("memory", {}).get("rss"), vms=service.get("memory", {}).get("vms"))
+        service["cpu"] = dict(
+            user=round(service.get("cpu", {}).get("user", 0), 2),
+            system=round(service.get("cpu", {}).get("system", 0), 2),
+        )
+        yield service
 
 
 class Monitor:
@@ -82,7 +93,13 @@ class Monitor:
                     continue
 
                 try:
-                    yield json.loads(line)
+                    parsed = json.loads(line)
+                    try:
+                        if service_stats := parsed.get("service_stats"):
+                            parsed["service_stats"] = list(refine_service(service_stats))
+                    except Exception as error:
+                        LOGGER.error("Received [%s: %s] when parsing services for %s", type(error), error, self.name)
+                    yield parsed
                 except json.JSONDecodeError:
                     LOGGER.debug("Bad JSON from %s: %s", self.base_url, line)
 
