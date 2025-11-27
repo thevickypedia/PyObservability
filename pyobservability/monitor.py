@@ -92,7 +92,7 @@ class Monitor:
             return
 
     ############################################################################
-    # POLL LOOP - SEQUENTIAL OVER ALL TARGETS
+    # STREAM A SPECIFIC TARGET - SEQUENTIAL OVER ALL TARGETS
     ############################################################################
     async def _stream_target(self, name, base, session, apikey):
         while not self._stop.is_set():
@@ -104,6 +104,9 @@ class Monitor:
                         "data": [{"name": name, "base_url": base, "metrics": payload}],
                     }
 
+                    # The queue gets full when subscribers aren’t reading fast enough
+                    # [OR]
+                    # The monitor produces new metrics faster than the queue’s fixed maxsize of 10 can be consumed
                     for q in list(self._ws_subscribers):
                         try:
                             q.put_nowait(result)

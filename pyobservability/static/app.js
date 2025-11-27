@@ -270,6 +270,20 @@
     }
   }
 
+  function objectToString(...vals) {
+    for (const v of vals) {
+      if (v !== undefined && v !== null) {
+        if (typeof v === "object") {
+          return Object.entries(v)
+            .map(([k, val]) => `${k}: ${val}`)
+            .join("<br>");
+        }
+        return String(v);
+      }
+    }
+    return "—";
+  }
+
   // ------------------------------------------------------------
   // METRICS HANDLER
   // ------------------------------------------------------------
@@ -414,7 +428,7 @@
       if (Array.isArray(services)) {
         const filter = svcFilter.value.trim().toLowerCase();
         for (const s of services) {
-          const name = s.Name || "";
+          const name = s.pname || s.Name || "";
 
           if (filter && !name.toLowerCase().includes(filter)) continue;
 
@@ -423,9 +437,8 @@
             <td>${s.PID ?? ""}</td>
             <td>${name}</td>
             <td>${s.Status ?? s.status ?? "—"}</td>
-            <td>${s.CPU ?? s.cpu ?? "—"}</td>
-            <td>${s.Memory ?? s.memory ?? "—"}</td>
-            <td>${s.Uptime ?? s.uptime ?? "—"}</td>
+            <td>${objectToString(s.CPU, s.cpu)}</td>
+            <td>${objectToString(s.Memory, s.memory)}</td>
             <td>${s.Threads ?? s.threads ?? "—"}</td>
             <td>${s["Open Files"] ?? s.open_files ?? "—"}</td>
           `;
