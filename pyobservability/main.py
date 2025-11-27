@@ -81,4 +81,8 @@ def start(**kwargs):
         port=settings.env.port,
         app=PyObservability,
     )
+    if settings.env.log_config:
+        uvicorn_args["log_config"] = (
+            settings.env.log_config if isinstance(settings.env.log_config, dict) else str(settings.env.log_config)
+        )
     uvicorn.run(**uvicorn_args)

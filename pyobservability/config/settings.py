@@ -2,12 +2,38 @@ import json
 import os
 import pathlib
 import socket
-from typing import List
+from typing import Any, Dict, List
 
 import yaml
-from pydantic import BaseModel, Field, HttpUrl, PositiveInt
+from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt
 from pydantic.aliases import AliasChoices
 from pydantic_settings import BaseSettings
+
+
+def detailed_log_config() -> Dict[str, Any]:
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "default": {
+                "format": "%(asctime)s - %(levelname)s - [%(module)s:%(lineno)d] - %(funcName)s - %(message)s",
+                "datefmt": "%b-%d-%Y %I:%M:%S %p",
+            }
+        },
+        "handlers": {
+            "default": {
+                "class": "logging.StreamHandler",
+                "formatter": "default",
+                "stream": "ext://sys.stdout",
+            }
+        },
+        "loggers": {
+            "uvicorn": {"handlers": ["default"], "level": "INFO"},
+            "uvicorn.error": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
+        },
+        "root": {"handlers": ["default"], "level": "INFO"},
+    }
 
 
 class PydanticEnvConfig(BaseSettings):
@@ -62,6 +88,8 @@ class EnvConfig(PydanticEnvConfig):
 
     targets: List[MonitorTarget] = Field(..., validation_alias=alias_choices("TARGETS"))
     interval: PositiveInt = Field(3, validation_alias=alias_choices("INTERVAL"))
+
+    log_config: Dict[str, Any] | FilePath | None = None
 
     username: str | None = Field(None, validation_alias=alias_choices("USERNAME"))
     password: str | None = Field(None, validation_alias=alias_choices("PASSWORD"))
