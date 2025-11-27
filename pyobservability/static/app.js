@@ -6,6 +6,7 @@
   const MAX_POINTS = 60;
   const targets = window.MONITOR_TARGETS || [];
   const DEFAULT_PAGE_SIZE = 15;
+  const panelSpinners = {};
 
   // ------------------------------------------------------------
   // VISUAL SPINNERS (ADDED)
@@ -13,10 +14,12 @@
   function attachSpinners() {
     document.querySelectorAll(".panel").forEach(box => {
       const overlay = document.createElement("div");
-      overlay.className = "loading-overlay";
+      overlay.className = "loading-overlay hidden";  // start hidden
       overlay.innerHTML = `<div class="spinner"></div>`;
       box.style.position = "relative";
       box.appendChild(overlay);
+      panelSpinners[box.id || box.querySelector('table,canvas')?.id || Symbol()] = overlay;
+      // Using panel id or child element id (table or canvas) or fallback symbol as key
     });
   }
 
@@ -313,6 +316,16 @@
   // ------------------------------------------------------------
   // RESET UI
   // ------------------------------------------------------------
+  function resetTables() {
+    // Clear all table data immediately
+    PAG_SERVICES.setData([], []);
+    PAG_PROCESSES.setData([], []);
+    PAG_DOCKER.setData([], []);
+    PAG_DISKS.setData([], []);
+    PAG_PYUDISK.setData([], []);
+    PAG_CERTS.setData([], []);
+  }
+
   function resetUI() {
     firstMessage = true;
     hideSpinners();
@@ -374,6 +387,16 @@
     }
     return "—";
   };
+
+  function showSpinner(panelOrTableId) {
+    const overlay = panelSpinners[panelOrTableId];
+    if (overlay) overlay.classList.remove("hidden");
+  }
+
+  function hideSpinner(panelOrTableId) {
+    const overlay = panelSpinners[panelOrTableId];
+    if (overlay) overlay.classList.add("hidden");
+  }
 
   // ------------------------------------------------------------
   // HANDLE METRICS
@@ -472,6 +495,7 @@
           "Open Files": s["Open Files"] ?? s.open_files ?? "—"
         }));
         PAG_SERVICES.setData(cleaned, columns);
+        hideSpinner("services-table");
       }
 
       // ------------ PROCESSES (paginated) ------------
@@ -483,27 +507,32 @@
       if (processes.length) {
         const columns = ["PID","Name","Status","CPU","Memory","Uptime","Threads","Open Files"];
         PAG_PROCESSES.setData(processes, columns);
+        hideSpinner("processes-table");
       }
 
       // ------------ DOCKER, DISKS, PYUDISK, CERTIFICATES ------------
       if (m.docker_stats) {
         const cols = Object.keys(m.docker_stats[0] || {});
         PAG_DOCKER.setData(m.docker_stats, cols);
+        hideSpinner("docker-table");
       }
 
       if (m.disks_info) {
         const cols = Object.keys(m.disks_info[0] || {});
         PAG_DISKS.setData(m.disks_info, cols);
+        hideSpinner("disks-table");
       }
 
       if (m.pyudisk_stats) {
         const cols = Object.keys(m.pyudisk_stats[0] || {});
         PAG_PYUDISK.setData(m.pyudisk_stats, cols);
+        hideSpinner("pyudisk-table");
       }
 
       if (m.certificates) {
         const cols = Object.keys(m.certificates[0] || {});
         PAG_CERTS.setData(m.certificates, cols);
+        hideSpinner("certificates-table");
       }
     }
   }
@@ -524,6 +553,18 @@
   nodeSelect.addEventListener("change", () => {
     selectedBase = nodeSelect.value;
     resetUI();
+
+    // Reset tables immediately
+    resetTables();
+
+    // Show spinner overlays on all panels containing tables
+    showSpinner("services-table");
+    showSpinner("processes-table");
+    showSpinner("docker-table");
+    showSpinner("disks-table");
+    showSpinner("pyudisk-table");
+    showSpinner("certificates-table");
+
     ws.send(JSON.stringify({ type: "select_target", base_url: selectedBase }));
   });
 
