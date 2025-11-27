@@ -2,6 +2,7 @@ import logging
 import pathlib
 import warnings
 
+import time
 import uiauth
 import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -47,7 +48,11 @@ async def websocket_endpoint(websocket: WebSocket):
     q = monitor.subscribe()
     try:
         while True:
+            start = time.time()
             payload = await q.get()
+            end = time.time()
+            nodes = [d['name'] for d in payload["data"]]
+            LOGGER.debug("Payload generated in %s - %d %s", end - start, len(nodes), nodes)
             # send as JSON text
             await websocket.send_json(payload)
     except WebSocketDisconnect:
