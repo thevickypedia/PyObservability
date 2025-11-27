@@ -18,7 +18,6 @@ async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue):
 
 async def websocket_endpoint(websocket: WebSocket):
     # TODO:
-    #   monitor.py - if host is unreachable (log it) for more than 3 times show error in UI
     #   UI - show spinner on each box until data is received
     #   All tables should have pages with a dedicated max items per page
     await websocket.accept()

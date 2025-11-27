@@ -130,9 +130,10 @@ class Monitor:
                         for q in list(self._ws_subscribers):
                             try:
                                 q.put_nowait(error_msg)
-                            except asyncio.QueueFull:
-                                pass
-
+                            except asyncio.QueueFull as warn:
+                                LOGGER.warning(warn)
+                                _ = q.get_nowait()
+                                q.put_nowait(result)
                         await self.stop()
                         return
                 else:
