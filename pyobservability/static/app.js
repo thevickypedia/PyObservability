@@ -507,6 +507,7 @@
   nodeSelect.addEventListener("change", () => {
     selectedBase = nodeSelect.value;
     resetUI();
+    ws.send(JSON.stringify({ type: "select_target", base_url: selectedBase }));
   });
 
   refreshBtn.addEventListener("click", resetUI);
@@ -523,6 +524,10 @@
   // ------------------------------------------------------------
   const protocol = location.protocol === "https:" ? "wss" : "ws";
   const ws = new WebSocket(`${protocol}://${location.host}/ws`);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: "select_target", base_url: selectedBase }));
+  };
 
   ws.onmessage = evt => {
     try {

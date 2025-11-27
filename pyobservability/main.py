@@ -1,8 +1,9 @@
+import asyncio
+import json
 import logging
 import pathlib
 import warnings
 
-import time
 import uiauth
 import uvicorn
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -36,34 +37,62 @@ async def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "targets": settings.env.targets})
 
 
-async def websocket_endpoint(websocket: WebSocket):
-    """Websocket endpoint to render the metrics.
+async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue):
+    while True:
+        payload = await q.get()
+        await websocket.send_json(payload)
 
-    Args:
-        websocket: FastAPI websocket object.
-    """
-    monitor = Monitor(targets=settings.env.targets, poll_interval=settings.env.interval)
+
+async def websocket_endpoint(websocket: WebSocket):
+    # TODO:
+    #   monitor.py - if host is unreachable (log it) for more than 3 times show error in UI
+    #   UI - show spinner on each box until data is received
+    #   All tables should have pages with a dedicated max items per page
     await websocket.accept()
-    await monitor.start()
-    q = monitor.subscribe()
+
+    monitor: Monitor | None = None
+    q: asyncio.Queue | None = None
+
     try:
         while True:
-            start = time.time()
-            payload = await q.get()
-            end = time.time()
-            nodes = [d['name'] for d in payload["data"]]
-            LOGGER.debug("Payload generated in %s - %d %s", end - start, len(nodes), nodes)
-            # send as JSON text
-            await websocket.send_json(payload)
+            msg = await websocket.receive_text()
+            data = json.loads(msg)
+
+            # -------------------------------------------
+            # UI requests a specific target to monitor
+            # -------------------------------------------
+            if data.get("type") == "select_target":
+                base_url = data["base_url"]
+
+                # stop old monitor
+                if monitor:
+                    monitor.unsubscribe(q)
+                    await monitor.stop()
+
+                target = None
+                for t in settings.env.targets:
+                    if t["base_url"] == base_url:
+                        target = t
+
+                # create new monitor
+                monitor = Monitor(base_url=base_url, apikey=target["apikey"], poll_interval=settings.env.interval)
+                await monitor.start()
+
+                # new subscription queue
+                q = monitor.subscribe()
+
+                # start forwarding metrics
+                asyncio.create_task(_forward_metrics(websocket, q))
     except WebSocketDisconnect:
-        monitor.unsubscribe(q)
-    except Exception:
-        monitor.unsubscribe(q)
-        try:
-            await websocket.close()
-        except Exception as err:
-            LOGGER.warning(err)
-    await monitor.stop()
+        pass
+    except Exception as err:
+        LOGGER.error("WS error: %s", err)
+
+    # cleanup
+    if monitor:
+        if q:
+            monitor.unsubscribe(q)
+        await monitor.stop()
 
 
 def include_routes():
