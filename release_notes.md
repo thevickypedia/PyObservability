@@ -1,6 +1,26 @@
 Release Notes
 =============
 
+v0.1.0 (11/27/2025)
+-------------------
+- [a6c08cb](https://github.com/thevickypedia/PyObservability/commit/a6c08cbd3c83080dd6a1ae6281c9da41873d707f) chore: Release ``v0.1.0``
+- [5b90baf](https://github.com/thevickypedia/PyObservability/commit/5b90baf4ee3e0bbd54eb693fcc87b61af344f497) chore: Log payload generated time
+- [4ea1e0a](https://github.com/thevickypedia/PyObservability/commit/4ea1e0a3bad0ad3bb340d9e9c48ffdd753b1fbc5) style: Improve service level metrics' display
+- [9fa9c7f](https://github.com/thevickypedia/PyObservability/commit/9fa9c7fdc51336723e52240037a62a5f7e306cf7) feat: Include a reconnect loop around fetch metrics
+- [85e5456](https://github.com/thevickypedia/PyObservability/commit/85e545622529594b885ae24dfc22ffee2cf14b12) perf: Handle streaming response from the server without making redundant API calls
+- [e0f4a46](https://github.com/thevickypedia/PyObservability/commit/e0f4a46d66ed6e82f636c1ac4fafe9d03dec77be) perf: Auto-generate table headers for disks, pyduisk, and certificates
+- [e30d3c5](https://github.com/thevickypedia/PyObservability/commit/e30d3c565190bc375cc6a030bd50663f32750c71) lint: Make linter happy
+- [ea7e4cf](https://github.com/thevickypedia/PyObservability/commit/ea7e4cfeda082364d29ab2af248aa49faad9c548) style: Display certificates' information in a table
+- [6551091](https://github.com/thevickypedia/PyObservability/commit/65510912c1fc50ad24ad93cc744d55a8c41dd544) perf: Create all coroutines in a list and run them concurrently
+- [43d0a86](https://github.com/thevickypedia/PyObservability/commit/43d0a86489c01484e3c526a9a7d93ec7dd3c1767) style: Group individual elements for system, ip, and processor info to one meta tag
+- [f49f7ed](https://github.com/thevickypedia/PyObservability/commit/f49f7edbeab41f93c57121b59dee81c24f335d1f) style: Make all meta cards consistent
+- [82bdaf5](https://github.com/thevickypedia/PyObservability/commit/82bdaf59ec8ea1405ed98269d364bc563c950598) style: Add pretext for CPU and GPU names
+- [b715a75](https://github.com/thevickypedia/PyObservability/commit/b715a757f146261cd47087543e605cb80bbe54b7) style: Avoid cluttering at the top row of the UI
+- [062f19d](https://github.com/thevickypedia/PyObservability/commit/062f19dc23dc115ec3c4aa8f18077c327213814a) refactor: Remove unnecessary ``||`` in disk metrics
+- [4651ac5](https://github.com/thevickypedia/PyObservability/commit/4651ac518f0877667764bb820976b43d950b5916) feat: Update UI to include all information sent by the API
+- [f8f8aea](https://github.com/thevickypedia/PyObservability/commit/f8f8aea1e181a9be65c1f8b179529d794423f347) refactor: Simplify individual API calls with a single entrypoint to get system resources as a ``StreamingResponse``
+- [045fb48](https://github.com/thevickypedia/PyObservability/commit/045fb4859dcb9994cbe4ab2aa07b87089a2f1e93) chore: Update release notes for v0.0.3
+
 v0.0.3 (11/25/2025)
 -------------------
 - [24a15bf](https://github.com/thevickypedia/PyObservability/commit/24a15bfd9bee2cfa5024997a66c2d3e2d1b20eb7) chore: Release ``v0.0.3``
