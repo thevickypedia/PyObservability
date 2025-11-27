@@ -533,6 +533,7 @@
     try {
       const msg = JSON.parse(evt.data);
       if (msg.type === "metrics") handleMetrics(msg.data);
+      if (msg.type === "error") alert(msg.message);
     } catch (err) {
       console.error("WS parse error:", err);
     }

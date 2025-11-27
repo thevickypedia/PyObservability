@@ -2,19 +2,21 @@ import asyncio
 import json
 import logging
 from asyncio import CancelledError
-from typing import Optional
+from typing import Dict
 
 import aiohttp
+
+from pyobservability.config import settings
 
 LOGGER = logging.getLogger("uvicorn.default")
 OBS_PATH = "/observability"
 
 
 class Monitor:
-    def __init__(self, base_url: str, poll_interval: float, apikey: Optional[str] = None):
-        self.base_url = base_url
-        self.apikey = apikey
-        self.poll_interval = poll_interval
+    def __init__(self, target: Dict[str, str]):
+        self.name = target["name"]
+        self.base_url = target["base_url"]
+        self.apikey = target["apikey"]
 
         self.session: aiohttp.ClientSession | None = None
         self._task: asyncio.Task | None = None
@@ -64,12 +66,12 @@ class Monitor:
     # FETCH STREAM
     # ------------------------------
     async def _fetch_stream(self):
-        url = self.base_url.rstrip("/") + OBS_PATH + f"?interval={self.poll_interval}"
-        headers = {"accept": "application/json"}
-        if self.apikey:
-            headers["Authorization"] = f"Bearer {self.apikey}"
+        url = self.base_url.rstrip("/") + OBS_PATH + f"?interval={settings.env.interval}"
+        headers = {"Accept": "application/json", "Authorization": f"Bearer {self.apikey}"}
 
-        async with self.session.get(url, headers=headers, timeout=None) as resp:
+        async with self.session.get(
+            url, headers=headers, timeout=aiohttp.ClientTimeout(total=None, connect=3, sock_read=None, sock_connect=3)
+        ) as resp:
             if resp.status != 200:
                 LOGGER.error("Bad response [%d] from %s", resp.status, url)
                 return
@@ -88,6 +90,7 @@ class Monitor:
     # STREAM LOOP
     # ------------------------------
     async def _stream_target(self):
+        errors = {}
         while not self._stop.is_set():
             try:
                 async for payload in self._fetch_stream():
@@ -111,5 +114,28 @@ class Monitor:
                             q.put_nowait(result)
             except Exception as err:
                 LOGGER.debug("Stream error for %s: %s", self.base_url, err)
+                if errors.get(self.base_url):
+                    if errors[self.base_url] < 10:
+                        errors[self.base_url] += 1
+                    else:
+                        LOGGER.error("%s exceeded error threshold.", self.base_url)
+
+                        # notify subscribers before stopping
+                        error_msg = {
+                            "type": "error",
+                            "base_url": self.base_url,
+                            "message": f"{self.name!r} is unreachable.",
+                        }
+
+                        for q in list(self._ws_subscribers):
+                            try:
+                                q.put_nowait(error_msg)
+                            except asyncio.QueueFull:
+                                pass
+
+                        await self.stop()
+                        return
+                else:
+                    errors[self.base_url] = 1
 
             await asyncio.sleep(1)
