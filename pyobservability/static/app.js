@@ -9,18 +9,32 @@
   const panelSpinners = {};
 
   // ------------------------------------------------------------
-  // VISUAL SPINNERS (ADDED)
+  // VISUAL SPINNERS
   // ------------------------------------------------------------
   function attachSpinners() {
+    // panels (charts/tables)
     document.querySelectorAll(".panel").forEach(box => {
       const overlay = document.createElement("div");
-      overlay.className = "loading-overlay hidden";  // start hidden
+      overlay.className = "loading-overlay";
       overlay.innerHTML = `<div class="spinner"></div>`;
       box.style.position = "relative";
       box.appendChild(overlay);
       panelSpinners[box.id || box.querySelector('table,canvas')?.id || Symbol()] = overlay;
-      // Using panel id or child element id (table or canvas) or fallback symbol as key
     });
+
+    // meta cards (system/static metrics)
+    document.querySelectorAll(".meta-card").forEach(card => {
+      const overlay = document.createElement("div");
+      overlay.className = "loading-overlay";
+      overlay.innerHTML = `<div class="spinner"></div>`;
+      card.style.position = "relative";
+      card.appendChild(overlay);
+      panelSpinners[card.querySelector(".meta-value")?.id || Symbol()] = overlay;
+    });
+  }
+
+  function showAllSpinners() {
+    Object.keys(panelSpinners).forEach(id => showSpinner(id));
   }
 
   function hideSpinners() {
@@ -291,6 +305,14 @@
     `;
     coresGrid.appendChild(wrapper);
 
+    // Spinner for per-core chart
+    const overlay = document.createElement("div");
+    overlay.className = "loading-overlay";
+    overlay.innerHTML = `<div class="spinner"></div>`;
+    wrapper.style.position = "relative";
+    wrapper.appendChild(overlay);
+    panelSpinners[coreName] = overlay;
+
     const canvas = wrapper.querySelector("canvas");
     const valEl = wrapper.querySelector(".value");
     const chart = makeCoreSparkline(canvas.getContext("2d"), coreName);
@@ -456,15 +478,18 @@
         pruneOldCores(values.map((_,i)=>"cpu"+(i+1)));
 
         values.forEach((v,i)=>{
-          const core = getCoreChart("cpu"+(i+1));
+          const coreName = "cpu"+(i+1);
+          const core = getCoreChart(coreName);
+
           core.chart.data.labels.push(now);
           core.chart.data.datasets[0].data.push(v||0);
           if (core.chart.data.labels.length > MAX_POINTS) {
             core.chart.data.labels.shift();
             core.chart.data.datasets[0].data.shift();
           }
-          core.chart.update("none");
+          core.chart.update({ lazy: true });
           core.valEl.textContent = `${(v||0).toFixed(1)}%`;
+          hideSpinner(coreName);  // hide spinner once first value arrives
         });
       }
       if (avg != null) pushPoint(cpuAvgChart, avg);
@@ -553,18 +578,8 @@
   nodeSelect.addEventListener("change", () => {
     selectedBase = nodeSelect.value;
     resetUI();
-
-    // Reset tables immediately
     resetTables();
-
-    // Show spinner overlays on all panels containing tables
-    showSpinner("services-table");
-    showSpinner("processes-table");
-    showSpinner("docker-table");
-    showSpinner("disks-table");
-    showSpinner("pyudisk-table");
-    showSpinner("certificates-table");
-
+    showAllSpinners();
     ws.send(JSON.stringify({ type: "select_target", base_url: selectedBase }));
   });
 
@@ -599,6 +614,6 @@
   // INIT
   // ------------------------------------------------------------
   attachSpinners();
-  document.querySelectorAll(".meta-card .loading-overlay")?.forEach(x => x.remove());
-  resetUI();
+  resetUI();           // reset UI, keep spinners visible
+  showAllSpinners();   // show spinners until first metrics arrive
 })();
