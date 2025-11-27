@@ -305,14 +305,6 @@
     `;
     coresGrid.appendChild(wrapper);
 
-    // Spinner for per-core chart
-    const overlay = document.createElement("div");
-    overlay.className = "loading-overlay";
-    overlay.innerHTML = `<div class="spinner"></div>`;
-    wrapper.style.position = "relative";
-    wrapper.appendChild(overlay);
-    panelSpinners[coreName] = overlay;
-
     const canvas = wrapper.querySelector("canvas");
     const valEl = wrapper.querySelector(".value");
     const chart = makeCoreSparkline(canvas.getContext("2d"), coreName);
@@ -478,8 +470,7 @@
         pruneOldCores(values.map((_,i)=>"cpu"+(i+1)));
 
         values.forEach((v,i)=>{
-          const coreName = "cpu"+(i+1);
-          const core = getCoreChart(coreName);
+          const core = getCoreChart("cpu"+(i+1));
 
           core.chart.data.labels.push(now);
           core.chart.data.datasets[0].data.push(v||0);
@@ -489,7 +480,6 @@
           }
           core.chart.update({ lazy: true });
           core.valEl.textContent = `${(v||0).toFixed(1)}%`;
-          hideSpinner(coreName);  // hide spinner once first value arrives
         });
       }
       if (avg != null) pushPoint(cpuAvgChart, avg);
