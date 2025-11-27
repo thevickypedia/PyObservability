@@ -7,8 +7,12 @@
 }
 
 * { box-sizing: border-box; }
-html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:#e6eef8; }
+html,body {
+  height:100%; margin:0; font-family: Inter, system-ui, -apple-system,
+  "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:#e6eef8;
+}
 
+.hidden { display: none !important; }
 .topbar {
   display:flex; align-items:center; justify-content:space-between;
   padding:12px 20px; background:linear-gradient(90deg,#071028,#0b1530); border-bottom:1px solid rgba(255,255,255,0.02);
@@ -16,16 +20,20 @@ html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system,
 .brand { font-weight:700; font-size:18px; }
 .controls { display:flex; gap:8px; align-items:center; }
 
-.controls select, .controls button { background:var(--panel); color:inherit; border:1px solid rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px; }
+.controls select, .controls button {
+  background:var(--panel); color:inherit; border:1px solid rgba(255,255,255,0.04); padding:6px 8px; border-radius:6px;
+}
 .controls label { font-size:14px; color:var(--muted); margin-right:6px; }
 
 .container { padding:18px; display:flex; flex-direction:column; gap:16px; max-width:1200px; margin:0 auto; }
 
-.meta-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-/* .meta-row { display:flex; gap:12px; } */
-.meta-card { background:var(--panel); padding:12px; border-radius:8px; width:1fr; min-width:120px; flex:1; box-shadow:0 4px 12px rgba(2,6,23,0.6); }
+.meta-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; align-items: stretch; }
+.meta-card {
+  display: flex; flex-direction: column; background:var(--panel); padding:12px; border-radius:8px; width:1fr;
+  min-width:120px; flex:1; box-shadow:0 4px 12px rgba(2,6,23,0.6);
+}
 .meta-title { font-size:12px; color:var(--muted); }
-.meta-value { margin-top:6px; font-weight:600; font-size:16px; }
+.meta-value { flex: 1; margin-top:6px; font-weight:600; font-size:16px; }
 .meta-value.pre { white-space:pre-wrap; font-family:monospace; font-size:13px; }
 
 .charts-row { display:flex; gap:12px; }
@@ -48,7 +56,9 @@ html,body { height:100%; margin:0; font-family: Inter, system-ui, -apple-system,
 .tables-row { display:grid; grid-template-columns:1fr; grid-auto-rows:auto; gap:12px; }
 .table { width:100%; border-collapse:collapse; font-size:13px; }
 .table th, .table td { padding:8px; border-bottom:1px solid rgba(255,255,255,0.03); text-align:left; }
-.pre { background:rgba(255,255,255,0.02); padding:8px; border-radius:6px; overflow:auto; white-space:pre-wrap; font-family:monospace; font-size:13px; }
+.pre {
+  background:rgba(255,255,255,0.02); padding:8px; border-radius:6px; overflow:auto; white-space:pre-wrap; font-family:monospace; font-size:13px;
+}
 .list { padding-left:14px; margin:8px 0; }
 .footer { padding:12px 20px; font-size:12px; color:var(--muted); text-align:center; border-top:1px solid rgba(255,255,255,0.02); margin-top:20px; }
 .service-controls { display:flex; gap:8px; padding-bottom:8px; }
@@ -89,22 +99,10 @@ input#proc-filter { flex:1; padding:6px 8px; background:var(--panel); border:1px
 }
 
 /* --------------- PAGINATION ------------------ */
-.pagination {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px;
-  margin-top: 6px;
-  font-size: 13px;
-}
+.pagination { display: flex; justify-content: center; gap: 6px; padding: 6px; margin-top: 6px; font-size: 13px; }
 
 .pagination button {
-  background: var(--panel);
-  color: inherit;
-  border: 1px solid rgba(255,255,255,0.05);
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
+  background: var(--panel); color: inherit; border: 1px solid rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 4px; cursor: pointer;
 }
 
 .pagination button.active {
@@ -115,19 +113,4 @@ input#proc-filter { flex:1; padding:6px 8px; background:var(--panel); border:1px
   font-size: 13px;
   margin-bottom: 4px;
   opacity: 0.85;
-}
-
-.hidden {
-  display: none !important;
-}
-
-.meta-row {
-  align-items: stretch;
-}
-.meta-card {
-  display: flex;
-  flex-direction: column;
-}
-.meta-value {
-  flex: 1;
 }
