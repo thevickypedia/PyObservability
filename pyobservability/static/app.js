@@ -501,9 +501,9 @@
       if (services.length) {
         const columns = ["PID","Name","Status","CPU","Memory","Threads","Open Files"];
         const cleaned = services.map(s => ({
-          PID: s.PID ?? "",
-          Name: s.pname ?? s.Name ?? "",
-          Status: s.Status ?? s.status ?? "—",
+          PID: s.PID ?? s.pid ?? "",
+          Name: s.pname ?? s.Name ?? s.name ?? "",
+          Status: s.Status ?? s.active ?? s.status ?? s.Active ?? "—",
           CPU: objectToString(s.CPU, s.cpu),
           Memory: objectToString(s.Memory, s.memory),
           Threads: s.Threads ?? s.threads ?? "—",
