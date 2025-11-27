@@ -152,3 +152,4 @@ def env_loader(**kwargs) -> EnvConfig:
 
 
 env: EnvConfig
+targets_by_url: Dict[str, Dict[str, str]]

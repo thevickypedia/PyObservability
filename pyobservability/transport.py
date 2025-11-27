@@ -17,10 +17,7 @@ async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue):
 
 
 async def websocket_endpoint(websocket: WebSocket):
-    # TODO:
-    #   UI - fix missing spinner
-    #   Tables don't reset when node is switched
-    #   Remove processes or add them through PyNinja
+    # TODO: Remove processes or add them through PyNinja
     await websocket.accept()
 
     monitor: Monitor | None = None
@@ -42,14 +39,11 @@ async def websocket_endpoint(websocket: WebSocket):
                     monitor.unsubscribe(q)
                     await monitor.stop()
 
-                for t in settings.env.targets:
-                    if t["base_url"] == base_url:
-                        target = t
-                        break
+                if target := settings.targets_by_url.get(base_url):
+                    LOGGER.info("Gathering metrics for: %s", target["name"])
                 else:
                     LOGGER.warning(f"Invalid base url: {base_url}")
                     raise WebSocketDisconnect(code=400, reason=f"Invalid base url: {base_url}")
-                LOGGER.info("Gathering metrics for: %s", target["name"])
 
                 # create new monitor
                 monitor = Monitor(target)
