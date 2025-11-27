@@ -5,6 +5,26 @@
   // ------------------------------------------------------------
   const MAX_POINTS = 60;
   const targets = window.MONITOR_TARGETS || [];
+  const DEFAULT_PAGE_SIZE = 15;
+
+  // ------------------------------------------------------------
+  // VISUAL SPINNERS (ADDED)
+  // ------------------------------------------------------------
+  function attachSpinners() {
+    document.querySelectorAll(".panel").forEach(box => {
+      const overlay = document.createElement("div");
+      overlay.className = "loading-overlay";
+      overlay.innerHTML = `<div class="spinner"></div>`;
+      box.style.position = "relative";
+      box.appendChild(overlay);
+    });
+  }
+
+  function hideSpinners() {
+    document.querySelectorAll(".loading-overlay").forEach(x => {
+      x.classList.add("hidden");
+    });
+  }
 
   // ------------------------------------------------------------
   // DOM REFERENCES
@@ -26,10 +46,12 @@
 
   const coresGrid = document.getElementById("cores-grid");
 
+  const servicesTable = document.getElementById("services-table");
   const servicesTableBody = document.querySelector("#services-table tbody");
   const svcFilter = document.getElementById("svc-filter");
 
-  const processesTableBody = document.querySelector("#processes-table tbody");
+  const processesTable = document.getElementById("processes-table");
+  const processesTableBody = processesTable.querySelector("tbody");
   const procFilter = document.getElementById("proc-filter");
 
   const dockerTable = document.getElementById("docker-table");
@@ -37,18 +59,155 @@
   const dockerTableBody = dockerTable.querySelector("tbody");
 
   const disksTable = document.getElementById("disks-table");
-  const disksTableHead = disksTable.querySelector("thead")
+  const disksTableHead = disksTable.querySelector("thead");
   const disksTableBody = disksTable.querySelector("tbody");
 
-  const pyudiskTable = document.getElementById("pyudisk-table")
-  const pyudiskTableHead = pyudiskTable.querySelector("thead")
-  const pyudiskTableBody = pyudiskTable.querySelector("tbody")
+  const pyudiskTable = document.getElementById("pyudisk-table");
+  const pyudiskTableHead = pyudiskTable.querySelector("thead");
+  const pyudiskTableBody = pyudiskTable.querySelector("tbody");
 
-  const certsTable = document.getElementById("certificates-table")
+  const certsTable = document.getElementById("certificates-table");
   const certsTableHead = certsTable.querySelector("thead");
   const certsTableBody = certsTable.querySelector("tbody");
 
   const showCoresCheckbox = document.getElementById("show-cores");
+
+  // ------------------------------------------------------------
+  // PAGINATION HELPERS
+  // ------------------------------------------------------------
+  function createPaginatedTable(tableEl, headEl, bodyEl, pageSize = DEFAULT_PAGE_SIZE) {
+    const info = document.createElement("div");
+    info.className = "pagination-info";
+    tableEl.insertAdjacentElement("beforebegin", info);
+
+    const state = {
+      data: [],
+      page: 1,
+      pageSize
+    };
+
+    const pagination = document.createElement("div");
+    pagination.className = "pagination";
+    tableEl.insertAdjacentElement("afterend", pagination);
+
+    function render() {
+      const rows = state.data;
+      const pages = Math.ceil(rows.length / state.pageSize) || 1;
+      state.page = Math.max(1, Math.min(state.page, pages));
+
+      const start = (state.page - 1) * state.pageSize;
+      const chunk = rows.slice(start, start + state.pageSize);
+
+      info.textContent =
+        `Showing ${start + 1} to ${Math.min(start + state.pageSize, rows.length)} of ${rows.length} entries`;
+
+      bodyEl.innerHTML = "";
+      chunk.forEach(r => bodyEl.insertAdjacentHTML("beforeend", r));
+
+      renderPagination(pages);
+    }
+
+    function renderPagination(pages) {
+      pagination.innerHTML = "";
+
+      const makeBtn = (txt, cb, active = false, disabled = false) => {
+        const b = document.createElement("button");
+        b.textContent = txt;
+        if (active) b.classList.add("active");
+        if (disabled) {
+          b.disabled = true;
+          b.style.opacity = "0.5";
+          b.style.cursor = "default";
+        }
+        b.onclick = disabled ? null : cb;
+        pagination.appendChild(b);
+      };
+
+      // --- Previous ---
+      makeBtn("Previous", () => { state.page--; render(); }, false, state.page === 1);
+
+      const maxVisible = 5;
+
+      if (pages <= maxVisible + 2) {
+        // Show all
+        for (let p = 1; p <= pages; p++) {
+          makeBtn(p, () => { state.page = p; render(); }, p === state.page);
+        }
+      } else {
+        // Big list → use ellipsis
+        const showLeft = 3;
+        const showRight = 3;
+
+        if (state.page <= showLeft) {
+          // First pages
+          for (let p = 1; p <= showLeft + 1; p++) {
+            makeBtn(p, () => { state.page = p; render(); }, p === state.page);
+          }
+          addEllipsis();
+          makeBtn(pages, () => { state.page = pages; render(); });
+        } else if (state.page >= pages - showRight + 1) {
+          // Last pages
+          makeBtn(1, () => { state.page = 1; render(); });
+          addEllipsis();
+          for (let p = pages - showRight; p <= pages; p++) {
+            makeBtn(p, () => { state.page = p; render(); }, p === state.page);
+          }
+        } else {
+          // Middle
+          makeBtn(1, () => { state.page = 1; render(); });
+          addEllipsis();
+          for (let p = state.page - 1; p <= state.page + 1; p++) {
+            makeBtn(p, () => { state.page = p; render(); }, p === state.page);
+          }
+          addEllipsis();
+          makeBtn(pages, () => { state.page = pages; render(); });
+        }
+      }
+
+      // --- Next ---
+      makeBtn("Next", () => { state.page++; render(); }, false, state.page === pages);
+
+      function addEllipsis() {
+        const e = document.createElement("span");
+        e.textContent = "…";
+        e.style.padding = "4px 6px";
+        pagination.appendChild(e);
+      }
+    }
+
+    function setData(arr, columns) {
+      if (JSON.stringify(state.data) === JSON.stringify(arr)) {
+        return; // do not re-render if data didn't change
+      }
+      headEl.innerHTML = "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
+      state.data = arr.map(row => {
+        return "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>";
+      });
+      render();
+    }
+
+    return { setData };
+  }
+
+  // Instances for each table
+  const PAG_SERVICES = createPaginatedTable(
+    servicesTable, servicesTable.querySelector("thead"), servicesTableBody, 5
+  );
+  const PAG_PROCESSES = createPaginatedTable(
+    processesTable, processesTable.querySelector("thead"), processesTableBody
+  );
+  const PAG_DOCKER = createPaginatedTable(
+    dockerTable, dockerTableHead, dockerTableBody
+  );
+  const PAG_DISKS = createPaginatedTable(
+    disksTable, disksTableHead, disksTableBody
+  );
+  const PAG_PYUDISK = createPaginatedTable(
+    pyudiskTable, pyudiskTableHead, pyudiskTableBody
+  );
+  const PAG_CERTS = createPaginatedTable(
+    certsTable, certsTableHead, certsTableBody
+  );
 
   // ------------------------------------------------------------
   // CHART HELPERS
@@ -73,20 +232,9 @@
         ]
       },
       options: {
-        animation: false,
-        responsive: true,
-        maintainAspectRatio: false,
-        spanGaps: false,
-        scales: {
-          x: { display: false },
-          y: {
-            beginAtZero: true,
-            suggestedMax: 100
-          }
-        },
-        plugins: {
-          legend: { display: false }
-        }
+        animation: false, responsive: true, maintainAspectRatio: false,
+        scales: { x: { display: false }, y: { beginAtZero: true, suggestedMax: 100 }},
+        plugins: { legend: { display: false } }
       }
     });
   }
@@ -112,7 +260,6 @@
         responsive: false,
         interaction: false,
         events: [],
-        spanGaps: false,
         plugins: { legend: { display: false } },
         scales: {
           x: { display: false },
@@ -123,11 +270,11 @@
   }
 
   const cpuAvgChart = makeMainChart(cpuAvgCtx, "CPU Avg");
-  const memChart    = makeMainChart(memCtx,    "Memory %");
-  const loadChart   = makeMainChart(loadCtx,   "CPU Load");
+  const memChart    = makeMainChart(memCtx, "Memory %");
+  const loadChart   = makeMainChart(loadCtx, "CPU Load");
 
   // ------------------------------------------------------------
-  // CORE SPARKLINE STATE
+  // CORE CHARTS
   // ------------------------------------------------------------
   const coreMini = {};
 
@@ -167,134 +314,85 @@
   // RESET UI
   // ------------------------------------------------------------
   function resetUI() {
-    // Pre-fill charts with right-anchored null buffers
+    firstMessage = true;
+    hideSpinners();
     const EMPTY_DATA = Array(MAX_POINTS).fill(null);
     const EMPTY_LABELS = Array(MAX_POINTS).fill("");
 
-    function resetChart(chart) {
+    const resetChart = chart => {
       chart.data.labels = [...EMPTY_LABELS];
       chart.data.datasets[0].data = [...EMPTY_DATA];
       chart.update();
-    }
+    };
 
-    // Reset main charts (CPU Avg, Memory %, CPU Load)
     resetChart(cpuAvgChart);
     resetChart(memChart);
     resetChart(loadChart);
 
-    // Remove all per-core mini charts
     for (const name of Object.keys(coreMini)) {
       try { coreMini[name].chart.destroy(); } catch {}
       coreMini[name].el.remove();
       delete coreMini[name];
     }
 
-    // Reset static UI fields
     systemEl.textContent = "-";
     ipEl.textContent = "—";
     processorEl.textContent = "—";
     memEl.textContent = "—";
     diskEl.textContent = "—";
     loadEl.textContent = "—";
-
-    servicesTableBody.innerHTML = "";
-    processesTableBody.innerHTML = "";
-
-    dockerTableHead.innerHTML = "";
-    dockerTableBody.innerHTML = "";
-
-    disksTableHead.innerHTML = "";
-    disksTableBody.innerHTML = "";
-
-    pyudiskTableHead.innerHTML = "";
-    pyudiskTableBody.innerHTML = "";
-
-    certsTableHead.innerHTML = "";
-    certsTableBody.innerHTML = "";
   }
 
   // ------------------------------------------------------------
-  // HELPERS
+  // MISC HELPERS
   // ------------------------------------------------------------
   function pushPoint(chart, value) {
     const ts = new Date().toLocaleTimeString();
     chart.data.labels.push(ts);
     chart.data.datasets[0].data.push(isFinite(value) ? Number(value) : NaN);
-
     if (chart.data.labels.length > MAX_POINTS) {
       chart.data.labels.shift();
       chart.data.datasets[0].data.shift();
     }
-
     chart.update("none");
   }
 
-  function num(x) {
-    const n = Number(x);
-    return Number.isFinite(n) ? n : null;
-  }
-
-  function round2(x) {
-    const n = Number(x);
-    return Number.isFinite(n) ? n.toFixed(2) : "—";
-  }
-
-  function formatBytes(x) {
+  function num(x) { const n = Number(x); return Number.isFinite(n) ? n : null; }
+  const round2 = x => Number(x).toFixed(2);
+  const formatBytes = x => {
     if (x == null) return "—";
-    const units = ["B","KB","MB","GB","TB"];
-    let i = 0;
-    let n = Number(x);
-    while (n > 1024 && i < units.length-1) {
-      n /= 1024;
-      i++;
-    }
-    return n.toFixed(2) + " " + units[i];
-  }
-
-  function tableConstructor(dataList, tableHead, tableBody) {
-    tableHead.innerHTML = "";
-    tableBody.innerHTML = "";
-
-    if (!Array.isArray(dataList) || dataList.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="10">NO DATA</td></tr>`;
-    } else {
-      const columns = Object.keys(dataList[0]);
-      tableHead.innerHTML =
-        "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
-      dataList.forEach(c => {
-        const row = "<tr>" +
-          columns.map(col => `<td>${c[col] ?? ""}</td>`).join("") +
-          "</tr>";
-        tableBody.insertAdjacentHTML("beforeend", row);
-      });
-    }
-  }
-
-  function objectToString(...vals) {
+    const u = ["B","KB","MB","GB","TB"];
+    let i = 0, n = Number(x);
+    while (n > 1024 && i < u.length-1) { n/=1024; i++; }
+    return n.toFixed(2) + " " + u[i];
+  };
+  const objectToString = (...vals) => {
     for (const v of vals) {
-      if (v !== undefined && v !== null) {
-        if (typeof v === "object") {
-          return Object.entries(v)
-            .map(([k, val]) => `${k}: ${val}`)
-            .join("<br>");
-        }
-        return String(v);
-      }
+      if (v && typeof v === "object")
+        return Object.entries(v).map(([a,b])=>`${a}: ${b}`).join("<br>");
+      if (v != null) return v;
     }
     return "—";
-  }
+  };
 
   // ------------------------------------------------------------
-  // METRICS HANDLER
+  // HANDLE METRICS
   // ------------------------------------------------------------
+  let firstMessage = true;
+
   function handleMetrics(list) {
+    if (firstMessage) {
+      hideSpinners();
+      firstMessage = false;
+    }
+
     const now = new Date().toLocaleTimeString();
 
     for (const host of list) {
       if (host.base_url !== selectedBase) continue;
       const m = host.metrics || {};
 
-      // ------------------- System -------------------
+      // ------------ Static fields ------------
       systemEl.textContent =
         `Node: ${m.node || "-"}\n` +
         `OS: ${m.system || "-"}\n` +
@@ -302,191 +400,111 @@
         `CPU Cores: ${m.cores || "-"}\n` +
         `Up Time: ${m.uptime || "-"}\n`;
 
-      // ------------------- IP -------------------
-      if (m.ip_info) {
+      if (m.ip_info)
         ipEl.textContent =
           `Private: ${m.ip_info.private || "-"}\n\n` +
           `Public: ${m.ip_info.public || "-"}`;
-      } else {
-        ipEl.textContent = "-";
-      }
 
-      // ------------------- CPU / GPU -------------------
       processorEl.textContent =
         `CPU: ${m.cpu_name || "-"}\n\n` +
         `GPU: ${m.gpu_name || "-"}`;
 
-      // ------------------- DISKS (OLD “disk” card) -------------------
-      if (Array.isArray(m.disk_info) && m.disk_info.length > 0) {
+      if (m.disk_info && m.disk_info[0]) {
         const d = m.disk_info[0];
         diskEl.textContent =
           `Total: ${formatBytes(d.total)}\n` +
           `Used: ${formatBytes(d.used)}\n` +
           `Free: ${formatBytes(d.free)}`;
-      } else if (m.disk) {
-        diskEl.textContent =
-          `Total: ${m.disk.total}\nUsed: ${m.disk.used}\nFree: ${m.disk.free}`;
-      } else {
-        diskEl.textContent = "NO DATA";
       }
 
-      // ------------------- MEMORY -------------------
       if (m.memory_info) {
-        const total = formatBytes(m.memory_info.total);
-        const used  = formatBytes(m.memory_info.used);
-        const percent = round2(m.memory_info.percent);
-
-        memEl.textContent = `Total: ${total}\nUsed: ${used}\nPercent: ${percent}%`;
+        memEl.textContent =
+          `Total: ${formatBytes(m.memory_info.total)}\n` +
+          `Used: ${formatBytes(m.memory_info.used)}\n` +
+          `Percent: ${round2(m.memory_info.percent)}%`;
         pushPoint(memChart, num(m.memory_info.percent));
-
-      } else if (m.memory) {
-        // fallback to old
-        const used = m.memory.ram_used || "";
-        const percent = m.memory.ram_usage ?? m.memory.percent ?? "—";
-        const totalMem = m.memory.ram_total ?? m.memory.total ?? "—";
-        memEl.textContent = `Total: ${totalMem}\nUsed: ${used}\nPercent: ${percent}%`;
-        pushPoint(memChart, num(percent));
-      } else {
-        memEl.textContent = "NO DATA";
       }
 
-      // ------------------- CPU (NEW — cpu_usage[]) -------------------
+      // ------------ CPU ------------
       let avg = null;
-
-      if (Array.isArray(m.cpu_usage)) {
+      if (m.cpu_usage) {
         const values = m.cpu_usage.map(num);
-        avg = values.reduce((a, b) => a + (b ?? 0), 0) / values.length;
+        avg = values.reduce((a,b)=>a+(b||0),0) / values.length;
+        pruneOldCores(values.map((_,i)=>"cpu"+(i+1)));
 
-        pruneOldCores(values.map((_, i) => "cpu" + (i + 1)));
-
-        values.forEach((v, i) => {
-          const coreName = "cpu" + (i + 1);
-          const c = getCoreChart(coreName);
-
-          c.chart.data.labels.push(now);
-          c.chart.data.datasets[0].data.push(v ?? 0);
-
-          if (c.chart.data.labels.length > MAX_POINTS) {
-            c.chart.data.labels.shift();
-            c.chart.data.datasets[0].data.shift();
+        values.forEach((v,i)=>{
+          const core = getCoreChart("cpu"+(i+1));
+          core.chart.data.labels.push(now);
+          core.chart.data.datasets[0].data.push(v||0);
+          if (core.chart.data.labels.length > MAX_POINTS) {
+            core.chart.data.labels.shift();
+            core.chart.data.datasets[0].data.shift();
           }
-
-          c.chart.update("none");
-          c.valEl.textContent = `${(v ?? 0).toFixed(1)}%`;
+          core.chart.update("none");
+          core.valEl.textContent = `${(v||0).toFixed(1)}%`;
         });
-
-      } else if (m.cpu) {
-        // fallback to old
-        const detail = m.cpu.detail || m.cpu;
-        if (typeof detail === "object") {
-          const names = Object.keys(detail);
-          pruneOldCores(names);
-
-          const values = [];
-          for (const [core, val] of Object.entries(detail)) {
-            const v = num(val);
-            values.push(v);
-
-            const c = getCoreChart(core);
-            c.chart.data.labels.push(now);
-            c.chart.data.datasets[0].data.push(v ?? 0);
-
-            if (c.chart.data.labels.length > MAX_POINTS) {
-              c.chart.data.labels.shift();
-              c.chart.data.datasets[0].data.shift();
-            }
-
-            c.chart.update("none");
-            c.valEl.textContent = `${(v ?? 0).toFixed(1)}%`;
-          }
-          avg = values.reduce((a, b) => a + (b ?? 0), 0) / values.length;
-        }
       }
-
       if (avg != null) pushPoint(cpuAvgChart, avg);
 
-      // ------------------- CPU LOAD -------------------
+      // ------------ LOAD ------------
       if (m.load_averages) {
         const la = m.load_averages;
         loadEl.textContent =
           `${round2(la.m1)} / ${round2(la.m5)} / ${round2(la.m15)}`;
         pushPoint(loadChart, num(la.m1));
-      } else if (m.cpu_load) {
-        const load = m.cpu_load.detail || m.cpu_load;
-        const m1 = load.m1 ?? load[0];
-        const m5 = load.m5 ?? load[1];
-        const m15 = load.m15 ?? load[2];
-        loadEl.textContent = `${round2(m1)} / ${round2(m5)} / ${round2(m15)}`;
-        pushPoint(loadChart, num(m1));
-      } else {
-        loadEl.textContent = "NO DATA";
       }
 
-      // ------------------- SERVICES (NEW → OLD) -------------------
-      const services = m.service_stats || m.services || [];
-      servicesTableBody.innerHTML = "";
-      if (Array.isArray(services)) {
-        const filter = svcFilter.value.trim().toLowerCase();
-        for (const s of services) {
-          const name = s.pname || s.Name || "";
-
-          if (filter && !name.toLowerCase().includes(filter)) continue;
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${s.PID ?? ""}</td>
-            <td>${name}</td>
-            <td>${s.Status ?? s.status ?? "—"}</td>
-            <td>${objectToString(s.CPU, s.cpu)}</td>
-            <td>${objectToString(s.Memory, s.memory)}</td>
-            <td>${s.Threads ?? s.threads ?? "—"}</td>
-            <td>${s["Open Files"] ?? s.open_files ?? "—"}</td>
-          `;
-          servicesTableBody.appendChild(tr);
-        }
+      // ------------ SERVICES (paginated) ------------
+      const services = (m.service_stats || m.services || []).filter(s =>
+        (s.pname || s.Name || "").toLowerCase().includes(
+          svcFilter.value.trim().toLowerCase()
+        )
+      );
+      if (services.length) {
+        const columns = ["PID","Name","Status","CPU","Memory","Threads","Open Files"];
+        const cleaned = services.map(s => ({
+          PID: s.PID ?? "",
+          Name: s.pname ?? s.Name ?? "",
+          Status: s.Status ?? s.status ?? "—",
+          CPU: objectToString(s.CPU, s.cpu),
+          Memory: objectToString(s.Memory, s.memory),
+          Threads: s.Threads ?? s.threads ?? "—",
+          "Open Files": s["Open Files"] ?? s.open_files ?? "—"
+        }));
+        PAG_SERVICES.setData(cleaned, columns);
       }
 
-      // ------------------- PROCESSES (NEW → OLD) -------------------
-      const processes = m.process_stats || [];
-      processesTableBody.innerHTML = "";
-      if (Array.isArray(processes)) {
-        const filter = procFilter.value.trim().toLowerCase();
-        for (const p of processes) {
-          const name = p.Name || "";
-
-          if (filter && !name.toLowerCase().includes(filter)) continue;
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${p.PID ?? ""}</td>
-            <td>${name}</td>
-            <td>${p.Status ?? p.status ?? "—"}</td>
-            <td>${p.CPU ?? p.cpu ?? "—"}</td>
-            <td>${p.Memory ?? p.memory ?? "—"}</td>
-            <td>${p.Uptime ?? p.uptime ?? "—"}</td>
-            <td>${p.Threads ?? p.threads ?? "—"}</td>
-            <td>${p["Open Files"] ?? p.open_files ?? "—"}</td>
-          `;
-          processesTableBody.appendChild(tr);
-        }
+      // ------------ PROCESSES (paginated) ------------
+      const processes = (m.process_stats || []).filter(p =>
+        (p.Name || "").toLowerCase().includes(
+          procFilter.value.trim().toLowerCase()
+        )
+      );
+      if (processes.length) {
+        const columns = ["PID","Name","Status","CPU","Memory","Uptime","Threads","Open Files"];
+        PAG_PROCESSES.setData(processes, columns);
       }
 
-      // ------------------- DOCKER -------------------
-      const dockerList = m.docker_stats || [];
-      tableConstructor(dockerList, dockerTableHead, dockerTableBody);
+      // ------------ DOCKER, DISKS, PYUDISK, CERTIFICATES ------------
+      if (m.docker_stats) {
+        const cols = Object.keys(m.docker_stats[0] || {});
+        PAG_DOCKER.setData(m.docker_stats, cols);
+      }
 
-      // ------------------- DISKS (Tables) -------------------
-      // TOOD: Remove disk list when pyudisk is available
-      const diskList = m.disks_info || [];
-      tableConstructor(diskList, disksTableHead, disksTableBody);
+      if (m.disks_info) {
+        const cols = Object.keys(m.disks_info[0] || {});
+        PAG_DISKS.setData(m.disks_info, cols);
+      }
 
-      // ------------------- PyUdisk (Tables) -------------------
-      const pyudiskList = m.pyudisk_stats || [];
-      tableConstructor(pyudiskList, pyudiskTableHead, pyudiskTableBody);
+      if (m.pyudisk_stats) {
+        const cols = Object.keys(m.pyudisk_stats[0] || {});
+        PAG_PYUDISK.setData(m.pyudisk_stats, cols);
+      }
 
-      // ------------------- CERTIFICATES -------------------
-      const certsList = m.certificates || [];
-      tableConstructor(certsList, certsTableHead, certsTableBody);
+      if (m.certificates) {
+        const cols = Object.keys(m.certificates[0] || {});
+        PAG_CERTS.setData(m.certificates, cols);
+      }
     }
   }
 
@@ -500,8 +518,7 @@
     nodeSelect.appendChild(opt);
   });
 
-  let selectedBase =
-    nodeSelect.value || (targets[0] && targets[0].base_url);
+  let selectedBase = nodeSelect.value || (targets[0] && targets[0].base_url);
   nodeSelect.value = selectedBase;
 
   nodeSelect.addEventListener("change", () => {
@@ -514,9 +531,7 @@
 
   showCoresCheckbox.addEventListener("change", () => {
     const visible = showCoresCheckbox.checked;
-    Object.values(coreMini).forEach(c => {
-      c.el.style.display = visible ? "block" : "none";
-    });
+    Object.values(coreMini).forEach(c => c.el.style.display = visible ? "block" : "none");
   });
 
   // ------------------------------------------------------------
@@ -542,5 +557,7 @@
   // ------------------------------------------------------------
   // INIT
   // ------------------------------------------------------------
+  attachSpinners();
+  document.querySelectorAll(".meta-card .loading-overlay")?.forEach(x => x.remove());
   resetUI();
 })();
