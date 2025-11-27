@@ -42,10 +42,16 @@ async def websocket_endpoint(websocket: WebSocket):
                     monitor.unsubscribe(q)
                     await monitor.stop()
 
-                target = None
                 for t in settings.env.targets:
                     if t["base_url"] == base_url:
                         target = t
+                        break
+                else:
+                    LOGGER.warning(f"Invalid base url: {base_url}")
+                    raise WebSocketDisconnect(
+                        code=400, reason=f"Invalid base url: {base_url}"
+                    )
+                LOGGER.info("Gathering metrics for: %s", target["name"])
 
                 # create new monitor
                 monitor = Monitor(base_url=base_url, apikey=target["apikey"], poll_interval=settings.env.interval)
