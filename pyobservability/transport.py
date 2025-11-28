@@ -17,7 +17,6 @@ async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue):
 
 
 async def websocket_endpoint(websocket: WebSocket):
-    # TODO: Remove processes or add them through PyNinja
     await websocket.accept()
 
     monitor: Monitor | None = None

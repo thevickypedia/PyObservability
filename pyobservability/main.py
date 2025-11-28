@@ -11,6 +11,7 @@ from fastapi.templating import Jinja2Templates
 
 from pyobservability.config import enums, settings
 from pyobservability.transport import websocket_endpoint
+from pyobservability.version import __version__
 
 LOGGER = logging.getLogger("uvicorn.default")
 
@@ -32,7 +33,9 @@ async def index(request: Request):
     Args:
         request: FastAPI request object.
     """
-    return templates.TemplateResponse("index.html", {"request": request, "targets": settings.env.targets})
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "targets": settings.env.targets, "version": __version__}
+    )
 
 
 def include_routes():
