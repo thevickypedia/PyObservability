@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v1.0.1 (11/28/2025)
+-------------------
+- [11b3dad](https://github.com/thevickypedia/PyObservability/commit/11b3dad9f01a8a194f36f421091b241bf46057b8) chore: Release ``v1.0.1``
+- [17a7d73](https://github.com/thevickypedia/PyObservability/commit/17a7d732dcdfacb94828b0c7d5cc0d0929dc82a8) refactor: Use custom logger for uiauth module
+- [81404ab](https://github.com/thevickypedia/PyObservability/commit/81404aba9edbcb7d15296a8cd52b51ccbd5b7e6a) feat: Include a lazy logger setup
+- [9aa2926](https://github.com/thevickypedia/PyObservability/commit/9aa2926e9e19cf7f933f024addb5cd1da50114f8) chore: Update release notes for v1.0.0
+
 v1.0.0 (11/28/2025)
 -------------------
 - [433e918](https://github.com/thevickypedia/PyObservability/commit/433e918b46eaed41c7626fc868993235047f17e4) chore: Release ``v1.0.0``
