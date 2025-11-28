@@ -9,8 +9,24 @@ from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt
 from pydantic.aliases import AliasChoices
 from pydantic_settings import BaseSettings
 
+from pyobservability.config import enums
 
-def detailed_log_config() -> Dict[str, Any]:
+
+def detailed_log_config(filename: str | None = None, debug: bool = False) -> Dict[str, Any]:
+    if filename:
+        log_handler = {
+            "class": "logging.FileHandler",
+            "formatter": "default",
+            "filename": filename,
+            "mode": "a",
+        }
+    else:
+        log_handler = {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+            "stream": "ext://sys.stdout",
+        }
+    level = "DEBUG" if debug else "INFO"
     return {
         "version": 1,
         "disable_existing_loggers": False,
@@ -20,19 +36,13 @@ def detailed_log_config() -> Dict[str, Any]:
                 "datefmt": "%b-%d-%Y %I:%M:%S %p",
             }
         },
-        "handlers": {
-            "default": {
-                "class": "logging.StreamHandler",
-                "formatter": "default",
-                "stream": "ext://sys.stdout",
-            }
-        },
+        "handlers": {"default": log_handler},
         "loggers": {
-            "uvicorn": {"handlers": ["default"], "level": "INFO"},
-            "uvicorn.error": {"handlers": ["default"], "level": "INFO", "propagate": False},
-            "uvicorn.access": {"handlers": ["default"], "level": "INFO", "propagate": False},
+            "uvicorn": {"handlers": ["default"], "level": level},
+            "uvicorn.error": {"handlers": ["default"], "level": level, "propagate": False},
+            "uvicorn.access": {"handlers": ["default"], "level": level, "propagate": False},
         },
-        "root": {"handlers": ["default"], "level": "INFO"},
+        "root": {"handlers": ["default"], "level": level},
     }
 
 
@@ -89,6 +99,8 @@ class EnvConfig(PydanticEnvConfig):
     targets: List[MonitorTarget] = Field(..., validation_alias=alias_choices("TARGETS"))
     interval: PositiveInt = Field(3, validation_alias=alias_choices("INTERVAL"))
 
+    log: enums.Log | None = None
+    debug: bool = False
     log_config: Dict[str, Any] | FilePath | None = None
 
     username: str | None = Field(None, validation_alias=alias_choices("USERNAME"))

@@ -1,6 +1,8 @@
 import logging
+import os
 import pathlib
 import warnings
+from datetime import datetime
 
 import uiauth
 import uvicorn
@@ -85,6 +87,14 @@ def start(**kwargs):
         port=settings.env.port,
         app=PyObservability,
     )
+    if log := settings.env.log:
+        if log == enums.Log.stdout:
+            uvicorn_args["log_config"] = settings.detailed_log_config(debug=settings.env.debug)
+        else:
+            log_file = datetime.now().strftime(os.path.join("logs", "pyobservability_%d-%m-%Y.log"))
+            os.makedirs("logs", exist_ok=True)
+            uvicorn_args["log_config"] = settings.detailed_log_config(filename=log_file, debug=settings.env.debug)
+    # log_config will take precedence if both log and log_config are set
     if settings.env.log_config:
         uvicorn_args["log_config"] = (
             settings.env.log_config if isinstance(settings.env.log_config, dict) else str(settings.env.log_config)
