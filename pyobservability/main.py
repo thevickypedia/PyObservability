@@ -46,6 +46,7 @@ def include_routes():
             app=PyObservability,
             username=settings.env.username,
             password=settings.env.password,
+            custom_logger=LOGGER,
             params=[
                 uiauth.Parameters(
                     path=enums.APIEndpoints.root,
