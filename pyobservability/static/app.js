@@ -66,6 +66,7 @@
   const servicesTable = document.getElementById("services-table");
   const servicesTableBody = document.querySelector("#services-table tbody");
   const svcFilter = document.getElementById("svc-filter");
+  const svcGetAll = document.getElementById("get-all-services");
 
   const processesTable = document.getElementById("processes-table");
   const processesTableBody = processesTable.querySelector("tbody");
@@ -572,6 +573,10 @@
     showAllSpinners();
     ws.send(JSON.stringify({ type: "select_target", base_url: selectedBase }));
   });
+
+  svcGetAll.addEventListener("change", () => {
+    ws.send(JSON.stringify({ type: "update_flags", all_services: svcGetAll.checked }));
+  })
 
   refreshBtn.addEventListener("click", resetUI);
 

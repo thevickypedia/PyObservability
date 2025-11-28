@@ -27,6 +27,12 @@ async def websocket_endpoint(websocket: WebSocket):
         while True:
             msg = await websocket.receive_text()
             data = json.loads(msg)
+            if data.get("type") == "update_flags":
+                if monitor:
+                    await monitor.update_flags(
+                        all_services=data.get("all_services", False),
+                    )
+                continue
 
             # -------------------------------------------
             # UI requests a specific target to monitor

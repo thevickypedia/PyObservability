@@ -28,6 +28,7 @@ class Monitor:
         self.name = target["name"]
         self.base_url = target["base_url"]
         self.apikey = target["apikey"]
+        self.flags = {"all_services": False}
 
         self.session: aiohttp.ClientSession | None = None
         self._task: asyncio.Task | None = None
@@ -73,11 +74,26 @@ class Monitor:
             await self.session.close()
             self.session = None
 
+    async def update_flags(self, **kwargs):
+        for k, v in kwargs.items():
+            if k in self.flags:
+                self.flags[k] = v
+
+        # restart stream with new params
+        await self._restart_stream()
+
+    async def _restart_stream(self):
+        await self.stop()
+        await self.start()
+
     # ------------------------------
     # FETCH STREAM
     # ------------------------------
     async def _fetch_stream(self):
-        url = self.base_url.rstrip("/") + OBS_PATH + f"?interval={settings.env.interval}"
+        query = f"?interval={settings.env.interval}"
+        if self.flags["all_services"]:
+            query += "&all_services=true"
+        url = self.base_url.rstrip("/") + OBS_PATH + query
         headers = {"Accept": "application/json", "Authorization": f"Bearer {self.apikey}"}
 
         async with self.session.get(
@@ -135,6 +151,7 @@ class Monitor:
                     if errors[self.base_url] < 10:
                         errors[self.base_url] += 1
                     else:
+                        LOGGER.error(err.with_traceback())
                         LOGGER.error("%s exceeded error threshold.", self.base_url)
 
                         # notify subscribers before stopping
