@@ -1,6 +1,28 @@
 Release Notes
 =============
 
+v1.0.0 (11/28/2025)
+-------------------
+- [433e918](https://github.com/thevickypedia/PyObservability/commit/433e918b46eaed41c7626fc868993235047f17e4) chore: Release ``v1.0.0``
+- [5004110](https://github.com/thevickypedia/PyObservability/commit/5004110cd98657dd3b48d1f9b251a4cf5b314ee6) style: Include project link and version for footer
+- [2bd5d1a](https://github.com/thevickypedia/PyObservability/commit/2bd5d1a3a5d6e0f1b132b8db72f6fddd9043d6d8) style: Set ``show-cores`` checkbox to true during startup
+- [71555ea](https://github.com/thevickypedia/PyObservability/commit/71555ea6b095a9ae21dc2572511428ca60b30126) feat: Add a checkbox to get all services
+- [130b7ac](https://github.com/thevickypedia/PyObservability/commit/130b7ac39b392ec2ce6a2cc1de209a9d751a2751) style: Condense CPU and Memory metrics for each service to specific fields
+- [488256e](https://github.com/thevickypedia/PyObservability/commit/488256e60ee0cfe57639defd5a66db09e0022671) perf: Store targets by ``base_url`` to avoid looping to identify target for each socket connection
+- [0849c43](https://github.com/thevickypedia/PyObservability/commit/0849c433a6b4bddf128d8117cbb5e3aa4ffd1e42) fix: Get missing PID for service status on Linux machines
+- [32bbd33](https://github.com/thevickypedia/PyObservability/commit/32bbd33c8e1f785a4befa23360c09dd8c520d177) perf: Include an option to allow custom logging config
+- [de21b16](https://github.com/thevickypedia/PyObservability/commit/de21b16fc5e623691003c561d1a3d0c6e06f4583) refactor: Re-format code for CSS
+- [0f9cc83](https://github.com/thevickypedia/PyObservability/commit/0f9cc8300bf7964073f83592fdf69a617c36a4eb) perf: Cleanup spinner references for per-core CPU utilization container
+- [cbc572f](https://github.com/thevickypedia/PyObservability/commit/cbc572fbf1b0108cab0c8e568538285a6caf36c1) style: Extend spinners for meta tags
+- [89655d1](https://github.com/thevickypedia/PyObservability/commit/89655d150af562743601e6c6ef19367f94462a49) fix: Add missing spinners for tables
+- [659e381](https://github.com/thevickypedia/PyObservability/commit/659e381e43d8c52a3e6f1dbacd715d8d15ec0052) feat: Add paginator for tables in the UI
+- [3ed8b32](https://github.com/thevickypedia/PyObservability/commit/3ed8b32977c8489ee014f61d11886c242a03ca28) perf: Drop oldest message in queue when full
+- [6b3e7e6](https://github.com/thevickypedia/PyObservability/commit/6b3e7e6c8c5befbc3dacccd561187fa40fb8fd4d) perf: Stop connection for unreachable host after N attempts and show an error in the UI
+- [f6a5400](https://github.com/thevickypedia/PyObservability/commit/f6a5400ece2877b00ddb68d0b5719c8580a3bc55) perf: Handle invalid websocket payload at transport layer
+- [7785e1b](https://github.com/thevickypedia/PyObservability/commit/7785e1b85374602156c14f63545a7ba61b68f86a) refactor: Move transport layer to its own module
+- [75265b5](https://github.com/thevickypedia/PyObservability/commit/75265b56b5640724950a93094174a7474cbd4ba1) perf: Gather metrics **ONLY** for the selected target
+- [75a5b53](https://github.com/thevickypedia/PyObservability/commit/75a5b53a11ec6233f4c59e9350b9fdf415529c28) chore: Update release notes for v0.1.0
+
 v0.1.0 (11/27/2025)
 -------------------
 - [a6c08cb](https://github.com/thevickypedia/PyObservability/commit/a6c08cbd3c83080dd6a1ae6281c9da41873d707f) chore: Release ``v0.1.0``
