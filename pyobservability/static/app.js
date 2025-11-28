@@ -304,6 +304,7 @@
       <canvas width="120" height="40"></canvas>
       <div class="value">—</div>
     `;
+    wrapper.style.display = showCoresCheckbox.checked ? "block" : "none";
     coresGrid.appendChild(wrapper);
 
     const canvas = wrapper.querySelector("canvas");
