@@ -62,8 +62,14 @@ class PydanticEnvConfig(BaseSettings):
         dotenv_settings,
         file_secret_settings,
     ):
-        """Order: dotenv, env, init, secrets files."""
-        return dotenv_settings, env_settings, init_settings, file_secret_settings
+        # Precedence (last wins):
+        # env < dotenv < file secrets < init
+        return (
+            env_settings,
+            dotenv_settings,
+            file_secret_settings,
+            init_settings,
+        )
 
 
 class MonitorTarget(BaseModel):
