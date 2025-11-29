@@ -134,6 +134,7 @@ class EnvConfig(PydanticEnvConfig):
 
         env_prefix = ""
         extra = "forbid"
+        hide_input_in_errors = True
 
     @classmethod
     def from_env_file(cls, filename: pathlib.Path) -> "EnvConfig":
