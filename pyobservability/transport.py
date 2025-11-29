@@ -23,7 +23,7 @@ async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue) -> None:
 
 
 async def websocket_endpoint(websocket: WebSocket) -> None:
-    """WebSocket endpoint to handle observability data streaming.
+    """Websocket endpoint to handle observability data streaming.
 
     Args:
         websocket: FastAPI WebSocket connection.

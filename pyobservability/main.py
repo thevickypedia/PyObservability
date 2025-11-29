@@ -3,6 +3,7 @@ import os
 import pathlib
 import warnings
 from datetime import datetime
+from typing import Dict
 
 import uiauth
 import uvicorn
@@ -29,7 +30,7 @@ static_dir = root / "static"
 PyObservability.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
-async def index(request: Request) -> templates.TemplateResponse:
+async def index(request: Request):
     """Pass configured targets to the template so frontend can prebuild UI.
 
     Args:
@@ -44,8 +45,26 @@ async def index(request: Request) -> templates.TemplateResponse:
     )
 
 
+async def health() -> Dict[str, str]:
+    """Health check endpoint.
+
+    Returns:
+        dict:
+        Health status.
+    """
+    return {"status": "ok"}
+
+
 def include_routes() -> None:
     """Include routes in the FastAPI app with or without authentication."""
+    PyObservability.routes.append(
+        APIRoute(
+            path=enums.APIEndpoints.health,
+            endpoint=health,
+            methods=["GET"],
+            include_in_schema=False,
+        ),
+    )
     if all((settings.env.username, settings.env.password)):
         uiauth.protect(
             app=PyObservability,

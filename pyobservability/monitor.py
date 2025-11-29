@@ -3,7 +3,7 @@ import json
 import logging
 from asyncio import CancelledError
 from collections.abc import Generator
-from typing import Any, Dict, List, AsyncGenerator
+from typing import Any, AsyncGenerator, Dict, List
 
 import aiohttp
 
