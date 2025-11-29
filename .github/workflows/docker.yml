@@ -8,7 +8,7 @@ on:
         type: string
         description: 'Tag name for the release (e.g., 1.0.1)'
         required: false
-        default: null
+        default: latest
 
   workflow_call:
     inputs:
@@ -16,14 +16,18 @@ on:
         type: string
         description: 'Tag name for the release (e.g., 1.0.1)'
         required: false
-        default: null
+        default: latest
 
 env:
-  repository: ${{ github.repository || 'thevickypedia/PyObservability' }}
-  repository_name: ${{ github.repository.name || 'PyObservability' }}
+  repository: ${{ github.repository.toLowerCase() || 'thevickypedia/pyobservability' }}
+  repository_name: ${{ github.repository.name.toLowerCase() || 'pyobservability' }}
   repository_description: ${{ github.event.repository.description || '🔎 Observability UI for PyNinja' }}
-  # workflow_call first, fallback to workflow_dispatch
-  tag_name: ${{ inputs.tag_name || github.event.inputs.tag_name }}
+  # Corrected tag_name logic with fallback and v-prefix removal
+  tag_name: ${{ 
+    startsWith(inputs.tag_name || github.event.inputs.tag_name || '', 'v') && 
+    (inputs.tag_name || github.event.inputs.tag_name || '')[1:] || 
+    (inputs.tag_name || github.event.inputs.tag_name || 'latest')
+  }}
 
 jobs:
   release:
@@ -34,7 +38,10 @@ jobs:
 
       - name: Docker Prerequisites
         run: |
-          tags="${{ env.repository }}:${{ env.tag_name }},${{ env.repository }}:latest"
+          tags="${{ env.repository }}:latest"
+          if [ -n "${{ env.tag_name }}" ] && [ "${{ env.tag_name }}" != "latest" ]; then
+            tags+=",${{ env.repository }}:${{ env.tag_name }}"
+          fi
           echo "Docker image will be published with tags: ${tags}"
           echo "dockertags=${tags}" >> $GITHUB_ENV
         shell: bash
