@@ -41,6 +41,14 @@ jobs:
           tag_name="${tag_name//^v/}"  # Remove 'v' prefix if present
           echo "tag_name=${tag_name}" >> $GITHUB_ENV
 
+          yq_version=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest | jq -r .tag_name)
+          # Check if the yq_version is empty or "null" and assign fallback if so
+          if [ -z "$yq_version" ] || [ "$yq_version" == "null" ]; then
+              YQ_VERSION="v4.49.2";
+          else
+              YQ_VERSION="$yq_version";
+          fi
+
           # Set tags for Docker image
           tags="${repository,,}:latest"
           if [ -n "${tag_name}" ] && [ "${tag_name}" != "latest" ]; then
@@ -72,6 +80,7 @@ jobs:
           tags: ${{ env.dockertags }}
           build-args: |
             VERSION=${{ env.tag_name || 'latest' }}
+            YQ_VERSION=${{ env.YQ_VERSION || 'v4.49.2' }}
 
       - name: Update description
         uses: thevickypedia/describe-docker@v1

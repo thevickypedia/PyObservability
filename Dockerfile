@@ -2,16 +2,20 @@ FROM python:3.11-slim
 
 ARG VERSION
 ENV VERSION=${VERSION:-latest}
+ARG YQ_VERSION
+ENV YQ_VERSION=${YQ_VERSION:-v4.49.2}
 
-# Install wget, jq and yq
+# Install wget and jq
 RUN apt-get update && apt-get install -y wget jq
+
+# Detect architecture and download yq, with fallback to v4.49.2 if latest fails
 RUN ARCH=$(uname -m) && \
+    echo "Detected architecture: $ARCH" && \
     if [ "$ARCH" = "x86_64" ]; then \
         ARCH="amd64"; \
     elif [ "$ARCH" = "aarch64" ]; then \
         ARCH="arm64"; \
     fi && \
-    YQ_VERSION=$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest | jq -r .tag_name) && \
     echo "Downloading yq version: $YQ_VERSION for architecture: $ARCH" && \
     wget https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_linux_${ARCH} -O /usr/local/bin/yq && \
     chmod +x /usr/local/bin/yq
