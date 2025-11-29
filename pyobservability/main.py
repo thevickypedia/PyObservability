@@ -29,18 +29,23 @@ static_dir = root / "static"
 PyObservability.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 
-async def index(request: Request):
+async def index(request: Request) -> templates.TemplateResponse:
     """Pass configured targets to the template so frontend can prebuild UI.
 
     Args:
         request: FastAPI request object.
+
+    Returns:
+        TemplateResponse:
+        Rendered HTML template with targets and version.
     """
     return templates.TemplateResponse(
         "index.html", {"request": request, "targets": settings.env.targets, "version": __version__}
     )
 
 
-def include_routes():
+def include_routes() -> None:
+    """Include routes in the FastAPI app with or without authentication."""
     if all((settings.env.username, settings.env.password)):
         uiauth.protect(
             app=PyObservability,
@@ -51,7 +56,7 @@ def include_routes():
                 uiauth.Parameters(
                     path=enums.APIEndpoints.root,
                     function=index,
-                    methods=["GET"],
+                    methods=[uiauth.enums.APIMethods.GET],
                 ),
                 uiauth.Parameters(
                     path=enums.APIEndpoints.ws,
@@ -78,7 +83,8 @@ def include_routes():
         )
 
 
-def start(**kwargs):
+def start(**kwargs) -> None:
+    """Start the FastAPI app with Uvicorn server."""
     settings.env = settings.env_loader(**kwargs)
     settings.env.targets = [{k: str(v) for k, v in target.model_dump().items()} for target in settings.env.targets]
     settings.targets_by_url = {t["base_url"]: t for t in settings.env.targets}

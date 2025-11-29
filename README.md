@@ -87,19 +87,9 @@ Licensed under the [MIT License][license]
 
 [3.11]: https://docs.python.org/3/whatsnew/3.11.html
 [virtual environment]: https://docs.python.org/3/tutorial/venv.html
-[release-notes]: https://github.com/thevickypedia/PyObservability/blob/main/release_notes.rst
 [gha_pypi]: https://github.com/thevickypedia/PyObservability/actions/workflows/python-publish.yml
 [gha_notes]: https://github.com/thevickypedia/PyObservability/actions/workflows/notes.yml
 [gha_release]: https://github.com/thevickypedia/PyObservability/actions/workflows/release.yml
-[google-docs]: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
-[pep8]: https://www.python.org/dev/peps/pep-0008/
-[isort]: https://pycqa.github.io/isort/
-[sphinx]: https://www.sphinx-doc.org/en/master/man/sphinx-autogen.html
 [pypi]: https://pypi.org/project/PyObservability
 [pypi-files]: https://pypi.org/project/PyObservability/#files
-[pypi-repo]: https://packaging.python.org/tutorials/packaging-projects/
 [license]: https://github.com/thevickypedia/PyObservability/blob/main/LICENSE
-[runbook]: https://thevickypedia.github.io/PyObservability/
-[samples]: https://github.com/thevickypedia/PyObservability/tree/main/samples
-[PyUdisk]: https://github.com/thevickypedia/PyUdisk
-[PyArchitecture]: https://github.com/thevickypedia/PyArchitecture

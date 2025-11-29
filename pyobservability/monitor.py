@@ -3,7 +3,7 @@ import json
 import logging
 from asyncio import CancelledError
 from collections.abc import Generator
-from typing import Any, Dict, List
+from typing import Any, Dict, List, AsyncGenerator
 
 import aiohttp
 
@@ -14,6 +14,15 @@ OBS_PATH = "/observability"
 
 
 def refine_service(service_list: List[Dict[str, Any]]) -> Generator[Dict[str, Dict[str, str]]]:
+    """Refine service stats to only include relevant fields and round CPU values.
+
+    Args:
+        service_list: List of service statistics dictionaries.
+
+    Yields:
+        Dict[str, Dict[str, str]]:
+        Refined service statistics dictionary.
+    """
     for service in service_list:
         service["memory"] = dict(rss=service.get("memory", {}).get("rss"), vms=service.get("memory", {}).get("vms"))
         service["cpu"] = dict(
@@ -24,7 +33,18 @@ def refine_service(service_list: List[Dict[str, Any]]) -> Generator[Dict[str, Di
 
 
 class Monitor:
+    """Monitor class to stream observability data from a target.
+
+    >>> Monitor
+
+    """
+
     def __init__(self, target: Dict[str, str]):
+        """Initialize Monitor with target configuration.
+
+        Args:
+            target: Dictionary containing target configuration with keys 'name', 'base_url', and 'apikey'.
+        """
         self.name = target["name"]
         self.base_url = target["base_url"]
         self.apikey = target["apikey"]
@@ -40,11 +60,22 @@ class Monitor:
     # SUBSCRIBE / UNSUBSCRIBE
     # ------------------------------
     def subscribe(self) -> asyncio.Queue:
+        """Subscribe to the monitor's data stream.
+
+        Returns:
+            asyncio.Queue:
+            Queue to receive streamed data.
+        """
         q = asyncio.Queue(maxsize=10)
         self._ws_subscribers.append(q)
         return q
 
-    def unsubscribe(self, q: asyncio.Queue):
+    def unsubscribe(self, q: asyncio.Queue) -> None:
+        """Unsubscribe from the monitor's data stream.
+
+        Args:
+            q: Queue to be removed from subscribers.
+        """
         if q in self._ws_subscribers:
             self._ws_subscribers.remove(q)
 
@@ -52,6 +83,7 @@ class Monitor:
     # START / STOP
     # ------------------------------
     async def start(self):
+        """Start the monitor's data streaming."""
         if self._task:
             return  # already running
 
@@ -61,6 +93,7 @@ class Monitor:
         self._task = asyncio.create_task(self._stream_target())
 
     async def stop(self):
+        """Stop the monitor's data streaming."""
         self._stop.set()
         if self._task:
             self._task.cancel()
@@ -74,7 +107,8 @@ class Monitor:
             await self.session.close()
             self.session = None
 
-    async def update_flags(self, **kwargs):
+    async def update_flags(self, **kwargs) -> None:
+        """Update monitor flags and restart the stream."""
         for k, v in kwargs.items():
             if k in self.flags:
                 self.flags[k] = v
@@ -82,14 +116,21 @@ class Monitor:
         # restart stream with new params
         await self._restart_stream()
 
-    async def _restart_stream(self):
+    async def _restart_stream(self) -> None:
+        """Restart the monitor's data streaming."""
         await self.stop()
         await self.start()
 
     # ------------------------------
     # FETCH STREAM
     # ------------------------------
-    async def _fetch_stream(self):
+    async def _fetch_stream(self) -> AsyncGenerator[Dict[str, Any], None]:
+        """Fetch the observability data stream from the target.
+
+        Yields:
+            Dict[str, Any]:
+            Parsed observability data.
+        """
         query = f"?interval={settings.env.interval}"
         if self.flags["all_services"]:
             query += "&all_services=true"
@@ -122,7 +163,8 @@ class Monitor:
     # ------------------------------
     # STREAM LOOP
     # ------------------------------
-    async def _stream_target(self):
+    async def _stream_target(self) -> None:
+        """Stream observability data from the target and notify subscribers."""
         errors = {}
         while not self._stop.is_set():
             try:

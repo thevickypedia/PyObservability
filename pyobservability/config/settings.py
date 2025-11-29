@@ -13,6 +13,16 @@ from pyobservability.config import enums
 
 
 def detailed_log_config(filename: str | None = None, debug: bool = False) -> Dict[str, Any]:
+    """Generate a detailed logging configuration.
+
+    Args:
+        filename: Optional log file name. If None, logs to stdout.
+        debug: If True, sets log level to DEBUG, else INFO.
+
+    Returns:
+        Dict[str, Any]:
+        Returns the logging configuration dictionary.
+    """
     if filename:
         log_handler = {
             "class": "logging.FileHandler",
@@ -62,6 +72,7 @@ class PydanticEnvConfig(BaseSettings):
         dotenv_settings,
         file_secret_settings,
     ):
+        """Customize the order of settings sources."""
         # Precedence (last wins):
         # env < dotenv < file secrets < init
         return (
@@ -73,6 +84,12 @@ class PydanticEnvConfig(BaseSettings):
 
 
 class MonitorTarget(BaseModel):
+    """Model representing a monitoring target.
+
+    >>> MonitorTarget
+
+    """
+
     name: str
     base_url: HttpUrl
     apikey: str

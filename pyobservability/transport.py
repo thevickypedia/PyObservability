@@ -10,13 +10,24 @@ from pyobservability.monitor import Monitor
 LOGGER = logging.getLogger("uvicorn.default")
 
 
-async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue):
+async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue) -> None:
+    """Forward metrics from the monitor's queue to the websocket.
+
+    Args:
+        websocket: FastAPI WebSocket connection.
+        q: asyncio.Queue to receive metrics from the monitor.
+    """
     while True:
         payload = await q.get()
         await websocket.send_json(payload)
 
 
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket) -> None:
+    """WebSocket endpoint to handle observability data streaming.
+
+    Args:
+        websocket: FastAPI WebSocket connection.
+    """
     await websocket.accept()
 
     monitor: Monitor | None = None
