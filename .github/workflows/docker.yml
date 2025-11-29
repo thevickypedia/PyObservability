@@ -18,17 +18,6 @@ on:
         required: false
         default: latest
 
-env:
-  repository: ${{ github.repository.toLowerCase() || 'thevickypedia/pyobservability' }}
-  repository_name: ${{ github.repository.name.toLowerCase() || 'pyobservability' }}
-  repository_description: ${{ github.event.repository.description || '🔎 Observability UI for PyNinja' }}
-  # Corrected tag_name logic with fallback and v-prefix removal
-  tag_name: ${{ 
-    startsWith(inputs.tag_name || github.event.inputs.tag_name || '', 'v') && 
-    (inputs.tag_name || github.event.inputs.tag_name || '')[1:] || 
-    (inputs.tag_name || github.event.inputs.tag_name || 'latest')
-  }}
-
 jobs:
   release:
     runs-on: ubuntu-22.04
@@ -36,11 +25,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Docker Prerequisites
+      - name: Set Environment Variables
         run: |
-          tags="${{ env.repository }}:latest"
-          if [ -n "${{ env.tag_name }}" ] && [ "${{ env.tag_name }}" != "latest" ]; then
-            tags+=",${{ env.repository }}:${{ env.tag_name }}"
+          # Convert repository and repository_name to lowercase
+          repository="${{ github.repository || 'thevickypedia/PyObservability' }}" 
+          repository_name="${{ github.repository.name || 'PyObservability' }}"
+          echo "repository=${repository,,}" >> $GITHUB_ENV  # Convert to lowercase
+          echo "repository_name=${repository_name,,}" >> $GITHUB_ENV  # Convert to lowercase
+
+          # Set repository description
+          echo "repository_description=${{ github.event.repository.description || '🔎 Observability UI for PyNinja' }}" >> $GITHUB_ENV
+
+          # Handle tag_name: remove 'v' prefix if exists
+          tag_name="${{ inputs.tag_name || github.event.inputs.tag_name }}"
+          tag_name="${tag_name//^v/}"  # Remove 'v' prefix if present
+          echo "tag_name=${tag_name}" >> $GITHUB_ENV
+
+          # Set tags for Docker image
+          tags="${repository,,}:latest"
+          if [ -n "${tag_name}" ] && [ "${tag_name}" != "latest" ]; then
+            tags+=",${repository,,}:${tag_name}"
           fi
           echo "Docker image will be published with tags: ${tags}"
           echo "dockertags=${tags}" >> $GITHUB_ENV
