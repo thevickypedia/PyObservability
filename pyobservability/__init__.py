@@ -32,7 +32,7 @@ def _cli() -> None:
     )
     args = [arg.lower() for arg in sys.argv[1:]]
     try:
-        assert len(args) > 1
+        assert len(args) >= 1
     except (IndexError, AttributeError, AssertionError):
         print(f"Cannot proceed without a valid arbitrary command. Please choose from {choices}")
         exit(1)
