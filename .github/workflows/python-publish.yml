@@ -27,6 +27,14 @@ jobs:
       project_version: ${{ needs.pypi-publisher.outputs.version }}
     secrets: inherit
 
+  docker-build-publish:
+    needs:
+      - pypi-publisher
+    uses: ./.github/workflows/docker.yml
+    with:
+      tag_name: ${{ needs.pypi-publisher.outputs.version }}
+    secrets: inherit
+
   release-notes:
     needs:
       - release

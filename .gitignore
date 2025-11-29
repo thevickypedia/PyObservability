@@ -9,13 +9,14 @@ dist/
 build/
 PyObservability.egg-info/
 
-logging.ini
 *.log
 *.env
 *.json
 *.yaml
 *.yml
-!docker-compose.yml
 *.txt
 *.text
 temp.py
+logging.ini
+!docker-compose.yml
+!.github/workflows/*.yml
