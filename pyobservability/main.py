@@ -113,8 +113,8 @@ def start(**kwargs) -> None:
         port=settings.env.port,
         app=PyObservability,
     )
-    if log := settings.env.log:
-        if log == enums.Log.stdout:
+    if settings.env.log:
+        if settings.env.log == enums.Log.stdout:
             uvicorn_args["log_config"] = settings.detailed_log_config(debug=settings.env.debug)
         else:
             log_file = datetime.now().strftime(os.path.join("logs", "pyobservability_%d-%m-%Y.log"))
