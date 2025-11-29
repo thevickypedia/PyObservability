@@ -15,6 +15,7 @@ logging.ini
 *.json
 *.yaml
 *.yml
+!docker-compose.yml
 *.txt
 *.text
 temp.py

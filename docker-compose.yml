@@ -1,0 +1,14 @@
+services:
+  pyobservability:
+    build:
+     context: .
+     dockerfile: Dockerfile
+    image: pyobservability
+    container_name: observability
+    ports:
+      - "8080:80"
+    volumes:
+      # Bind mount for persistent storage and config
+      # export DOCKER_VOLUME_STORAGE=$(pwd)
+      - "${DOCKER_VOLUME_STORAGE:-$HOME/.observability}/config:/config"
+    restart: no

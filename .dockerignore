@@ -1,0 +1,14 @@
+PyObservability.egg-info/
+__pycache__/
+.github/
+config/
+build/
+venv/
+.git/
+
+.pre-commit-config.yaml
+.gitignore
+*.json
+*.yaml
+*.yml
+*.log
