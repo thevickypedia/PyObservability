@@ -1,6 +1,25 @@
 Release Notes
 =============
 
+v1.1.0 (11/29/2025)
+-------------------
+- [2e061e4](https://github.com/thevickypedia/PyObservability/commit/2e061e4572f5dd798503c7fb81c026210983149a) chore: Release v1.1.0
+- [d35f7ec](https://github.com/thevickypedia/PyObservability/commit/d35f7ec9e687a44f1651fba520b11ccc29db265b) feat: Allow custom logs directory
+- [34e1aa7](https://github.com/thevickypedia/PyObservability/commit/34e1aa77d940c0955a995389727fd88247b87efb) docs: Update documentation
+- [947fb77](https://github.com/thevickypedia/PyObservability/commit/947fb77e8870a001d7cb12403a6a18795bc501e3) fix: Setup a fallback for YQ_VERSION
+- [7139a56](https://github.com/thevickypedia/PyObservability/commit/7139a56af0976b5c2141623d52357922b9383262) fix: Reset environment variables in docker GHA
+- [b2f8783](https://github.com/thevickypedia/PyObservability/commit/b2f87835cb10b3e7625047a5893086fd1e483d61) fix: Make docker repo name lowercase in GHA
+- [3e1774e](https://github.com/thevickypedia/PyObservability/commit/3e1774ecdb6edbdd33b0d3cbb12c399d7e070c7d) ci: Add a GHA workflow for docker publish
+- [17d793f](https://github.com/thevickypedia/PyObservability/commit/17d793ffe793dfd732f54cad389e8f9bee561ba4) feat: Automatically install compatible YQ version during docker build
+- [da46ec2](https://github.com/thevickypedia/PyObservability/commit/da46ec20d3d5643fd9018a713f59b202b9177d06) feat: Include docker setup for PyObservability
+- [384e299](https://github.com/thevickypedia/PyObservability/commit/384e2995104e7c310236240c8d26b6e8b8daec9c) fix: Hide inputs in pydantic errors
+- [62f48ea](https://github.com/thevickypedia/PyObservability/commit/62f48eada082a8edfdf7ca7bbfaffad302c6c8c6) fix: Reduce arg limit for CLI instantiation
+- [047eaa7](https://github.com/thevickypedia/PyObservability/commit/047eaa70710cdf75122ab0ae9d418cb63fed3ebe) feat: Include a health check endpoint
+- [b27f0b5](https://github.com/thevickypedia/PyObservability/commit/b27f0b5b518064266357f4b30b913340ad5bde9d) docs: Update documentation
+- [a271249](https://github.com/thevickypedia/PyObservability/commit/a27124933dbce9570287d80599f4b6a4befadaf2) chore: Update project metadata
+- [c329b56](https://github.com/thevickypedia/PyObservability/commit/c329b565882507e38f0e95f1a42d73c3a1b67d8b) refactor: Reset priority order for env vars
+- [ce84667](https://github.com/thevickypedia/PyObservability/commit/ce846676762ce7985c610d6d86d587c6ec309fe8) chore: Update release notes for v1.0.1
+
 v1.0.1 (11/28/2025)
 -------------------
 - [11b3dad](https://github.com/thevickypedia/PyObservability/commit/11b3dad9f01a8a194f36f421091b241bf46057b8) chore: Release ``v1.0.1``
