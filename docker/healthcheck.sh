@@ -22,4 +22,4 @@ fi
 export HOST=${HOST:-0.0.0.0}
 export PORT=${PORT:-80}
 
-wget -q --spider http://$HOST:$PORT/health || exit 1
+curl -sf http://$HOST:$PORT/health > /dev/null || exit 1
