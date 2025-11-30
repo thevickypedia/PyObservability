@@ -1,615 +1,658 @@
 // app/static/app.js
 (function () {
-  // ------------------------------------------------------------
-  // CONFIG
-  // ------------------------------------------------------------
-  const MAX_POINTS = 60;
-  const targets = window.MONITOR_TARGETS || [];
-  const DEFAULT_PAGE_SIZE = 15;
-  const panelSpinners = {};
+    // ------------------------------------------------------------
+    // CONFIG
+    // ------------------------------------------------------------
+    const MAX_POINTS = 60;
+    const targets = window.MONITOR_TARGETS || [];
+    const DEFAULT_PAGE_SIZE = 15;
+    const panelSpinners = {};
 
-  // ------------------------------------------------------------
-  // VISUAL SPINNERS
-  // ------------------------------------------------------------
-  function attachSpinners() {
-    // panels (charts/tables)
-    document.querySelectorAll(".panel").forEach(box => {
-      const overlay = document.createElement("div");
-      overlay.className = "loading-overlay";
-      overlay.innerHTML = `<div class="spinner"></div>`;
-      box.style.position = "relative";
-      box.appendChild(overlay);
-      panelSpinners[box.id || box.querySelector('table,canvas')?.id || Symbol()] = overlay;
-    });
+    // ------------------------------------------------------------
+    // VISUAL SPINNERS
+    // ------------------------------------------------------------
+    function attachSpinners() {
+        // panels (charts/tables)
+        document.querySelectorAll(".panel").forEach(box => {
+            const overlay = document.createElement("div");
+            overlay.className = "loading-overlay";
+            overlay.innerHTML = `<div class="spinner"></div>`;
+            box.style.position = "relative";
+            box.appendChild(overlay);
+            panelSpinners[box.id || box.querySelector('table,canvas')?.id || Symbol()] = overlay;
+        });
 
-    // meta cards (system/static metrics)
-    document.querySelectorAll(".meta-card").forEach(card => {
-      const overlay = document.createElement("div");
-      overlay.className = "loading-overlay";
-      overlay.innerHTML = `<div class="spinner"></div>`;
-      card.style.position = "relative";
-      card.appendChild(overlay);
-      panelSpinners[card.querySelector(".meta-value")?.id || Symbol()] = overlay;
-    });
-  }
-
-  function showAllSpinners() {
-    Object.keys(panelSpinners).forEach(id => showSpinner(id));
-  }
-
-  function hideSpinners() {
-    document.querySelectorAll(".loading-overlay").forEach(x => {
-      x.classList.add("hidden");
-    });
-  }
-
-  // ------------------------------------------------------------
-  // DOM REFERENCES
-  // ------------------------------------------------------------
-  const nodeSelect = document.getElementById("node-select");
-  const refreshBtn = document.getElementById("refresh-btn");
-
-  const systemEl = document.getElementById("system");
-  const ipEl = document.getElementById("ip-info");
-  const processorEl = document.getElementById("processor");
-
-  const memEl = document.getElementById("memory");
-  const diskEl = document.getElementById("disk");
-  const loadEl = document.getElementById("cpuload");
-
-  const cpuAvgCtx = document.getElementById("cpu-avg-chart").getContext("2d");
-  const memCtx = document.getElementById("mem-chart").getContext("2d");
-  const loadCtx = document.getElementById("load-chart").getContext("2d");
-
-  const coresGrid = document.getElementById("cores-grid");
-
-  const servicesTable = document.getElementById("services-table");
-  const servicesTableBody = document.querySelector("#services-table tbody");
-  const svcFilter = document.getElementById("svc-filter");
-  const svcGetAll = document.getElementById("get-all-services");
-
-  const processesTable = document.getElementById("processes-table");
-  const processesTableBody = processesTable.querySelector("tbody");
-  const procFilter = document.getElementById("proc-filter");
-
-  const dockerTable = document.getElementById("docker-table");
-  const dockerTableHead = dockerTable.querySelector("thead");
-  const dockerTableBody = dockerTable.querySelector("tbody");
-
-  const disksTable = document.getElementById("disks-table");
-  const disksTableHead = disksTable.querySelector("thead");
-  const disksTableBody = disksTable.querySelector("tbody");
-
-  const pyudiskTable = document.getElementById("pyudisk-table");
-  const pyudiskTableHead = pyudiskTable.querySelector("thead");
-  const pyudiskTableBody = pyudiskTable.querySelector("tbody");
-
-  const certsTable = document.getElementById("certificates-table");
-  const certsTableHead = certsTable.querySelector("thead");
-  const certsTableBody = certsTable.querySelector("tbody");
-
-  const showCoresCheckbox = document.getElementById("show-cores");
-
-  // ------------------------------------------------------------
-  // PAGINATION HELPERS
-  // ------------------------------------------------------------
-  function createPaginatedTable(tableEl, headEl, bodyEl, pageSize = DEFAULT_PAGE_SIZE) {
-    const info = document.createElement("div");
-    info.className = "pagination-info";
-    tableEl.insertAdjacentElement("beforebegin", info);
-
-    const state = {
-      data: [],
-      page: 1,
-      pageSize
-    };
-
-    const pagination = document.createElement("div");
-    pagination.className = "pagination";
-    tableEl.insertAdjacentElement("afterend", pagination);
-
-    function render() {
-      const rows = state.data;
-      const pages = Math.ceil(rows.length / state.pageSize) || 1;
-      state.page = Math.max(1, Math.min(state.page, pages));
-
-      const start = (state.page - 1) * state.pageSize;
-      const chunk = rows.slice(start, start + state.pageSize);
-
-      info.textContent =
-        `Showing ${start + 1} to ${Math.min(start + state.pageSize, rows.length)} of ${rows.length} entries`;
-
-      bodyEl.innerHTML = "";
-      chunk.forEach(r => bodyEl.insertAdjacentHTML("beforeend", r));
-
-      renderPagination(pages);
+        // meta cards (system/static metrics)
+        document.querySelectorAll(".meta-card").forEach(card => {
+            const overlay = document.createElement("div");
+            overlay.className = "loading-overlay";
+            overlay.innerHTML = `<div class="spinner"></div>`;
+            card.style.position = "relative";
+            card.appendChild(overlay);
+            panelSpinners[card.querySelector(".meta-value")?.id || Symbol()] = overlay;
+        });
     }
 
-    function renderPagination(pages) {
-      pagination.innerHTML = "";
-
-      const makeBtn = (txt, cb, active = false, disabled = false) => {
-        const b = document.createElement("button");
-        b.textContent = txt;
-        if (active) b.classList.add("active");
-        if (disabled) {
-          b.disabled = true;
-          b.style.opacity = "0.5";
-          b.style.cursor = "default";
-        }
-        b.onclick = disabled ? null : cb;
-        pagination.appendChild(b);
-      };
-
-      // --- Previous ---
-      makeBtn("Previous", () => { state.page--; render(); }, false, state.page === 1);
-
-      const maxVisible = 5;
-
-      if (pages <= maxVisible + 2) {
-        // Show all
-        for (let p = 1; p <= pages; p++) {
-          makeBtn(p, () => { state.page = p; render(); }, p === state.page);
-        }
-      } else {
-        // Big list → use ellipsis
-        const showLeft = 3;
-        const showRight = 3;
-
-        if (state.page <= showLeft) {
-          // First pages
-          for (let p = 1; p <= showLeft + 1; p++) {
-            makeBtn(p, () => { state.page = p; render(); }, p === state.page);
-          }
-          addEllipsis();
-          makeBtn(pages, () => { state.page = pages; render(); });
-        } else if (state.page >= pages - showRight + 1) {
-          // Last pages
-          makeBtn(1, () => { state.page = 1; render(); });
-          addEllipsis();
-          for (let p = pages - showRight; p <= pages; p++) {
-            makeBtn(p, () => { state.page = p; render(); }, p === state.page);
-          }
-        } else {
-          // Middle
-          makeBtn(1, () => { state.page = 1; render(); });
-          addEllipsis();
-          for (let p = state.page - 1; p <= state.page + 1; p++) {
-            makeBtn(p, () => { state.page = p; render(); }, p === state.page);
-          }
-          addEllipsis();
-          makeBtn(pages, () => { state.page = pages; render(); });
-        }
-      }
-
-      // --- Next ---
-      makeBtn("Next", () => { state.page++; render(); }, false, state.page === pages);
-
-      function addEllipsis() {
-        const e = document.createElement("span");
-        e.textContent = "…";
-        e.style.padding = "4px 6px";
-        pagination.appendChild(e);
-      }
+    function showAllSpinners() {
+        Object.keys(panelSpinners).forEach(id => showSpinner(id));
     }
 
-    function setData(arr, columns) {
-      if (JSON.stringify(state.data) === JSON.stringify(arr)) {
-        return; // do not re-render if data didn't change
-      }
-      headEl.innerHTML = "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
-      state.data = arr.map(row => {
-        return "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>";
-      });
-      render();
+    function hideSpinners() {
+        document.querySelectorAll(".loading-overlay").forEach(x => {
+            x.classList.add("hidden");
+        });
     }
 
-    return { setData };
-  }
+    // ------------------------------------------------------------
+    // DOM REFERENCES
+    // ------------------------------------------------------------
+    const nodeSelect = document.getElementById("node-select");
+    const refreshBtn = document.getElementById("refresh-btn");
 
-  // Instances for each table
-  const PAG_SERVICES = createPaginatedTable(
-    servicesTable, servicesTable.querySelector("thead"), servicesTableBody, 5
-  );
-  const PAG_PROCESSES = createPaginatedTable(
-    processesTable, processesTable.querySelector("thead"), processesTableBody
-  );
-  const PAG_DOCKER = createPaginatedTable(
-    dockerTable, dockerTableHead, dockerTableBody
-  );
-  const PAG_DISKS = createPaginatedTable(
-    disksTable, disksTableHead, disksTableBody
-  );
-  const PAG_PYUDISK = createPaginatedTable(
-    pyudiskTable, pyudiskTableHead, pyudiskTableBody
-  );
-  const PAG_CERTS = createPaginatedTable(
-    certsTable, certsTableHead, certsTableBody
-  );
+    const systemEl = document.getElementById("system");
+    const ipEl = document.getElementById("ip-info");
+    const processorEl = document.getElementById("processor");
 
-  // ------------------------------------------------------------
-  // CHART HELPERS
-  // ------------------------------------------------------------
-  function makeMainChart(ctx, label) {
-    const EMPTY = Array(MAX_POINTS).fill(null);
-    const LABELS = Array(MAX_POINTS).fill("");
+    const memEl = document.getElementById("memory");
+    const diskEl = document.getElementById("disk");
+    const loadEl = document.getElementById("cpuload");
 
-    return new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: [...LABELS],
-        datasets: [
-          {
-            label,
-            data: [...EMPTY],
-            fill: true,
-            tension: 0.2,
-            cubicInterpolationMode: "monotone",
-            pointRadius: 0
-          }
-        ]
-      },
-      options: {
-        animation: false, responsive: true, maintainAspectRatio: false,
-        scales: { x: { display: false }, y: { beginAtZero: true, suggestedMax: 100 }},
-        plugins: { legend: { display: false } }
-      }
-    });
-  }
+    const cpuAvgCtx = document.getElementById("cpu-avg-chart").getContext("2d");
+    const memCtx = document.getElementById("mem-chart").getContext("2d");
+    const loadCtx = document.getElementById("load-chart").getContext("2d");
 
-  function makeCoreSparkline(ctx, coreName) {
-    const EMPTY_LABELS = Array(MAX_POINTS).fill("");
-    const EMPTY_DATA   = Array(MAX_POINTS).fill(null);
+    const coresGrid = document.getElementById("cores-grid");
 
-    return new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: [...EMPTY_LABELS],
-        datasets: [{
-          label: coreName,
-          data: [...EMPTY_DATA],
-          fill: false,
-          tension: 0.2,
-          pointRadius: 0
-        }]
-      },
-      options: {
-        animation: false,
-        responsive: false,
-        interaction: false,
-        events: [],
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { display: false },
-          y: { display: false, suggestedMax: 100 }
+    const servicesTable = document.getElementById("services-table");
+    const servicesTableBody = document.querySelector("#services-table tbody");
+    const svcFilter = document.getElementById("svc-filter");
+    const svcGetAll = document.getElementById("get-all-services");
+
+    const processesTable = document.getElementById("processes-table");
+    const processesTableBody = processesTable.querySelector("tbody");
+    const procFilter = document.getElementById("proc-filter");
+
+    const dockerTable = document.getElementById("docker-table");
+    const dockerTableHead = dockerTable.querySelector("thead");
+    const dockerTableBody = dockerTable.querySelector("tbody");
+
+    const disksTable = document.getElementById("disks-table");
+    const disksTableHead = disksTable.querySelector("thead");
+    const disksTableBody = disksTable.querySelector("tbody");
+
+    const pyudiskTable = document.getElementById("pyudisk-table");
+    const pyudiskTableHead = pyudiskTable.querySelector("thead");
+    const pyudiskTableBody = pyudiskTable.querySelector("tbody");
+
+    const certsTable = document.getElementById("certificates-table");
+    const certsTableHead = certsTable.querySelector("thead");
+    const certsTableBody = certsTable.querySelector("tbody");
+
+    const showCoresCheckbox = document.getElementById("show-cores");
+
+    // ------------------------------------------------------------
+    // PAGINATION HELPERS
+    // ------------------------------------------------------------
+    function createPaginatedTable(tableEl, headEl, bodyEl, pageSize = DEFAULT_PAGE_SIZE) {
+        const info = document.createElement("div");
+        info.className = "pagination-info";
+        tableEl.insertAdjacentElement("beforebegin", info);
+
+        const state = {
+            data: [],
+            page: 1,
+            pageSize
+        };
+
+        const pagination = document.createElement("div");
+        pagination.className = "pagination";
+        tableEl.insertAdjacentElement("afterend", pagination);
+
+        function render() {
+            const rows = state.data;
+            const pages = Math.ceil(rows.length / state.pageSize) || 1;
+            state.page = Math.max(1, Math.min(state.page, pages));
+
+            const start = (state.page - 1) * state.pageSize;
+            const chunk = rows.slice(start, start + state.pageSize);
+
+            info.textContent =
+                `Showing ${start + 1} to ${Math.min(start + state.pageSize, rows.length)} of ${rows.length} entries`;
+
+            bodyEl.innerHTML = "";
+            chunk.forEach(r => bodyEl.insertAdjacentHTML("beforeend", r));
+
+            renderPagination(pages);
         }
-      }
-    });
-  }
 
-  const cpuAvgChart = makeMainChart(cpuAvgCtx, "CPU Avg");
-  const memChart    = makeMainChart(memCtx, "Memory %");
-  const loadChart   = makeMainChart(loadCtx, "CPU Load");
+        function renderPagination(pages) {
+            pagination.innerHTML = "";
 
-  // ------------------------------------------------------------
-  // CORE CHARTS
-  // ------------------------------------------------------------
-  const coreMini = {};
+            const makeBtn = (txt, cb, active = false, disabled = false) => {
+                const b = document.createElement("button");
+                b.textContent = txt;
+                if (active) b.classList.add("active");
+                if (disabled) {
+                    b.disabled = true;
+                    b.style.opacity = "0.5";
+                    b.style.cursor = "default";
+                }
+                b.onclick = disabled ? null : cb;
+                pagination.appendChild(b);
+            };
 
-  function createCoreChart(coreName) {
-    const wrapper = document.createElement("div");
-    wrapper.className = "core-mini";
-    wrapper.innerHTML = `
+            // --- Previous ---
+            makeBtn("Previous", () => {
+                state.page--;
+                render();
+            }, false, state.page === 1);
+
+            const maxVisible = 5;
+
+            if (pages <= maxVisible + 2) {
+                // Show all
+                for (let p = 1; p <= pages; p++) {
+                    makeBtn(p, () => {
+                        state.page = p;
+                        render();
+                    }, p === state.page);
+                }
+            } else {
+                // Big list → use ellipsis
+                const showLeft = 3;
+                const showRight = 3;
+
+                if (state.page <= showLeft) {
+                    // First pages
+                    for (let p = 1; p <= showLeft + 1; p++) {
+                        makeBtn(p, () => {
+                            state.page = p;
+                            render();
+                        }, p === state.page);
+                    }
+                    addEllipsis();
+                    makeBtn(pages, () => {
+                        state.page = pages;
+                        render();
+                    });
+                } else if (state.page >= pages - showRight + 1) {
+                    // Last pages
+                    makeBtn(1, () => {
+                        state.page = 1;
+                        render();
+                    });
+                    addEllipsis();
+                    for (let p = pages - showRight; p <= pages; p++) {
+                        makeBtn(p, () => {
+                            state.page = p;
+                            render();
+                        }, p === state.page);
+                    }
+                } else {
+                    // Middle
+                    makeBtn(1, () => {
+                        state.page = 1;
+                        render();
+                    });
+                    addEllipsis();
+                    for (let p = state.page - 1; p <= state.page + 1; p++) {
+                        makeBtn(p, () => {
+                            state.page = p;
+                            render();
+                        }, p === state.page);
+                    }
+                    addEllipsis();
+                    makeBtn(pages, () => {
+                        state.page = pages;
+                        render();
+                    });
+                }
+            }
+
+            // --- Next ---
+            makeBtn("Next", () => {
+                state.page++;
+                render();
+            }, false, state.page === pages);
+
+            function addEllipsis() {
+                const e = document.createElement("span");
+                e.textContent = "…";
+                e.style.padding = "4px 6px";
+                pagination.appendChild(e);
+            }
+        }
+
+        function setData(arr, columns) {
+            if (JSON.stringify(state.data) === JSON.stringify(arr)) {
+                return; // do not re-render if data didn't change
+            }
+            headEl.innerHTML = "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
+            state.data = arr.map(row => {
+                return "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>";
+            });
+            render();
+        }
+
+        return {setData};
+    }
+
+    // Instances for each table
+    const PAG_SERVICES = createPaginatedTable(
+        servicesTable, servicesTable.querySelector("thead"), servicesTableBody, 5
+    );
+    const PAG_PROCESSES = createPaginatedTable(
+        processesTable, processesTable.querySelector("thead"), processesTableBody
+    );
+    const PAG_DOCKER = createPaginatedTable(
+        dockerTable, dockerTableHead, dockerTableBody
+    );
+    const PAG_DISKS = createPaginatedTable(
+        disksTable, disksTableHead, disksTableBody
+    );
+    const PAG_PYUDISK = createPaginatedTable(
+        pyudiskTable, pyudiskTableHead, pyudiskTableBody
+    );
+    const PAG_CERTS = createPaginatedTable(
+        certsTable, certsTableHead, certsTableBody
+    );
+
+    // ------------------------------------------------------------
+    // CHART HELPERS
+    // ------------------------------------------------------------
+    function makeMainChart(ctx, label) {
+        const EMPTY = Array(MAX_POINTS).fill(null);
+        const LABELS = Array(MAX_POINTS).fill("");
+
+        return new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: [...LABELS],
+                datasets: [
+                    {
+                        label,
+                        data: [...EMPTY],
+                        fill: true,
+                        tension: 0.2,
+                        cubicInterpolationMode: "monotone",
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                animation: false, responsive: true, maintainAspectRatio: false,
+                scales: {x: {display: false}, y: {beginAtZero: true, suggestedMax: 100}},
+                plugins: {legend: {display: false}}
+            }
+        });
+    }
+
+    function makeCoreSparkline(ctx, coreName) {
+        const EMPTY_LABELS = Array(MAX_POINTS).fill("");
+        const EMPTY_DATA = Array(MAX_POINTS).fill(null);
+
+        return new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: [...EMPTY_LABELS],
+                datasets: [{
+                    label: coreName,
+                    data: [...EMPTY_DATA],
+                    fill: false,
+                    tension: 0.2,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: false,
+                interaction: false,
+                events: [],
+                plugins: {legend: {display: false}},
+                scales: {
+                    x: {display: false},
+                    y: {display: false, suggestedMax: 100}
+                }
+            }
+        });
+    }
+
+    const cpuAvgChart = makeMainChart(cpuAvgCtx, "CPU Avg");
+    const memChart = makeMainChart(memCtx, "Memory %");
+    const loadChart = makeMainChart(loadCtx, "CPU Load");
+
+    // ------------------------------------------------------------
+    // CORE CHARTS
+    // ------------------------------------------------------------
+    const coreMini = {};
+
+    function createCoreChart(coreName) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "core-mini";
+        wrapper.innerHTML = `
       <div class="label">${coreName}</div>
       <canvas width="120" height="40"></canvas>
       <div class="value">—</div>
     `;
-    wrapper.style.display = showCoresCheckbox.checked ? "block" : "none";
-    coresGrid.appendChild(wrapper);
+        wrapper.style.display = showCoresCheckbox.checked ? "block" : "none";
+        coresGrid.appendChild(wrapper);
 
-    const canvas = wrapper.querySelector("canvas");
-    const valEl = wrapper.querySelector(".value");
-    const chart = makeCoreSparkline(canvas.getContext("2d"), coreName);
+        const canvas = wrapper.querySelector("canvas");
+        const valEl = wrapper.querySelector(".value");
+        const chart = makeCoreSparkline(canvas.getContext("2d"), coreName);
 
-    coreMini[coreName] = { chart, el: wrapper, valEl };
-    return coreMini[coreName];
-  }
-
-  function getCoreChart(coreName) {
-    return coreMini[coreName] || createCoreChart(coreName);
-  }
-
-  function pruneOldCores(latest) {
-    for (const name of Object.keys(coreMini)) {
-      if (!latest.includes(name)) {
-        try { coreMini[name].chart.destroy(); } catch {}
-        coreMini[name].el.remove();
-        delete coreMini[name];
-      }
+        coreMini[coreName] = {chart, el: wrapper, valEl};
+        return coreMini[coreName];
     }
-  }
 
-  // ------------------------------------------------------------
-  // RESET UI
-  // ------------------------------------------------------------
-  function resetTables() {
-    // Clear all table data immediately
-    PAG_SERVICES.setData([], []);
-    PAG_PROCESSES.setData([], []);
-    PAG_DOCKER.setData([], []);
-    PAG_DISKS.setData([], []);
-    PAG_PYUDISK.setData([], []);
-    PAG_CERTS.setData([], []);
-  }
+    function getCoreChart(coreName) {
+        return coreMini[coreName] || createCoreChart(coreName);
+    }
 
-  function resetUI() {
-    firstMessage = true;
-    hideSpinners();
-    const EMPTY_DATA = Array(MAX_POINTS).fill(null);
-    const EMPTY_LABELS = Array(MAX_POINTS).fill("");
+    function pruneOldCores(latest) {
+        for (const name of Object.keys(coreMini)) {
+            if (!latest.includes(name)) {
+                try {
+                    coreMini[name].chart.destroy();
+                } catch {
+                }
+                coreMini[name].el.remove();
+                delete coreMini[name];
+            }
+        }
+    }
 
-    const resetChart = chart => {
-      chart.data.labels = [...EMPTY_LABELS];
-      chart.data.datasets[0].data = [...EMPTY_DATA];
-      chart.update();
+    // ------------------------------------------------------------
+    // RESET UI
+    // ------------------------------------------------------------
+    function resetTables() {
+        // Clear all table data immediately
+        PAG_SERVICES.setData([], []);
+        PAG_PROCESSES.setData([], []);
+        PAG_DOCKER.setData([], []);
+        PAG_DISKS.setData([], []);
+        PAG_PYUDISK.setData([], []);
+        PAG_CERTS.setData([], []);
+    }
+
+    function resetUI() {
+        firstMessage = true;
+        hideSpinners();
+        const EMPTY_DATA = Array(MAX_POINTS).fill(null);
+        const EMPTY_LABELS = Array(MAX_POINTS).fill("");
+
+        const resetChart = chart => {
+            chart.data.labels = [...EMPTY_LABELS];
+            chart.data.datasets[0].data = [...EMPTY_DATA];
+            chart.update();
+        };
+
+        resetChart(cpuAvgChart);
+        resetChart(memChart);
+        resetChart(loadChart);
+
+        for (const name of Object.keys(coreMini)) {
+            try {
+                coreMini[name].chart.destroy();
+            } catch {
+            }
+            coreMini[name].el.remove();
+            delete coreMini[name];
+        }
+
+        systemEl.textContent = "-";
+        ipEl.textContent = "—";
+        processorEl.textContent = "—";
+        memEl.textContent = "—";
+        diskEl.textContent = "—";
+        loadEl.textContent = "—";
+    }
+
+    // ------------------------------------------------------------
+    // MISC HELPERS
+    // ------------------------------------------------------------
+    function pushPoint(chart, value) {
+        const ts = new Date().toLocaleTimeString();
+        chart.data.labels.push(ts);
+        chart.data.datasets[0].data.push(isFinite(value) ? Number(value) : NaN);
+        if (chart.data.labels.length > MAX_POINTS) {
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+        }
+        chart.update("none");
+    }
+
+    function num(x) {
+        const n = Number(x);
+        return Number.isFinite(n) ? n : null;
+    }
+
+    const round2 = x => Number(x).toFixed(2);
+    const formatBytes = x => {
+        if (x == null) return "—";
+        const u = ["B", "KB", "MB", "GB", "TB"];
+        let i = 0, n = Number(x);
+        while (n > 1024 && i < u.length - 1) {
+            n /= 1024;
+            i++;
+        }
+        return n.toFixed(2) + " " + u[i];
+    };
+    const objectToString = (...vals) => {
+        for (const v of vals) {
+            if (v && typeof v === "object")
+                return Object.entries(v).map(([a, b]) => `${a}: ${b}`).join("<br>");
+            if (v != null) return v;
+        }
+        return "—";
     };
 
-    resetChart(cpuAvgChart);
-    resetChart(memChart);
-    resetChart(loadChart);
-
-    for (const name of Object.keys(coreMini)) {
-      try { coreMini[name].chart.destroy(); } catch {}
-      coreMini[name].el.remove();
-      delete coreMini[name];
+    function showSpinner(panelOrTableId) {
+        const overlay = panelSpinners[panelOrTableId];
+        if (overlay) overlay.classList.remove("hidden");
     }
 
-    systemEl.textContent = "-";
-    ipEl.textContent = "—";
-    processorEl.textContent = "—";
-    memEl.textContent = "—";
-    diskEl.textContent = "—";
-    loadEl.textContent = "—";
-  }
-
-  // ------------------------------------------------------------
-  // MISC HELPERS
-  // ------------------------------------------------------------
-  function pushPoint(chart, value) {
-    const ts = new Date().toLocaleTimeString();
-    chart.data.labels.push(ts);
-    chart.data.datasets[0].data.push(isFinite(value) ? Number(value) : NaN);
-    if (chart.data.labels.length > MAX_POINTS) {
-      chart.data.labels.shift();
-      chart.data.datasets[0].data.shift();
-    }
-    chart.update("none");
-  }
-
-  function num(x) { const n = Number(x); return Number.isFinite(n) ? n : null; }
-  const round2 = x => Number(x).toFixed(2);
-  const formatBytes = x => {
-    if (x == null) return "—";
-    const u = ["B","KB","MB","GB","TB"];
-    let i = 0, n = Number(x);
-    while (n > 1024 && i < u.length-1) { n/=1024; i++; }
-    return n.toFixed(2) + " " + u[i];
-  };
-  const objectToString = (...vals) => {
-    for (const v of vals) {
-      if (v && typeof v === "object")
-        return Object.entries(v).map(([a,b])=>`${a}: ${b}`).join("<br>");
-      if (v != null) return v;
-    }
-    return "—";
-  };
-
-  function showSpinner(panelOrTableId) {
-    const overlay = panelSpinners[panelOrTableId];
-    if (overlay) overlay.classList.remove("hidden");
-  }
-
-  function hideSpinner(panelOrTableId) {
-    const overlay = panelSpinners[panelOrTableId];
-    if (overlay) overlay.classList.add("hidden");
-  }
-
-  // ------------------------------------------------------------
-  // HANDLE METRICS
-  // ------------------------------------------------------------
-  let firstMessage = true;
-
-  function handleMetrics(list) {
-    if (firstMessage) {
-      hideSpinners();
-      firstMessage = false;
+    function hideSpinner(panelOrTableId) {
+        const overlay = panelSpinners[panelOrTableId];
+        if (overlay) overlay.classList.add("hidden");
     }
 
-    const now = new Date().toLocaleTimeString();
+    // ------------------------------------------------------------
+    // HANDLE METRICS
+    // ------------------------------------------------------------
+    let firstMessage = true;
 
-    for (const host of list) {
-      if (host.base_url !== selectedBase) continue;
-      const m = host.metrics || {};
+    function handleMetrics(list) {
+        if (firstMessage) {
+            hideSpinners();
+            firstMessage = false;
+        }
 
-      // ------------ Static fields ------------
-      systemEl.textContent =
-        `Node: ${m.node || "-"}\n` +
-        `OS: ${m.system || "-"}\n` +
-        `Architecture: ${m.architecture || "-"}\n\n` +
-        `CPU Cores: ${m.cores || "-"}\n` +
-        `Up Time: ${m.uptime || "-"}\n`;
+        const now = new Date().toLocaleTimeString();
 
-      if (m.ip_info)
-        ipEl.textContent =
-          `Private: ${m.ip_info.private || "-"}\n\n` +
-          `Public: ${m.ip_info.public || "-"}`;
+        for (const host of list) {
+            if (host.base_url !== selectedBase) continue;
+            const m = host.metrics || {};
 
-      processorEl.textContent =
-        `CPU: ${m.cpu_name || "-"}\n\n` +
-        `GPU: ${m.gpu_name || "-"}`;
+            // ------------ Static fields ------------
+            systemEl.textContent =
+                `Node: ${m.node || "-"}\n` +
+                `OS: ${m.system || "-"}\n` +
+                `Architecture: ${m.architecture || "-"}\n\n` +
+                `CPU Cores: ${m.cores || "-"}\n` +
+                `Up Time: ${m.uptime || "-"}\n`;
 
-      if (m.disk_info && m.disk_info[0]) {
-        const d = m.disk_info[0];
-        diskEl.textContent =
-          `Total: ${formatBytes(d.total)}\n` +
-          `Used: ${formatBytes(d.used)}\n` +
-          `Free: ${formatBytes(d.free)}`;
-      }
+            if (m.ip_info)
+                ipEl.textContent =
+                    `Private: ${m.ip_info.private || "-"}\n\n` +
+                    `Public: ${m.ip_info.public || "-"}`;
 
-      if (m.memory_info) {
-        memEl.textContent =
-          `Total: ${formatBytes(m.memory_info.total)}\n` +
-          `Used: ${formatBytes(m.memory_info.used)}\n` +
-          `Percent: ${round2(m.memory_info.percent)}%`;
-        pushPoint(memChart, num(m.memory_info.percent));
-      }
+            processorEl.textContent =
+                `CPU: ${m.cpu_name || "-"}\n\n` +
+                `GPU: ${m.gpu_name || "-"}`;
 
-      // ------------ CPU ------------
-      let avg = null;
-      if (m.cpu_usage) {
-        const values = m.cpu_usage.map(num);
-        avg = values.reduce((a,b)=>a+(b||0),0) / values.length;
-        pruneOldCores(values.map((_,i)=>"cpu"+(i+1)));
+            if (m.disk_info && m.disk_info[0]) {
+                const d = m.disk_info[0];
+                diskEl.textContent =
+                    `Total: ${formatBytes(d.total)}\n` +
+                    `Used: ${formatBytes(d.used)}\n` +
+                    `Free: ${formatBytes(d.free)}`;
+            }
 
-        values.forEach((v,i)=>{
-          const core = getCoreChart("cpu"+(i+1));
+            if (m.memory_info) {
+                memEl.textContent =
+                    `Total: ${formatBytes(m.memory_info.total)}\n` +
+                    `Used: ${formatBytes(m.memory_info.used)}\n` +
+                    `Percent: ${round2(m.memory_info.percent)}%`;
+                pushPoint(memChart, num(m.memory_info.percent));
+            }
 
-          core.chart.data.labels.push(now);
-          core.chart.data.datasets[0].data.push(v||0);
-          if (core.chart.data.labels.length > MAX_POINTS) {
-            core.chart.data.labels.shift();
-            core.chart.data.datasets[0].data.shift();
-          }
-          core.chart.update({ lazy: true });
-          core.valEl.textContent = `${(v||0).toFixed(1)}%`;
-        });
-      }
-      if (avg != null) pushPoint(cpuAvgChart, avg);
+            // ------------ CPU ------------
+            let avg = null;
+            if (m.cpu_usage) {
+                const values = m.cpu_usage.map(num);
+                avg = values.reduce((a, b) => a + (b || 0), 0) / values.length;
+                pruneOldCores(values.map((_, i) => "cpu" + (i + 1)));
 
-      // ------------ LOAD ------------
-      if (m.load_averages) {
-        const la = m.load_averages;
-        loadEl.textContent =
-          `${round2(la.m1)} / ${round2(la.m5)} / ${round2(la.m15)}`;
-        pushPoint(loadChart, num(la.m1));
-      }
+                values.forEach((v, i) => {
+                    const core = getCoreChart("cpu" + (i + 1));
 
-      // ------------ SERVICES (paginated) ------------
-      const services = (m.service_stats || m.services || []).filter(s =>
-        (s.pname || s.Name || "").toLowerCase().includes(
-          svcFilter.value.trim().toLowerCase()
-        )
-      );
-      if (services.length) {
-        const columns = ["PID","Name","Status","CPU","Memory","Threads","Open Files"];
-        const cleaned = services.map(s => ({
-          PID: s.PID ?? s.pid ?? "",
-          Name: s.pname ?? s.Name ?? s.name ?? "",
-          Status: s.Status ?? s.active ?? s.status ?? s.Active ?? "—",
-          CPU: objectToString(s.CPU, s.cpu),
-          Memory: objectToString(s.Memory, s.memory),
-          Threads: s.Threads ?? s.threads ?? "—",
-          "Open Files": s["Open Files"] ?? s.open_files ?? "—"
-        }));
-        PAG_SERVICES.setData(cleaned, columns);
-        hideSpinner("services-table");
-      }
+                    core.chart.data.labels.push(now);
+                    core.chart.data.datasets[0].data.push(v || 0);
+                    if (core.chart.data.labels.length > MAX_POINTS) {
+                        core.chart.data.labels.shift();
+                        core.chart.data.datasets[0].data.shift();
+                    }
+                    core.chart.update({lazy: true});
+                    core.valEl.textContent = `${(v || 0).toFixed(1)}%`;
+                });
+            }
+            if (avg != null) pushPoint(cpuAvgChart, avg);
 
-      // ------------ PROCESSES (paginated) ------------
-      const processes = (m.process_stats || []).filter(p =>
-        (p.Name || "").toLowerCase().includes(
-          procFilter.value.trim().toLowerCase()
-        )
-      );
-      if (processes.length) {
-        const columns = ["PID","Name","Status","CPU","Memory","Uptime","Threads","Open Files"];
-        PAG_PROCESSES.setData(processes, columns);
-        hideSpinner("processes-table");
-      }
+            // ------------ LOAD ------------
+            if (m.load_averages) {
+                const la = m.load_averages;
+                loadEl.textContent =
+                    `${round2(la.m1)} / ${round2(la.m5)} / ${round2(la.m15)}`;
+                pushPoint(loadChart, num(la.m1));
+            }
 
-      // ------------ DOCKER, DISKS, PYUDISK, CERTIFICATES ------------
-      if (m.docker_stats) {
-        const cols = Object.keys(m.docker_stats[0] || {});
-        PAG_DOCKER.setData(m.docker_stats, cols);
-        hideSpinner("docker-table");
-      }
+            // ------------ SERVICES (paginated) ------------
+            const services = (m.service_stats || m.services || []).filter(s =>
+                (s.pname || s.Name || "").toLowerCase().includes(
+                    svcFilter.value.trim().toLowerCase()
+                )
+            );
+            if (services.length) {
+                const columns = ["PID", "Name", "Status", "CPU", "Memory", "Threads", "Open Files"];
+                const cleaned = services.map(s => ({
+                    PID: s.PID ?? s.pid ?? "",
+                    Name: s.pname ?? s.Name ?? s.name ?? "",
+                    Status: s.Status ?? s.active ?? s.status ?? s.Active ?? "—",
+                    CPU: objectToString(s.CPU, s.cpu),
+                    Memory: objectToString(s.Memory, s.memory),
+                    Threads: s.Threads ?? s.threads ?? "—",
+                    "Open Files": s["Open Files"] ?? s.open_files ?? "—"
+                }));
+                PAG_SERVICES.setData(cleaned, columns);
+                hideSpinner("services-table");
+            }
 
-      if (m.disks_info) {
-        const cols = Object.keys(m.disks_info[0] || {});
-        PAG_DISKS.setData(m.disks_info, cols);
-        hideSpinner("disks-table");
-      }
+            // ------------ PROCESSES (paginated) ------------
+            const processes = (m.process_stats || []).filter(p =>
+                (p.Name || "").toLowerCase().includes(
+                    procFilter.value.trim().toLowerCase()
+                )
+            );
+            if (processes.length) {
+                const columns = ["PID", "Name", "Status", "CPU", "Memory", "Uptime", "Threads", "Open Files"];
+                PAG_PROCESSES.setData(processes, columns);
+                hideSpinner("processes-table");
+            }
 
-      if (m.pyudisk_stats) {
-        const cols = Object.keys(m.pyudisk_stats[0] || {});
-        PAG_PYUDISK.setData(m.pyudisk_stats, cols);
-        hideSpinner("pyudisk-table");
-      }
+            // ------------ DOCKER, DISKS, PYUDISK, CERTIFICATES ------------
+            if (m.docker_stats) {
+                const cols = Object.keys(m.docker_stats[0] || {});
+                PAG_DOCKER.setData(m.docker_stats, cols);
+                hideSpinner("docker-table");
+            }
 
-      if (m.certificates) {
-        const cols = Object.keys(m.certificates[0] || {});
-        PAG_CERTS.setData(m.certificates, cols);
-        hideSpinner("certificates-table");
-      }
+            if (m.disks_info) {
+                const cols = Object.keys(m.disks_info[0] || {});
+                PAG_DISKS.setData(m.disks_info, cols);
+                hideSpinner("disks-table");
+            }
+
+            if (m.pyudisk_stats) {
+                const cols = Object.keys(m.pyudisk_stats[0] || {});
+                PAG_PYUDISK.setData(m.pyudisk_stats, cols);
+                hideSpinner("pyudisk-table");
+            }
+
+            if (m.certificates) {
+                const cols = Object.keys(m.certificates[0] || {});
+                PAG_CERTS.setData(m.certificates, cols);
+                hideSpinner("certificates-table");
+            }
+        }
     }
-  }
 
-  // ------------------------------------------------------------
-  // EVENT BINDINGS
-  // ------------------------------------------------------------
-  targets.forEach(t => {
-    const opt = document.createElement("option");
-    opt.value = t.base_url;
-    opt.textContent = t.name || t.base_url;
-    nodeSelect.appendChild(opt);
-  });
+    // ------------------------------------------------------------
+    // EVENT BINDINGS
+    // ------------------------------------------------------------
+    targets.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.base_url;
+        opt.textContent = t.name || t.base_url;
+        nodeSelect.appendChild(opt);
+    });
 
-  let selectedBase = nodeSelect.value || (targets[0] && targets[0].base_url);
-  nodeSelect.value = selectedBase;
+    let selectedBase = nodeSelect.value || (targets[0] && targets[0].base_url);
+    nodeSelect.value = selectedBase;
 
-  nodeSelect.addEventListener("change", () => {
-    selectedBase = nodeSelect.value;
-    resetUI();
-    resetTables();
-    showAllSpinners();
-    ws.send(JSON.stringify({ type: "select_target", base_url: selectedBase }));
-  });
+    nodeSelect.addEventListener("change", () => {
+        selectedBase = nodeSelect.value;
+        resetUI();
+        resetTables();
+        showAllSpinners();
+        ws.send(JSON.stringify({type: "select_target", base_url: selectedBase}));
+    });
 
-  svcGetAll.addEventListener("change", () => {
-    ws.send(JSON.stringify({ type: "update_flags", all_services: svcGetAll.checked }));
-  })
+    svcGetAll.addEventListener("change", () => {
+        ws.send(JSON.stringify({type: "update_flags", all_services: svcGetAll.checked}));
+    })
 
-  refreshBtn.addEventListener("click", resetUI);
+    refreshBtn.addEventListener("click", resetUI);
 
-  showCoresCheckbox.addEventListener("change", () => {
-    const visible = showCoresCheckbox.checked;
-    Object.values(coreMini).forEach(c => c.el.style.display = visible ? "block" : "none");
-  });
+    showCoresCheckbox.addEventListener("change", () => {
+        const visible = showCoresCheckbox.checked;
+        Object.values(coreMini).forEach(c => c.el.style.display = visible ? "block" : "none");
+    });
 
-  // ------------------------------------------------------------
-  // WEBSOCKET
-  // ------------------------------------------------------------
-  const protocol = location.protocol === "https:" ? "wss" : "ws";
-  const ws = new WebSocket(`${protocol}://${location.host}/ws`);
+    // ------------------------------------------------------------
+    // WEBSOCKET
+    // ------------------------------------------------------------
+    const protocol = location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(`${protocol}://${location.host}/ws`);
 
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ type: "select_target", base_url: selectedBase }));
-  };
+    ws.onopen = () => {
+        ws.send(JSON.stringify({type: "select_target", base_url: selectedBase}));
+    };
 
-  ws.onmessage = evt => {
-    try {
-      const msg = JSON.parse(evt.data);
-      if (msg.type === "metrics") handleMetrics(msg.data);
-      if (msg.type === "error") alert(msg.message);
-    } catch (err) {
-      console.error("WS parse error:", err);
-    }
-  };
+    ws.onmessage = evt => {
+        try {
+            const msg = JSON.parse(evt.data);
+            if (msg.type === "metrics") handleMetrics(msg.data);
+            if (msg.type === "error") alert(msg.message);
+        } catch (err) {
+            console.error("WS parse error:", err);
+        }
+    };
 
-  // ------------------------------------------------------------
-  // INIT
-  // ------------------------------------------------------------
-  attachSpinners();
-  resetUI();           // reset UI, keep spinners visible
-  showAllSpinners();   // show spinners until first metrics arrive
+    // ------------------------------------------------------------
+    // INIT
+    // ------------------------------------------------------------
+    attachSpinners();
+    resetUI();           // reset UI, keep spinners visible
+    showAllSpinners();   // show spinners until first metrics arrive
 })();
