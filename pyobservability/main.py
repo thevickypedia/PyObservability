@@ -1,5 +1,4 @@
 import logging
-import os
 import pathlib
 import warnings
 from datetime import datetime
@@ -120,7 +119,9 @@ def start(**kwargs) -> None:
             logs_path = pathlib.Path(settings.env.logs_path)
             log_file = logs_path / f"pyobservability_{datetime.now():%d-%m-%Y}.log"
             logs_path.mkdir(parents=True, exist_ok=True)
-            uvicorn_args["log_config"] = settings.detailed_log_config(filename=log_file.resolve(), debug=settings.env.debug)
+            uvicorn_args["log_config"] = settings.detailed_log_config(
+                filename=log_file.resolve(), debug=settings.env.debug
+            )
     # log_config will take precedence if both log and log_config are set
     if settings.env.log_config:
         uvicorn_args["log_config"] = (

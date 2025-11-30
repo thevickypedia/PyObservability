@@ -5,7 +5,7 @@ import socket
 from typing import Any, Dict, List
 
 import yaml
-from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt, DirectoryPath
+from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt
 from pydantic.aliases import AliasChoices
 from pydantic_settings import BaseSettings
 
