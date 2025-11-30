@@ -9,16 +9,18 @@ on:
       - "**/version.py"
 
 jobs:
-  pre_commit:
+  pre-commit:
     runs-on: thevickypedia-default
     steps:
       - uses: actions/checkout@v5
       - run: |
           pip install pre-commit
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
           pre-commit run --all-files
         shell: bash
 
   pypi-publisher:
+    needs: pre-commit
     runs-on: thevickypedia-default
     outputs:
       version: ${{ steps.publish.outputs.version }}
