@@ -9,6 +9,15 @@ on:
       - "**/version.py"
 
 jobs:
+  pre_commit:
+    runs-on: thevickypedia-default
+    steps:
+      - uses: actions/checkout@v5
+      - run: |
+          pip install pre-commit
+          pre-commit run --all-files
+        shell: bash
+
   pypi-publisher:
     runs-on: thevickypedia-default
     outputs:
