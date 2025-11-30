@@ -30,10 +30,10 @@ RUN if [ "$VERSION" = "latest" ]; then \
       pip install "pyobservability==$VERSION"; \
     fi
 
-COPY entrypoint.sh /entrypoint.sh
+COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-COPY healthcheck.sh /healthcheck.sh
+COPY docker/healthcheck.sh /healthcheck.sh
 RUN chmod +x /entrypoint.sh
 
 HEALTHCHECK --start-period=2s --interval=5s --timeout=3s \
