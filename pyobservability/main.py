@@ -70,6 +70,7 @@ def include_routes() -> None:
             app=PyObservability,
             username=settings.env.username,
             password=settings.env.password,
+            timeout=settings.env.timeout,
             custom_logger=LOGGER,
             params=[
                 uiauth.Parameters(

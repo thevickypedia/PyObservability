@@ -129,6 +129,7 @@ class EnvConfig(PydanticEnvConfig):
 
     username: str | None = Field(None, validation_alias=alias_choices("USERNAME"))
     password: str | None = Field(None, validation_alias=alias_choices("PASSWORD"))
+    timeout: PositiveInt = Field(300, validation_alias=alias_choices("TIMEOUT"))
 
     class Config:
         """Environment variables configuration."""
