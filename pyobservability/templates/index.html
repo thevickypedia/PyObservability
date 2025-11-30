@@ -23,6 +23,7 @@
         <label for="node-select">Node:</label>
         <select id="node-select" aria-label="Select node"></select>
         <button id="refresh-btn" title="Force refresh">Refresh</button>
+        <button id="logout" title="Logout" onclick="logout()">Logout</button>
     </div>
 </header>
 
@@ -190,6 +191,17 @@
 <script>
     // inject server-side targets
     window.MONITOR_TARGETS = {{ targets | tojson }};
+</script>
+<script>
+    const logoutEndpoint = "{{ logout }}";
+
+    if (!logoutEndpoint.startsWith('/')) {
+        document.getElementById("logout").style.display = "none";
+    }
+
+    function logout() {
+        window.location.href = logoutEndpoint;
+    }
 </script>
 <script src="/static/app.js"></script>
 </body>

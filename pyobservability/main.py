@@ -39,9 +39,10 @@ async def index(request: Request):
         TemplateResponse:
         Rendered HTML template with targets and version.
     """
-    return templates.TemplateResponse(
-        "index.html", {"request": request, "targets": settings.env.targets, "version": __version__}
-    )
+    args = dict(request=request, targets=settings.env.targets, version=__version__)
+    if settings.env.username and settings.env.password:
+        args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
+    return templates.TemplateResponse("index.html", args)
 
 
 async def health() -> Dict[str, str]:
