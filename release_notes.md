@@ -1,6 +1,19 @@
 Release Notes
 =============
 
+v1.2.0 (11/29/2025)
+-------------------
+- [a90557d](https://github.com/thevickypedia/PyObservability/commit/a90557d97a4ad730066a54d13b97f1c264a8bdb9) chore: Release v1.2.0
+- [1aec808](https://github.com/thevickypedia/PyObservability/commit/1aec8086126ba1f94b005e7cbb42aa0cf9a77923) ci: Add a dependency for pre-commit before pypi-publish
+- [02ac6d9](https://github.com/thevickypedia/PyObservability/commit/02ac6d94c35c41b1d5fe18dea4417a897237edc6) refactor: Move docker related files into a dedicated directory
+- [846c4a1](https://github.com/thevickypedia/PyObservability/commit/846c4a1ab9d38a5251d060352569927b580680f9) docs: Update README.md
+- [25c0ef2](https://github.com/thevickypedia/PyObservability/commit/25c0ef2045f2f67ecd953cd4bb8abeee6abd4057) feat: Include an option to set timeout for UI auth
+- [bc977a3](https://github.com/thevickypedia/PyObservability/commit/bc977a36bf2a3d49d2def54a01bb957856ab8b87) feat: Include a /logout endpoint in the UI
+- [ddb6d87](https://github.com/thevickypedia/PyObservability/commit/ddb6d87333f174d2beb7b7253f8220944632dbfe) style: Add meta tags for favicon and apple touch icons
+- [66331e6](https://github.com/thevickypedia/PyObservability/commit/66331e6a5fa3e7b498b5159c729d0cdaafa9d869) lint: Make linter happy
+- [4a2689a](https://github.com/thevickypedia/PyObservability/commit/4a2689aea84bfad11ec5687bb95337b5fae68fd4) ci: Run linter through GHA on every push
+- [71c2dd8](https://github.com/thevickypedia/PyObservability/commit/71c2dd87c422312d4a368401fba1986358c72e29) chore: Update release notes for v1.1.0
+
 v1.1.0 (11/29/2025)
 -------------------
 - [2e061e4](https://github.com/thevickypedia/PyObservability/commit/2e061e4572f5dd798503c7fb81c026210983149a) chore: Release v1.1.0
