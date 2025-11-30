@@ -78,6 +78,14 @@ docker run \
 **Optional**
 - **USERNAME** - Username to authenticate the monitoring page.
 - **PASSWORD** - Password to authenticate the monitoring page.
+- **TIMEOUT** - Timeout (in seconds) for UI authentication. Defaults to 5m.
+
+**Logging**
+> PyObservability uses ``uvicorn`` logger by default. Following options can be used to override the default logger.
+- **LOG** - Lazy logger to use a custom log format. Can either be `file` or `stdout`.
+- **DEBUG** - Enables debug level logging. Defaults to `False`.
+- **LOGS_PATH** - Directory path to store log files if `LOG` is set to `file`.
+- **LOG_CONFIG** - Path to a custom logging configuration file.
 
 ## License & copyright
 
