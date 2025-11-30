@@ -5,7 +5,7 @@ import socket
 from typing import Any, Dict, List
 
 import yaml
-from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt
+from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt, DirectoryPath
 from pydantic.aliases import AliasChoices
 from pydantic_settings import BaseSettings
 
@@ -123,6 +123,7 @@ class EnvConfig(PydanticEnvConfig):
     interval: PositiveInt = Field(3, validation_alias=alias_choices("INTERVAL"))
 
     log: enums.Log | None = None
+    logs_path: str = "logs"
     debug: bool = False
     log_config: Dict[str, Any] | FilePath | None = None
 
