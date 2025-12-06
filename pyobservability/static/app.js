@@ -228,6 +228,40 @@
                 return; // do not re-render if data didn't change
             }
             headEl.innerHTML = "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
+            state.dataRaw = arr; // Keep raw data for sorting
+            state.columns = columns;
+            state.sortCol = null;
+            state.sortAsc = true;
+            // Add click listeners for sorting
+            Array.from(headEl.querySelectorAll("th")).forEach((th, idx) => {
+                th.style.cursor = "pointer";
+                th.onclick = () => {
+                    const col = columns[idx];
+                    if (state.sortCol === col) {
+                        state.sortAsc = !state.sortAsc;
+                    } else {
+                        state.sortCol = col;
+                        state.sortAsc = true;
+                    }
+                    state.dataRaw.sort((a, b) => {
+                        let va = a[col], vb = b[col];
+                        let na = parseFloat(va), nb = parseFloat(vb);
+                        if (!isNaN(na) && !isNaN(nb)) {
+                            return state.sortAsc ? na - nb : nb - na;
+                        }
+                        va = (va ?? "").toString().toLowerCase();
+                        vb = (vb ?? "").toString().toLowerCase();
+                        if (va < vb) return state.sortAsc ? -1 : 1;
+                        if (va > vb) return state.sortAsc ? 1 : -1;
+                        return 0;
+                    });
+                    // Update state.data after sorting
+                    state.data = state.dataRaw.map(row =>
+                        "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>"
+                    );
+                    render();
+                };
+            });
             state.data = arr.map(row => {
                 return "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>";
             });
