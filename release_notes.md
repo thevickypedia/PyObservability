@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v1.3.0 (12/06/2025)
+-------------------
+- [c942f33](https://github.com/thevickypedia/PyObservability/commit/c942f331cc62846d1195ff37ad26c12e54d9dd3c) chore: Release ``v1.3.0``
+- [a4ebd19](https://github.com/thevickypedia/PyObservability/commit/a4ebd19a2949bb7e476756d904f243ca4912438b) docs: Remove stale labels from README.md
+- [ffd8db6](https://github.com/thevickypedia/PyObservability/commit/ffd8db6eb15ce5bfde19c65bcb94e4bb6ffa8e58) feat: Rebuild all the table headers instead of soft reset when sorting is ended
+- [cabfbdf](https://github.com/thevickypedia/PyObservability/commit/cabfbdf0ad59ed3f34523f589743c1f4736f4c67) feat: Reset and prevent sort with a tiny reset button
+- [da56291](https://github.com/thevickypedia/PyObservability/commit/da562919343b0fa3520d0b40cb537aba8d102c5d) style: Maintain sorted columns as sorted
+- [bdcb812](https://github.com/thevickypedia/PyObservability/commit/bdcb81294adf47fc97b89eb84bc04232405c7620) feat: Make table headers sortable
+- [43a4370](https://github.com/thevickypedia/PyObservability/commit/43a4370155ebdbadb343726ce40e232bbe03938e) fix: Fix failing healthchecks for dockerizer runs
+- [a061b2b](https://github.com/thevickypedia/PyObservability/commit/a061b2b3c12009fdcc9fa9f2faef4555caab9f5a) chore: Update release notes for v1.2.0
+
 v1.2.0 (11/29/2025)
 -------------------
 - [a90557d](https://github.com/thevickypedia/PyObservability/commit/a90557d97a4ad730066a54d13b97f1c264a8bdb9) chore: Release v1.2.0
