@@ -9,8 +9,6 @@
 **Deployments**
 
 [![pypi][label-actions-pypi]][gha_pypi]
-[![notes][label-actions-notes]][gha_notes]
-[![release][label-actions-release]][gha_release]
 [![docker][label-actions-docker]][gha_docker]
 
 [![Pypi][label-pypi]][pypi]
@@ -103,15 +101,11 @@ Licensed under the [MIT License][license]
 [label-pypi]: https://img.shields.io/pypi/v/PyObservability
 [label-pypi-format]: https://img.shields.io/pypi/format/PyObservability
 [label-pypi-status]: https://img.shields.io/pypi/status/PyObservability
-[label-actions-notes]: https://github.com/thevickypedia/PyObservability/actions/workflows/notes.yml/badge.svg
-[label-actions-release]: https://github.com/thevickypedia/PyObservability/actions/workflows/release.yml/badge.svg
 [label-actions-docker]: https://github.com/thevickypedia/PyObservability/actions/workflows/docker.yml/badge.svg
 
 [3.11]: https://docs.python.org/3/whatsnew/3.11.html
 [virtual environment]: https://docs.python.org/3/tutorial/venv.html
 [gha_pypi]: https://github.com/thevickypedia/PyObservability/actions/workflows/python-publish.yml
-[gha_notes]: https://github.com/thevickypedia/PyObservability/actions/workflows/notes.yml
-[gha_release]: https://github.com/thevickypedia/PyObservability/actions/workflows/release.yml
 [gha_docker]: https://github.com/thevickypedia/PyObservability/actions/workflows/docker.yml
 [pypi]: https://pypi.org/project/PyObservability
 [pypi-files]: https://pypi.org/project/PyObservability/#files
