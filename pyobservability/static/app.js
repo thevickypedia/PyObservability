@@ -224,15 +224,10 @@
         }
 
         function setData(arr, columns) {
-            if (JSON.stringify(state.data) === JSON.stringify(arr)) {
-                return; // do not re-render if data didn't change
-            }
             headEl.innerHTML = "<tr>" + columns.map(c => `<th>${c}</th>`).join("") + "</tr>";
-            state.dataRaw = arr; // Keep raw data for sorting
+            state.dataRaw = arr.slice();
             state.columns = columns;
-            state.sortCol = null;
-            state.sortAsc = true;
-            // Add click listeners for sorting
+            // Sorting logic
             Array.from(headEl.querySelectorAll("th")).forEach((th, idx) => {
                 th.style.cursor = "pointer";
                 th.onclick = () => {
@@ -243,8 +238,14 @@
                         state.sortCol = col;
                         state.sortAsc = true;
                     }
+                    sortAndRender();
+                };
+            });
+            // If a sort is active, re-apply it
+            function sortAndRender() {
+                if (state.sortCol) {
                     state.dataRaw.sort((a, b) => {
-                        let va = a[col], vb = b[col];
+                        let va = a[state.sortCol], vb = b[state.sortCol];
                         let na = parseFloat(va), nb = parseFloat(vb);
                         if (!isNaN(na) && !isNaN(nb)) {
                             return state.sortAsc ? na - nb : nb - na;
@@ -255,17 +256,13 @@
                         if (va > vb) return state.sortAsc ? 1 : -1;
                         return 0;
                     });
-                    // Update state.data after sorting
-                    state.data = state.dataRaw.map(row =>
-                        "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>"
-                    );
-                    render();
-                };
-            });
-            state.data = arr.map(row => {
-                return "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>";
-            });
-            render();
+                }
+                state.data = state.dataRaw.map(row =>
+                    "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>"
+                );
+                render();
+            }
+            sortAndRender();
         }
 
         return {setData};
