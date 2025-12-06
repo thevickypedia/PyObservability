@@ -230,7 +230,9 @@
             // Sorting logic
             Array.from(headEl.querySelectorAll("th")).forEach((th, idx) => {
                 th.style.cursor = "pointer";
-                th.onclick = () => {
+                th.onclick = (e) => {
+                    // Prevent sort if reset button was clicked
+                    if (e.target.classList.contains("sort-reset")) return;
                     const col = columns[idx];
                     if (state.sortCol === col) {
                         state.sortAsc = !state.sortAsc;
@@ -241,8 +243,10 @@
                     sortAndRender();
                 };
             });
-            // If a sort is active, re-apply it
+
             function sortAndRender() {
+                // Remove all indicators
+                headEl.querySelectorAll("th").forEach(th => th.innerHTML = th.textContent);
                 if (state.sortCol) {
                     state.dataRaw.sort((a, b) => {
                         let va = a[state.sortCol], vb = b[state.sortCol];
@@ -256,6 +260,17 @@
                         if (va > vb) return state.sortAsc ? 1 : -1;
                         return 0;
                     });
+                    // Add indicator and reset button
+                    const idx = columns.indexOf(state.sortCol);
+                    const th = headEl.querySelectorAll("th")[idx];
+                    th.innerHTML = `${state.sortCol} <span style="font-size:0.9em">${state.sortAsc ? "▲" : "▼"}</span> <span class="sort-reset" style="cursor:pointer;font-size:0.9em;color:#888;margin-left:4px;" title="Reset sort">⨯</span>`;
+                    th.querySelector(".sort-reset").onclick = (e) => {
+                        e.stopPropagation();
+                        state.sortCol = null;
+                        state.sortAsc = true;
+                        state.dataRaw = arr.slice();
+                        sortAndRender();
+                    };
                 }
                 state.data = state.dataRaw.map(row =>
                     "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>"
