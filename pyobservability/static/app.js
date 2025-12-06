@@ -245,8 +245,22 @@
             });
 
             function sortAndRender() {
-                // Remove all indicators
-                headEl.querySelectorAll("th").forEach(th => th.innerHTML = th.textContent);
+                // Rebuild all headers with correct HTML
+                headEl.querySelectorAll("th").forEach((th, idx) => {
+                    const col = state.columns[idx];
+                    if (state.sortCol === col) {
+                        th.innerHTML = `${col} <span style="font-size:0.9em">${state.sortAsc ? "▲" : "▼"}</span>&nbsp;<span class="sort-reset" style="cursor:pointer;font-size:0.9em;color:#888;margin-left:8px;" title="Reset sort">⨯</span>`;
+                        th.querySelector(".sort-reset").onclick = (e) => {
+                            e.stopPropagation();
+                            state.sortCol = null;
+                            state.sortAsc = true;
+                            state.dataRaw = arr.slice();
+                            sortAndRender();
+                        };
+                    } else {
+                        th.innerHTML = col;
+                    }
+                });
                 if (state.sortCol) {
                     state.dataRaw.sort((a, b) => {
                         let va = a[state.sortCol], vb = b[state.sortCol];
@@ -260,20 +274,9 @@
                         if (va > vb) return state.sortAsc ? 1 : -1;
                         return 0;
                     });
-                    // Add indicator and reset button
-                    const idx = columns.indexOf(state.sortCol);
-                    const th = headEl.querySelectorAll("th")[idx];
-                    th.innerHTML = `${state.sortCol} <span style="font-size:0.9em">${state.sortAsc ? "▲" : "▼"}</span> <span class="sort-reset" style="cursor:pointer;font-size:0.9em;color:#888;margin-left:4px;" title="Reset sort">⨯</span>`;
-                    th.querySelector(".sort-reset").onclick = (e) => {
-                        e.stopPropagation();
-                        state.sortCol = null;
-                        state.sortAsc = true;
-                        state.dataRaw = arr.slice();
-                        sortAndRender();
-                    };
                 }
                 state.data = state.dataRaw.map(row =>
-                    "<tr>" + columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>"
+                    "<tr>" + state.columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>"
                 );
                 render();
             }
