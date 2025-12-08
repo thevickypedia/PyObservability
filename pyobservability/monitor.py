@@ -193,7 +193,7 @@ class Monitor:
                     if errors[self.base_url] < 10:
                         errors[self.base_url] += 1
                     else:
-                        LOGGER.error(err.with_traceback())
+                        LOGGER.error(err.__traceback__)
                         LOGGER.error("%s exceeded error threshold.", self.base_url)
 
                         # notify subscribers before stopping
@@ -209,7 +209,7 @@ class Monitor:
                             except asyncio.QueueFull as warn:
                                 LOGGER.warning(warn)
                                 _ = q.get_nowait()
-                                q.put_nowait(result)
+                                q.put_nowait(error_msg)
                         await self.stop()
                         return
                 else:

@@ -115,6 +115,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 queues.clear()
 
                 if base_url == "*":
+                    # TODO: If errors exceed threshold, UI freezes but the node should be skipped instead
                     targets = _normalize_targets()
                     for target in targets:
                         mon = Monitor(target)
