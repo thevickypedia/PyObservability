@@ -482,15 +482,8 @@
             const m = host.metrics;
             if (m.disk_info && m.disk_info[0]) {
                 const m = host.metrics;
-                let totalDisk = 0;
-                let usedDisk = 0;
-                let freeDisk = 0;
-                m.disk_info.forEach(d => {
-                    totalDisk += num(d.total || 0);
-                    usedDisk += num(d.used || 0);
-                    freeDisk += num(d.free || 0);
-                });
-                return totalDisk > 0 ? (usedDisk / totalDisk) * 100 : 0.0;
+                const agg = aggregateDiskInfo(m.disk_info);
+                return agg.percent;
             }
             return host.metrics.disk_info?.[0]?.percent ?? null;
         }
@@ -622,6 +615,19 @@
     // ------------------------------------------------------------
     // MISC HELPERS
     // ------------------------------------------------------------
+    function aggregateDiskInfo(diskInfo) {
+        let totalDisk = 0;
+        let usedDisk = 0;
+        let freeDisk = 0;
+        diskInfo.forEach(d => {
+            totalDisk += num(d.total || 0);
+            usedDisk += num(d.used || 0);
+            freeDisk += num(d.free || 0);
+        });
+        let percentDisk = totalDisk > 0 ? (usedDisk / totalDisk) * 100 : 0.0;
+        return {"total": totalDisk, "used": usedDisk, "free": freeDisk, "percent": percentDisk};
+    }
+
     function pushPoint(chart, value) {
         const ts = new Date().toLocaleTimeString();
         chart.data.labels.push(ts);
@@ -713,20 +719,12 @@
                 `GPU: ${m.gpu_name || "-"}`;
 
             if (m.disk_info && m.disk_info[0]) {
-                let totalDisk = 0;
-                let usedDisk = 0;
-                let freeDisk = 0;
-                m.disk_info.forEach(d => {
-                    totalDisk += num(d.total || 0);
-                    usedDisk += num(d.used || 0);
-                    freeDisk += num(d.free || 0);
-                });
-                let percentDisk = totalDisk > 0 ? (usedDisk / totalDisk) * 100 : 0.0;
+                const agg = aggregateDiskInfo(m.disk_info);
                 diskEl.textContent =
-                    `Total: ${formatBytes(totalDisk)}\n` +
-                    `Used: ${formatBytes(usedDisk)}\n` +
-                    `Free: ${formatBytes(freeDisk)}\n` +
-                    `Percent: ${round2(percentDisk)}%`;
+                    `Total: ${formatBytes(agg.total)}\n` +
+                    `Used: ${formatBytes(agg.used)}\n` +
+                    `Free: ${formatBytes(agg.free)}\n` +
+                    `Percent: ${round2(agg.percent)}%`;
             }
 
             if (m.memory_info) {
