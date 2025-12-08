@@ -479,6 +479,19 @@
             return values.reduce((a, b) => a + b, 0) / values.length;
         }
         if (metric === "disk") {
+            const m = host.metrics;
+            if (m.disk_info && m.disk_info[0]) {
+                const m = host.metrics;
+                let totalDisk = 0;
+                let usedDisk = 0;
+                let freeDisk = 0;
+                m.disk_info.forEach(d => {
+                    totalDisk += num(d.total || 0);
+                    usedDisk += num(d.used || 0);
+                    freeDisk += num(d.free || 0);
+                });
+                return totalDisk > 0 ? (usedDisk / totalDisk) * 100 : 0.0;
+            }
             return host.metrics.disk_info?.[0]?.percent ?? null;
         }
         return null;
@@ -593,8 +606,7 @@
         for (const name of Object.keys(coreMini)) {
             try {
                 coreMini[name].chart.destroy();
-            } catch {
-            }
+            } catch {}
             coreMini[name].el.remove();
             delete coreMini[name];
         }
@@ -701,17 +713,27 @@
                 `GPU: ${m.gpu_name || "-"}`;
 
             if (m.disk_info && m.disk_info[0]) {
-                const d = m.disk_info[0];
+                let totalDisk = 0;
+                let usedDisk = 0;
+                let freeDisk = 0;
+                m.disk_info.forEach(d => {
+                    totalDisk += num(d.total || 0);
+                    usedDisk += num(d.used || 0);
+                    freeDisk += num(d.free || 0);
+                });
+                let percentDisk = totalDisk > 0 ? (usedDisk / totalDisk) * 100 : 0.0;
                 diskEl.textContent =
-                    `Total: ${formatBytes(d.total)}\n` +
-                    `Used: ${formatBytes(d.used)}\n` +
-                    `Free: ${formatBytes(d.free)}`;
+                    `Total: ${formatBytes(totalDisk)}\n` +
+                    `Used: ${formatBytes(usedDisk)}\n` +
+                    `Free: ${formatBytes(freeDisk)}\n` +
+                    `Percent: ${round2(percentDisk)}%`;
             }
 
             if (m.memory_info) {
                 memEl.textContent =
                     `Total: ${formatBytes(m.memory_info.total)}\n` +
                     `Used: ${formatBytes(m.memory_info.used)}\n` +
+                    `Free: ${formatBytes(m.memory_info.free)}\n` +
                     `Percent: ${round2(m.memory_info.percent)}%`;
                 pushPoint(memChart, num(m.memory_info.percent));
             }
