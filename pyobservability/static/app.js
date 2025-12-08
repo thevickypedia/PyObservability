@@ -370,6 +370,144 @@
     const memChart = makeMainChart(memCtx, "Memory %");
     const loadChart = makeMainChart(loadCtx, "CPU Load");
 
+    const unifiedCtx = document.getElementById("unified-chart").getContext("2d");
+    const unifiedPanel = document.getElementById("unified-panel");
+    const unifiedLegend = document.getElementById("unified-legend");
+    const unifiedTitle = document.getElementById("unified-title");
+    const metricButtons = document.querySelectorAll("[data-metric-btn]");
+    let unifiedMetric = "memory";
+    let unifiedChart = null;
+    let unifiedNodes = [];
+    const colorPalette = ["#63b3ff", "#ff99c8", "#7dd3fc", "#fbbf24", "#a3e635", "#f87171", "#c084fc", "#38bdf8"];
+    const nodeColor = {};
+
+    function normalizeNodes(nodes) {
+        return nodes
+            .filter(node => node.base_url && node.base_url !== "*")
+            .sort((a, b) => (a.name || a.base_url).localeCompare(b.name || b.base_url));
+    }
+
+    function assignColors(nodes) {
+        nodes.forEach((node, idx) => {
+            nodeColor[node.base_url] = colorPalette[idx % colorPalette.length];
+        });
+    }
+
+    function renderLegend(nodes) {
+        unifiedLegend.innerHTML = "";
+        nodes.forEach(node => {
+            const item = document.createElement("div");
+            item.className = "unified-legend-item";
+            item.innerHTML = `<span class="legend-dot" style="background:${nodeColor[node.base_url]}"></span>${node.name || node.base_url}`;
+            unifiedLegend.appendChild(item);
+        });
+    }
+
+    function makeUnifiedChart(nodes) {
+        return new Chart(unifiedCtx, {
+            type: "line",
+            data: {
+                labels: Array(MAX_POINTS).fill(""),
+                datasets: nodes.map(node => ({
+                    label: node.name || node.base_url,
+                    meta: {base_url: node.base_url},
+                    data: Array(MAX_POINTS).fill(null),
+                    borderColor: nodeColor[node.base_url],
+                    backgroundColor: `${nodeColor[node.base_url]}33`,
+                    borderWidth: 2,
+                    fill: false,
+                    tension: 0.3,
+                    pointRadius: 0,
+                }))
+            },
+            options: {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {display: false},
+                    y: {beginAtZero: true, suggestedMax: 100}
+                },
+                plugins: {legend: {display: false}}
+            }
+        });
+    }
+
+    function setUnifiedMode(enabled) {
+        document.body.classList.toggle("unified-mode", enabled);
+        if (!enabled) {
+            unifiedPanel.classList.add("hidden");
+        }
+    }
+
+    function ensureUnifiedChart(metrics) {
+        const nodes = normalizeNodes(metrics);
+        if (!nodes.length) return false;
+        const changed =
+            nodes.length !== unifiedNodes.length ||
+            nodes.some((node, idx) => unifiedNodes[idx]?.base_url !== node.base_url);
+        if (!unifiedChart || changed) {
+            if (unifiedChart) {
+                unifiedChart.destroy();
+            }
+            assignColors(nodes);
+            unifiedChart = makeUnifiedChart(nodes);
+            unifiedNodes = nodes;
+        }
+        unifiedPanel.classList.remove("hidden");
+        renderLegend(nodes);
+        return true;
+    }
+
+    function sampleForMetric(host, metric) {
+        if (!host.metrics) return null;
+        if (metric === "memory") return host.metrics.memory_info?.percent ?? null;
+        if (metric === "cpu") {
+            const values = (host.metrics.cpu_usage || [])
+                .map(v => Number(v))
+                .filter(Number.isFinite);
+            if (!values.length) return null;
+            return values.reduce((a, b) => a + b, 0) / values.length;
+        }
+        if (metric === "disk") {
+            return host.metrics.disk_info?.[0]?.percent ?? null;
+        }
+        return null;
+    }
+
+    function updateUnified(metrics) {
+        if (!unifiedChart) return;
+        const ts = new Date().toLocaleTimeString();
+        unifiedChart.data.labels.push(ts);
+        if (unifiedChart.data.labels.length > MAX_POINTS) {
+            unifiedChart.data.labels.shift();
+        }
+        unifiedChart.data.datasets.forEach(ds => {
+            const host = metrics.find(h => h.base_url === ds.meta.base_url);
+            const value = host ? sampleForMetric(host, unifiedMetric) : null;
+            ds.data.push(value);
+            if (ds.data.length > MAX_POINTS) ds.data.shift();
+        });
+        unifiedChart.update("none");
+    }
+
+    metricButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+            metricButtons.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            unifiedMetric = btn.dataset.metricBtn;
+            unifiedTitle.textContent = btn.textContent;
+            if (unifiedChart) {
+                const EMPTY = Array(MAX_POINTS).fill(null);
+                unifiedChart.data.datasets.forEach(ds => {
+                    ds.data = [...EMPTY];
+                });
+                unifiedChart.data.labels = [...EMPTY];
+                unifiedChart.update();
+            }
+        });
+    });
+
     // ------------------------------------------------------------
     // CORE CHARTS
     // ------------------------------------------------------------
@@ -398,9 +536,9 @@
         return coreMini[coreName] || createCoreChart(coreName);
     }
 
-    function pruneOldCores(latest) {
+    function pruneOldCores(keep) {
         for (const name of Object.keys(coreMini)) {
-            if (!latest.includes(name)) {
+            if (!keep.includes(name)) {
                 try {
                     coreMini[name].chart.destroy();
                 } catch {
@@ -518,6 +656,16 @@
         }
 
         const now = new Date().toLocaleTimeString();
+
+        if (selectedBase === "*") {
+            if (ensureUnifiedChart(list)) {
+                setUnifiedMode(true);
+                updateUnified(list);
+            }
+            return;
+        }
+
+        setUnifiedMode(false);
 
         for (const host of list) {
             if (host.base_url !== selectedBase) continue;
@@ -644,11 +792,28 @@
                 hideSpinner("certificates-table");
             }
         }
+
+        if (selectedBase === "*") {
+            if (ensureUnifiedChart(list)) {
+                updateUnified(list);
+            }
+        } else {
+            unifiedPanel.classList.add("hidden");
+            unifiedNodes = [];
+            if (unifiedChart) {
+                unifiedChart.destroy();
+                unifiedChart = null;
+            }
+        }
     }
 
     // ------------------------------------------------------------
     // EVENT BINDINGS
     // ------------------------------------------------------------
+    targets.push({
+        base_url: "*",
+        name: "*"
+    });
     targets.forEach(t => {
         const opt = document.createElement("option");
         opt.value = t.base_url;
@@ -664,6 +829,7 @@
         resetUI();
         resetTables();
         showAllSpinners();
+        if (selectedBase !== "*") unifiedPanel.classList.add("hidden");
         ws.send(JSON.stringify({type: "select_target", base_url: selectedBase}));
     });
 

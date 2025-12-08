@@ -174,7 +174,7 @@ class Monitor:
                         "ts": asyncio.get_event_loop().time(),
                         "data": [
                             {
-                                "name": self.base_url,
+                                "name": self.name,
                                 "base_url": self.base_url,
                                 "metrics": payload,
                             }

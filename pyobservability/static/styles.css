@@ -324,3 +324,88 @@ input#proc-filter {
     margin-bottom: 4px;
     opacity: 0.85;
 }
+
+.panel-helper {
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.metric-switch {
+    display: inline-flex;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.metric-btn {
+    background: transparent;
+    color: inherit;
+    border: none;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.metric-btn:not(.active):hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.metric-btn.active {
+    background: var(--accent);
+    color: #020617;
+}
+
+.unified-header {
+    align-items: center;
+    gap: 12px;
+}
+
+.unified-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.unified-indicator {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+}
+
+.unified-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.unified-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 12px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+body.unified-mode .meta-row,
+body.unified-mode .charts-row > :not(#unified-panel),
+body.unified-mode .details-row,
+body.unified-mode .tables-row,
+body.unified-mode footer {
+    display: none !important;
+}
+
+body.unified-mode #unified-panel {
+    flex: 1;
+}
