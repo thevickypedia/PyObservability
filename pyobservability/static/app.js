@@ -370,16 +370,17 @@
     const memChart = makeMainChart(memCtx, "Memory %");
     const loadChart = makeMainChart(loadCtx, "CPU Load");
 
-    const unifiedCtx = document.getElementById("unified-chart").getContext("2d");
+    // Unified metrics: three parallel charts (memory, CPU, disk)
     const unifiedPanel = document.getElementById("unified-panel");
     const unifiedLegend = document.getElementById("unified-legend");
-    const unifiedTitle = document.getElementById("unified-title");
-    const metricButtons = document.querySelectorAll("[data-metric-btn]");
-    let unifiedMetric = "memory";
-    let unifiedChart = null;
+    const unifiedMemCtx = document.getElementById("unified-mem-chart").getContext("2d");
+    const unifiedCpuCtx = document.getElementById("unified-cpu-chart").getContext("2d");
+    const unifiedDiskCtx = document.getElementById("unified-disk-chart").getContext("2d");
+
     let unifiedNodes = [];
     const colorPalette = ["#63b3ff", "#ff99c8", "#7dd3fc", "#fbbf24", "#a3e635", "#f87171", "#c084fc", "#38bdf8"];
     const nodeColor = {};
+    const unifiedCharts = {memory: null, cpu: null, disk: null};
 
     function normalizeNodes(nodes) {
         return nodes
@@ -403,8 +404,8 @@
         });
     }
 
-    function makeUnifiedChart(nodes) {
-        return new Chart(unifiedCtx, {
+    function makeUnifiedChart(ctx, nodes) {
+        return new Chart(ctx, {
             type: "line",
             data: {
                 labels: Array(MAX_POINTS).fill(""),
@@ -446,14 +447,22 @@
         const changed =
             nodes.length !== unifiedNodes.length ||
             nodes.some((node, idx) => unifiedNodes[idx]?.base_url !== node.base_url);
-        if (!unifiedChart || changed) {
-            if (unifiedChart) {
-                unifiedChart.destroy();
-            }
+
+        if (changed) {
+            // Destroy any existing unified charts
+            Object.keys(unifiedCharts).forEach(key => {
+                if (unifiedCharts[key]) {
+                    unifiedCharts[key].destroy();
+                    unifiedCharts[key] = null;
+                }
+            });
             assignColors(nodes);
-            unifiedChart = makeUnifiedChart(nodes);
+            unifiedCharts.memory = makeUnifiedChart(unifiedMemCtx, nodes);
+            unifiedCharts.cpu = makeUnifiedChart(unifiedCpuCtx, nodes);
+            unifiedCharts.disk = makeUnifiedChart(unifiedDiskCtx, nodes);
             unifiedNodes = nodes;
         }
+
         unifiedPanel.classList.remove("hidden");
         renderLegend(nodes);
         return true;
@@ -476,37 +485,27 @@
     }
 
     function updateUnified(metrics) {
-        if (!unifiedChart) return;
         const ts = new Date().toLocaleTimeString();
-        unifiedChart.data.labels.push(ts);
-        if (unifiedChart.data.labels.length > MAX_POINTS) {
-            unifiedChart.data.labels.shift();
-        }
-        unifiedChart.data.datasets.forEach(ds => {
-            const host = metrics.find(h => h.base_url === ds.meta.base_url);
-            const value = host ? sampleForMetric(host, unifiedMetric) : null;
-            ds.data.push(value);
-            if (ds.data.length > MAX_POINTS) ds.data.shift();
-        });
-        unifiedChart.update("none");
-    }
+        const metricKeys = ["memory", "cpu", "disk"];
+        metricKeys.forEach(metric => {
+            const chart = unifiedCharts[metric];
+            if (!chart) return;
 
-    metricButtons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            metricButtons.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            unifiedMetric = btn.dataset.metricBtn;
-            unifiedTitle.textContent = btn.textContent;
-            if (unifiedChart) {
-                const EMPTY = Array(MAX_POINTS).fill(null);
-                unifiedChart.data.datasets.forEach(ds => {
-                    ds.data = [...EMPTY];
-                });
-                unifiedChart.data.labels = [...EMPTY];
-                unifiedChart.update();
+            chart.data.labels.push(ts);
+            if (chart.data.labels.length > MAX_POINTS) {
+                chart.data.labels.shift();
             }
+
+            chart.data.datasets.forEach(ds => {
+                const host = metrics.find(h => h.base_url === ds.meta.base_url);
+                const value = host ? sampleForMetric(host, metric) : null;
+                ds.data.push(value);
+                if (ds.data.length > MAX_POINTS) ds.data.shift();
+            });
+
+            chart.update("none");
         });
-    });
+    }
 
     // ------------------------------------------------------------
     // CORE CHARTS
@@ -577,6 +576,19 @@
         resetChart(cpuAvgChart);
         resetChart(memChart);
         resetChart(loadChart);
+
+        // Reset unified charts as well
+        Object.keys(unifiedCharts).forEach(key => {
+            const chart = unifiedCharts[key];
+            if (chart) {
+                try {
+                    chart.destroy();
+                } catch {}
+                unifiedCharts[key] = null;
+            }
+        });
+        unifiedNodes = [];
+        unifiedPanel.classList.add("hidden");
 
         for (const name of Object.keys(coreMini)) {
             try {
@@ -800,10 +812,12 @@
         } else {
             unifiedPanel.classList.add("hidden");
             unifiedNodes = [];
-            if (unifiedChart) {
-                unifiedChart.destroy();
-                unifiedChart = null;
-            }
+            Object.keys(unifiedCharts).forEach(key => {
+                if (unifiedCharts[key]) {
+                    unifiedCharts[key].destroy();
+                    unifiedCharts[key] = null;
+                }
+            });
         }
     }
 

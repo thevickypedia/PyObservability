@@ -265,6 +265,10 @@ input#proc-filter {
     .meta-row {
         grid-template-columns: 1fr;
     }
+
+    .unified-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ---------------- SPINNER ------------------- */
@@ -396,6 +400,25 @@ input#proc-filter {
     width: 10px;
     height: 10px;
     border-radius: 50%;
+}
+
+/* New unified-grid layout for three unified charts */
+.unified-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.unified-metric-panel {
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 8px 8px 4px;
+    box-shadow: 0 4px 12px rgba(2, 6, 23, 0.6);
+}
+
+.unified-metric-panel .panel-header h3 {
+    font-size: 13px;
 }
 
 body.unified-mode .meta-row,

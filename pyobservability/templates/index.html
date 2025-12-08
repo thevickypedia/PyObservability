@@ -80,16 +80,24 @@
             <div class="panel-header unified-header">
                 <div class="unified-title-group">
                     <h3>Unified Metrics</h3>
-                    <span id="unified-title" class="unified-indicator">Memory</span>
-                </div>
-                <div class="panel-actions metric-switch">
-                    <button class="metric-btn active" data-metric-btn="memory">Memory</button>
-                    <button class="metric-btn" data-metric-btn="cpu">CPU</button>
-                    <button class="metric-btn" data-metric-btn="disk">Disk</button>
+                    <span class="unified-indicator">All nodes comparison</span>
                 </div>
             </div>
             <p class="panel-helper">Select "All nodes" (*) to compare every host.</p>
-            <canvas id="unified-chart" class="chart"></canvas>
+            <div class="unified-grid">
+                <div class="unified-metric-panel">
+                    <div class="panel-header"><h3>Memory (%)</h3></div>
+                    <canvas id="unified-mem-chart" class="chart"></canvas>
+                </div>
+                <div class="unified-metric-panel">
+                    <div class="panel-header"><h3>CPU Avg (%)</h3></div>
+                    <canvas id="unified-cpu-chart" class="chart"></canvas>
+                </div>
+                <div class="unified-metric-panel">
+                    <div class="panel-header"><h3>Disk (%)</h3></div>
+                    <canvas id="unified-disk-chart" class="chart"></canvas>
+                </div>
+            </div>
             <div id="unified-legend" class="unified-legend"></div>
         </div>
     </section>
