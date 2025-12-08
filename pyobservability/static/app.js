@@ -825,20 +825,15 @@
             }
         }
 
-        if (selectedBase === "*") {
-            if (ensureUnifiedChart(list)) {
-                updateUnified(list);
+        // When not in unified ("*") mode, ensure unified panel is hidden and charts cleared
+        unifiedPanel.classList.add("hidden");
+        unifiedNodes = [];
+        Object.keys(unifiedCharts).forEach(key => {
+            if (unifiedCharts[key]) {
+                unifiedCharts[key].destroy();
+                unifiedCharts[key] = null;
             }
-        } else {
-            unifiedPanel.classList.add("hidden");
-            unifiedNodes = [];
-            Object.keys(unifiedCharts).forEach(key => {
-                if (unifiedCharts[key]) {
-                    unifiedCharts[key].destroy();
-                    unifiedCharts[key] = null;
-                }
-            });
-        }
+        });
     }
 
     // ------------------------------------------------------------
