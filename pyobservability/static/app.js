@@ -377,7 +377,53 @@
     const unifiedCpuCtx = document.getElementById("unified-cpu-chart").getContext("2d");
     const unifiedDiskCtx = document.getElementById("unified-disk-chart").getContext("2d");
 
+    // Unified tables DOM references
+    const unifiedServicesTable = document.getElementById("unified-services-table");
+    const unifiedServicesHead = unifiedServicesTable?.querySelector("thead");
+    const unifiedServicesBody = unifiedServicesTable?.querySelector("tbody");
+
+    const unifiedProcessesTable = document.getElementById("unified-processes-table");
+    const unifiedProcessesHead = unifiedProcessesTable?.querySelector("thead");
+    const unifiedProcessesBody = unifiedProcessesTable?.querySelector("tbody");
+
+    const unifiedDockerTable = document.getElementById("unified-docker-table");
+    const unifiedDockerHead = unifiedDockerTable?.querySelector("thead");
+    const unifiedDockerBody = unifiedDockerTable?.querySelector("tbody");
+
+    const unifiedDisksTable = document.getElementById("unified-disks-table");
+    const unifiedDisksHead = unifiedDisksTable?.querySelector("thead");
+    const unifiedDisksBody = unifiedDisksTable?.querySelector("tbody");
+
+    const unifiedPyudiskTable = document.getElementById("unified-pyudisk-table");
+    const unifiedPyudiskHead = unifiedPyudiskTable?.querySelector("thead");
+    const unifiedPyudiskBody = unifiedPyudiskTable?.querySelector("tbody");
+
+    const unifiedCertsTable = document.getElementById("unified-certificates-table");
+    const unifiedCertsHead = unifiedCertsTable?.querySelector("thead");
+    const unifiedCertsBody = unifiedCertsTable?.querySelector("tbody");
+
+    // Paginated unified tables
+    const PAG_UNIFIED_SERVICES = unifiedServicesTable && createPaginatedTable(
+        unifiedServicesTable, unifiedServicesHead, unifiedServicesBody
+    );
+    const PAG_UNIFIED_PROCESSES = unifiedProcessesTable && createPaginatedTable(
+        unifiedProcessesTable, unifiedProcessesHead, unifiedProcessesBody
+    );
+    const PAG_UNIFIED_DOCKER = unifiedDockerTable && createPaginatedTable(
+        unifiedDockerTable, unifiedDockerHead, unifiedDockerBody
+    );
+    const PAG_UNIFIED_DISKS = unifiedDisksTable && createPaginatedTable(
+        unifiedDisksTable, unifiedDisksHead, unifiedDisksBody
+    );
+    const PAG_UNIFIED_PYUDISK = unifiedPyudiskTable && createPaginatedTable(
+        unifiedPyudiskTable, unifiedPyudiskHead, unifiedPyudiskBody
+    );
+    const PAG_UNIFIED_CERTS = unifiedCertsTable && createPaginatedTable(
+        unifiedCertsTable, unifiedCertsHead, unifiedCertsBody
+    );
+
     let unifiedNodes = [];
+    // TODO: Update colorPalette to use contrasting colors
     const colorPalette = ["#63b3ff", "#ff99c8", "#7dd3fc", "#fbbf24", "#a3e635", "#f87171", "#c084fc", "#38bdf8"];
     const nodeColor = {};
     const unifiedCharts = {memory: null, cpu: null, disk: null};
@@ -511,6 +557,145 @@
 
             chart.update("none");
         });
+
+        // --- Unified tables aggregation ---
+        // Helper to get display name for node
+        const getNodeLabel = (host) => host.name || host.base_url || "";
+
+        // Services
+        if (PAG_UNIFIED_SERVICES) {
+            const svcRows = [];
+            metrics.forEach(host => {
+                if (!host.metrics) return;
+                const m = host.metrics;
+                const label = getNodeLabel(host);
+                const services = (m.service_stats || m.services || []).filter(s =>
+                    (s.pname || s.Name || "").toLowerCase().includes(
+                        svcFilter.value.trim().toLowerCase()
+                    )
+                );
+                services.forEach(s => {
+                    svcRows.push({
+                        Node: label,
+                        PID: s.PID ?? s.pid ?? "",
+                        Name: s.pname ?? s.Name ?? s.name ?? "",
+                        Status: s.Status ?? s.active ?? s.status ?? s.Active ?? "4",
+                        CPU: objectToString(s.CPU, s.cpu),
+                        Memory: objectToString(s.Memory, s.memory),
+                        Threads: s.Threads ?? s.threads ?? "4",
+                        "Open Files": s["Open Files"] ?? s.open_files ?? "4"
+                    });
+                });
+            });
+            const svcCols = ["Node", "PID", "Name", "Status", "CPU", "Memory", "Threads", "Open Files"];
+            PAG_UNIFIED_SERVICES.setData(svcRows, svcCols);
+        }
+
+        // Processes
+        if (PAG_UNIFIED_PROCESSES) {
+            const procRows = [];
+            const procColsSet = new Set(["Node", "PID", "Name", "Status", "CPU", "Memory", "Uptime", "Threads", "Open Files"]);
+            metrics.forEach(host => {
+                if (!host.metrics) return;
+                const m = host.metrics;
+                const label = getNodeLabel(host);
+                const processes = (m.process_stats || []).filter(p =>
+                    (p.Name || "").toLowerCase().includes(
+                        procFilter.value.trim().toLowerCase()
+                    )
+                );
+                processes.forEach(p => {
+                    const row = {Node: label};
+                    Object.entries(p).forEach(([k, v]) => {
+                        procColsSet.add(k);
+                        row[k] = v;
+                    });
+                    procRows.push(row);
+                });
+            });
+            const procCols = Array.from(procColsSet);
+            PAG_UNIFIED_PROCESSES.setData(procRows, procCols);
+        }
+
+        // Docker
+        if (PAG_UNIFIED_DOCKER) {
+            const dockerRows = [];
+            const dockerColsSet = new Set(["Node"]);
+            metrics.forEach(host => {
+                if (!host.metrics || !Array.isArray(host.metrics.docker_stats)) return;
+                const label = getNodeLabel(host);
+                host.metrics.docker_stats.forEach(s => {
+                    const row = {Node: label};
+                    Object.entries(s).forEach(([k, v]) => {
+                        dockerColsSet.add(k);
+                        row[k] = v;
+                    });
+                    dockerRows.push(row);
+                });
+            });
+            const dockerCols = Array.from(dockerColsSet);
+            PAG_UNIFIED_DOCKER.setData(dockerRows, dockerCols);
+        }
+
+        // Disks
+        if (PAG_UNIFIED_DISKS) {
+            const diskRows = [];
+            const diskColsSet = new Set(["Node"]);
+            metrics.forEach(host => {
+                if (!host.metrics || !Array.isArray(host.metrics.disks_info)) return;
+                const label = getNodeLabel(host);
+                host.metrics.disks_info.forEach(d => {
+                    const row = {Node: label};
+                    Object.entries(d).forEach(([k, v]) => {
+                        diskColsSet.add(k);
+                        row[k] = v;
+                    });
+                    diskRows.push(row);
+                });
+            });
+            const diskCols = Array.from(diskColsSet);
+            PAG_UNIFIED_DISKS.setData(diskRows, diskCols);
+        }
+
+        // PyUdisk
+        if (PAG_UNIFIED_PYUDISK) {
+            const pyuRows = [];
+            const pyuColsSet = new Set(["Node"]);
+            metrics.forEach(host => {
+                if (!host.metrics || !Array.isArray(host.metrics.pyudisk_stats)) return;
+                const label = getNodeLabel(host);
+                host.metrics.pyudisk_stats.forEach(pyu => {
+                    const row = {Node: label};
+                    Object.entries(pyu).forEach(([k, v]) => {
+                        pyuColsSet.add(k);
+                        row[k] = v;
+                    });
+                    pyuRows.push(row);
+                });
+            });
+            const pyuCols = Array.from(pyuColsSet);
+            PAG_UNIFIED_PYUDISK.setData(pyuRows, pyuCols);
+        }
+
+        // Certificates
+        if (PAG_UNIFIED_CERTS) {
+            const certRows = [];
+            const certColsSet = new Set(["Node"]);
+            metrics.forEach(host => {
+                if (!host.metrics || !Array.isArray(host.metrics.certificates)) return;
+                const label = getNodeLabel(host);
+                host.metrics.certificates.forEach(c => {
+                    const row = {Node: label};
+                    Object.entries(c).forEach(([k, v]) => {
+                        certColsSet.add(k);
+                        row[k] = v;
+                    });
+                    certRows.push(row);
+                });
+            });
+            const certCols = Array.from(certColsSet);
+            PAG_UNIFIED_CERTS.setData(certRows, certCols);
+        }
     }
 
     // ------------------------------------------------------------
@@ -565,6 +750,12 @@
         PAG_DISKS.setData([], []);
         PAG_PYUDISK.setData([], []);
         PAG_CERTS.setData([], []);
+        if (PAG_UNIFIED_SERVICES) PAG_UNIFIED_SERVICES.setData([], []);
+        if (PAG_UNIFIED_PROCESSES) PAG_UNIFIED_PROCESSES.setData([], []);
+        if (PAG_UNIFIED_DOCKER) PAG_UNIFIED_DOCKER.setData([], []);
+        if (PAG_UNIFIED_DISKS) PAG_UNIFIED_DISKS.setData([], []);
+        if (PAG_UNIFIED_PYUDISK) PAG_UNIFIED_PYUDISK.setData([], []);
+        if (PAG_UNIFIED_CERTS) PAG_UNIFIED_CERTS.setData([], []);
     }
 
     function resetUI() {

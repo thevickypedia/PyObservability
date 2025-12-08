@@ -425,6 +425,46 @@ input#proc-filter {
     font-size: 13px;
 }
 
+.unified-tables {
+    margin-top: 12px;
+}
+
+.unified-tables-title {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.unified-tables-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+}
+
+.unified-table-panel {
+    max-height: 260px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.unified-table-panel .table {
+    font-size: 12px;
+}
+
+.unified-table-panel .table tbody {
+    display: block;
+    max-height: 190px;
+    overflow-y: auto;
+}
+
+.unified-table-panel .table thead,
+.unified-table-panel .table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
 body.unified-mode .meta-row,
 body.unified-mode .charts-row > :not(#unified-panel),
 body.unified-mode .details-row,
