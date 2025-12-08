@@ -30,30 +30,81 @@ def _normalize_targets() -> list[dict]:
 async def _forward_metrics_multi(
     websocket: WebSocket,
     queues: list[asyncio.Queue],
-    monitors: list[Monitor],
     targets: list[dict],
 ) -> None:
-    """Fan-in metrics from multiple monitors and emit once every node updates."""
+    """Fan-in metrics from multiple monitors and emit once every node updates.
+
+    This is resilient to individual node failures. If a monitor
+    starts emitting an ``error`` payload (e.g. exceeded error threshold),
+    that node is marked as failed and removed from the unified stream so
+    that the remaining nodes keep updating in the UI.
+    """
+
+    # Track active (non-failed) indices
+    active = [True] * len(queues)
+
+    # Latest payload per node keyed by base_url
     latest: dict[str, dict] = {}
     try:
         while True:
+            # If all nodes have failed, stop the unified stream loop.
+            if not any(active):
+                LOGGER.info("All targets in unified stream have failed; stopping multi-node forwarder")
+                return
+
+            # Wait for at least one payload from any active queue.
+            # We gather one payload per active queue in a "round", but we do
+            # not block forever on failed queues because we mark them inactive
+            # as soon as they send an error.
             for idx, q in enumerate(queues):
+                if not active[idx]:
+                    continue
+
                 payload = await q.get()
-                latest[targets[idx]["base_url"]] = payload
 
-            if len(latest) != len(targets):
-                continue
+                # Handle error payloads from monitors: mark this node as failed
+                # and notify the UI once, then skip it from future
+                # rounds so the rest of the nodes continue streaming.
+                if isinstance(payload, dict) and payload.get("type") == "error":
+                    base_url = targets[idx]["base_url"]
+                    LOGGER.warning("Unified stream: target %s reported error and will be skipped", base_url)
 
+                    # Forward the error to the websocket so the UI can show it.
+                    try:
+                        await websocket.send_json(payload)
+                    except Exception as send_err:  # pragma: no cover - defensive
+                        LOGGER.debug("Failed to send error payload to WS: %s", send_err)
+
+                    # Mark this target as inactive and remove its latest sample
+                    active[idx] = False
+                    latest.pop(base_url, None)
+                    continue
+
+                # Normal metrics payload: remember latest per base_url
+                base_url = targets[idx]["base_url"]
+                latest[base_url] = payload
+
+            # Build merged message from all currently active targets that have
+            # produced at least one metrics payload.
             merged = {
                 "type": "metrics",
                 "ts": asyncio.get_event_loop().time(),
                 "data": [],
             }
-            for target in targets:
+
+            for idx, target in enumerate(targets):
+                if not active[idx]:
+                    continue
                 sample = latest.get(target["base_url"])
                 if not sample:
                     continue
-                merged["data"].extend(sample["data"])
+                merged["data"].extend(sample.get("data", []))
+
+            # If we have no data (e.g. new round before any active node
+            # produced metrics), skip sending to avoid spamming empty payloads.
+            if not merged["data"]:
+                continue
+
             await websocket.send_json(merged)
     except asyncio.CancelledError:
         LOGGER.debug("Unified stream task cancelled")
@@ -115,14 +166,13 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 queues.clear()
 
                 if base_url == "*":
-                    # TODO: If errors exceed threshold, UI freezes but the node should be skipped instead
                     targets = _normalize_targets()
                     for target in targets:
                         mon = Monitor(target)
                         await mon.start()
                         monitors.append(mon)
                         queues.append(mon.subscribe())
-                    multi_task = asyncio.create_task(_forward_metrics_multi(websocket, queues, monitors, targets))
+                    multi_task = asyncio.create_task(_forward_metrics_multi(websocket, queues, targets))
                     continue
 
                 if target := settings.targets_by_url.get(base_url):
