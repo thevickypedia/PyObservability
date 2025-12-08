@@ -188,13 +188,12 @@ class Monitor:
                             _ = q.get_nowait()
                             q.put_nowait(result)
             except Exception as err:
-                LOGGER.debug("Stream error for %s: %s", self.base_url, err)
                 if errors.get(self.base_url):
                     if errors[self.base_url] < 10:
+                        LOGGER.debug("Stream error for %s: %s", self.base_url, err)
                         errors[self.base_url] += 1
                     else:
-                        LOGGER.error(err.__traceback__)
-                        LOGGER.error("%s exceeded error threshold.", self.base_url)
+                        LOGGER.error("Stream error for %s: %s", self.base_url, err)
 
                         # notify subscribers before stopping
                         error_msg = {

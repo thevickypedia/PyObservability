@@ -159,21 +159,27 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
                 # stop old monitor / tasks
                 if forward_task:
+                    LOGGER.info("Stopping previous forwarder task")
                     forward_task.cancel()
                     forward_task = None
 
                 if monitor:
+                    LOGGER.info("Stopping previous monitor task")
                     monitor.unsubscribe(q)
                     await monitor.stop()
                     monitor = None
                     q = None
 
                 if multi_task:
+                    LOGGER.info("Stopping previous multi-target forwarder task")
                     multi_task.cancel()
                     multi_task = None
+
+                LOGGER.info("Unsubscribing from previous monitors") if monitor else None
                 for idx, mon in enumerate(monitors):
                     mon.unsubscribe(queues[idx])
                     await mon.stop()
+
                 monitors.clear()
                 queues.clear()
 

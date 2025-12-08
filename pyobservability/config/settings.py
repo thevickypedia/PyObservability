@@ -51,6 +51,7 @@ def detailed_log_config(filename: str | None = None, debug: bool = False) -> Dic
             "uvicorn": {"handlers": ["default"], "level": level},
             "uvicorn.error": {"handlers": ["default"], "level": level, "propagate": False},
             "uvicorn.access": {"handlers": ["default"], "level": level, "propagate": False},
+            "uvicorn.default": {"handlers": ["default"], "level": level, "propagate": False},
         },
         "root": {"handlers": ["default"], "level": level},
     }
