@@ -2,7 +2,7 @@ import logging
 import pathlib
 import warnings
 from datetime import datetime
-from typing import Dict
+from typing import Any, Dict
 
 import uiauth
 import uvicorn
@@ -39,7 +39,7 @@ async def index(request: Request):
         TemplateResponse:
         Rendered HTML template with targets and version.
     """
-    args = dict(request=request, targets=settings.env.targets, version=__version__)
+    args: Dict[str, Any] = dict(request=request, targets=settings.env.targets, version=__version__)
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
     return templates.TemplateResponse("index.html", args)
@@ -49,7 +49,7 @@ async def health() -> Dict[str, str]:
     """Health check endpoint.
 
     Returns:
-        dict:
+        Dict[str, str]:
         Health status.
     """
     return {"status": "ok"}

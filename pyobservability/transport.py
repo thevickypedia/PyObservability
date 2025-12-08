@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from typing import Dict, List
 
 from fastapi import WebSocket, WebSocketDisconnect
 
@@ -22,29 +23,34 @@ async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue) -> None:
         await websocket.send_json(payload)
 
 
-def _normalize_targets() -> list[dict]:
+def _normalize_targets() -> List[Dict[str, str]]:
     """Return configuration targets sorted so legend colors are consistent."""
     return sorted(settings.env.targets, key=lambda t: t["name"].lower())
 
 
 async def _forward_metrics_multi(
     websocket: WebSocket,
-    queues: list[asyncio.Queue],
-    targets: list[dict],
+    queues: List[asyncio.Queue],
+    targets: List[Dict[str, str]],
 ) -> None:
     """Fan-in metrics from multiple monitors and emit once every node updates.
 
-    This is resilient to individual node failures. If a monitor
-    starts emitting an ``error`` payload (e.g. exceeded error threshold),
-    that node is marked as failed and removed from the unified stream so
-    that the remaining nodes keep updating in the UI.
-    """
+    Args:
+        websocket: FastAPI WebSocket connection.
+        queues: List of asyncio.Queues from multiple monitors.
+        targets: List of target configurations corresponding to the queues.
 
+    Notes:
+        This is resilient to individual node failures.
+        If a monitor starts emitting an ``error`` payload (e.g. exceeded error threshold),
+        that node is marked as failed and removed from the unified stream,
+        so that the remaining nodes keep updating in the UI.
+    """
     # Track active (non-failed) indices
     active = [True] * len(queues)
 
     # Latest payload per node keyed by base_url
-    latest: dict[str, dict] = {}
+    latest: Dict[str, dict] = {}
     try:
         while True:
             # If all nodes have failed, stop the unified stream loop.
@@ -120,9 +126,10 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     monitor: Monitor | None = None
     q: asyncio.Queue | None = None
-    monitors: list[Monitor] = []
-    queues: list[asyncio.Queue] = []
+    monitors: List[Monitor] = []
+    queues: List[asyncio.Queue] = []
     multi_task: asyncio.Task | None = None
+    forward_task: asyncio.Task | None = None
 
     try:
         while True:
@@ -150,12 +157,17 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
             if data.get("type") == "select_target":
                 base_url = data["base_url"]
 
-                # stop old monitor
+                # stop old monitor / tasks
+                if forward_task:
+                    forward_task.cancel()
+                    forward_task = None
+
                 if monitor:
                     monitor.unsubscribe(q)
                     await monitor.stop()
                     monitor = None
                     q = None
+
                 if multi_task:
                     multi_task.cancel()
                     multi_task = None
@@ -166,6 +178,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 queues.clear()
 
                 if base_url == "*":
+                    LOGGER.info("Gathering metrics for all targets in unified stream")
                     targets = _normalize_targets()
                     for target in targets:
                         mon = Monitor(target)
@@ -189,13 +202,16 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 q = monitor.subscribe()
 
                 # start forwarding metrics
-                asyncio.create_task(_forward_metrics(websocket, q))
+                forward_task = asyncio.create_task(_forward_metrics(websocket, q))
     except WebSocketDisconnect:
         pass
     except Exception as err:
         LOGGER.error("WS error: %s", err)
 
     # cleanup
+    if forward_task:
+        forward_task.cancel()
+
     if monitor:
         if q:
             monitor.unsubscribe(q)
