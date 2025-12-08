@@ -1,6 +1,20 @@
 Release Notes
 =============
 
+v1.4.0 (12/08/2025)
+-------------------
+- [99492cf](https://github.com/thevickypedia/PyObservability/commit/99492cf52351517a05e7fff571c5dc3c5caafa69) chore: Release v1.4.0
+- [30af3bf](https://github.com/thevickypedia/PyObservability/commit/30af3bfa942e15f6e1349b61f1c3f8f253e483a1) style: Align header and sub-header text to center in aggregated metrics view
+- [d094719](https://github.com/thevickypedia/PyObservability/commit/d09471962eacc45b6d6465c05018f348d4357777) fix: Remove duplicate logging for uvicorn.default handler
+- [c8b3683](https://github.com/thevickypedia/PyObservability/commit/c8b36837df3ed27fc07eac5966d35fcffc127881) lint: Make linter happy
+- [4dc1407](https://github.com/thevickypedia/PyObservability/commit/4dc140762286767a8b74bef5a41b4c0e31b84134) perf: Ensure one node's failed response doesn't freeze up the unified metrics view
+- [5c19c5a](https://github.com/thevickypedia/PyObservability/commit/5c19c5add5267a0d9cb42e5b0adb779b8b8281be) refactor: Create a re-usable func to aggregate disk metrics in JS
+- [24a72df](https://github.com/thevickypedia/PyObservability/commit/24a72df5c5376fdb9a5f90ef3224c838ba87e781) feat: Aggregate disk information to display total, used, free, and percentage metrics in the UI
+- [81f8e54](https://github.com/thevickypedia/PyObservability/commit/81f8e549fef3092d68e5c0bf6f0c613d2ea106d1) fix: Remove invalid references in exception handlers
+- [ae489fd](https://github.com/thevickypedia/PyObservability/commit/ae489fd13c94e2f17b9511879fe21bbcd9efde65) style: Show memory, cpu, and disk metrics in dedicated containers - unified metrics
+- [292ebdf](https://github.com/thevickypedia/PyObservability/commit/292ebdff5b37eb4fb1b8f4804c9e6ed464352c56) feat: Include an option to view all the metrics in one view
+- [f27da8a](https://github.com/thevickypedia/PyObservability/commit/f27da8ab58cc6a9305acfcb123cef26504155efa) chore: Update release notes for v1.3.0
+
 v1.3.0 (12/06/2025)
 -------------------
 - [c942f33](https://github.com/thevickypedia/PyObservability/commit/c942f331cc62846d1195ff37ad26c12e54d9dd3c) chore: Release ``v1.3.0``
