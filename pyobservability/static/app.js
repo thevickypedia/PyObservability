@@ -647,6 +647,7 @@
                 host.metrics.disks_info.forEach(d => {
                     const row = {Node: label};
                     Object.entries(d).forEach(([k, v]) => {
+                        if (k === "Node") return;
                         diskColsSet.add(k);
                         row[k] = v;
                     });
@@ -667,6 +668,7 @@
                 host.metrics.pyudisk_stats.forEach(pyu => {
                     const row = {Node: label};
                     Object.entries(pyu).forEach(([k, v]) => {
+                        if (k === "Mountpoint") return;
                         pyuColsSet.add(k);
                         row[k] = v;
                     });
