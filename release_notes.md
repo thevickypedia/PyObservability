@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v1.4.1 (12/08/2025)
+-------------------
+- [5b6e83f](https://github.com/thevickypedia/PyObservability/commit/5b6e83f8916833aa639abd82647089ed015fcb97) chore: Release v1.4.1
+- [86e0f26](https://github.com/thevickypedia/PyObservability/commit/86e0f260411063ccbb603a177e5be98cef89f64a) style: Avoid adding table vertical padding for first page
+- [6ff4400](https://github.com/thevickypedia/PyObservability/commit/6ff4400b20c6389d70356dc271da05126cf45d99) style: Avoid shrinkage in table vertical size to keep pagination consistent
+- [83dfa40](https://github.com/thevickypedia/PyObservability/commit/83dfa40fc52d170f52a0985bf5ab0e52808cd192) fix: Avoid node being overridden for PyUdisk metrics
+- [67abaad](https://github.com/thevickypedia/PyObservability/commit/67abaad00f545b59ce17b1e7c3b20133d5935236) style: Add page controls and fix container issues in aggregated view
+- [79f1b23](https://github.com/thevickypedia/PyObservability/commit/79f1b2394b1c6343597af59aeae084e5b9637260) feat: Include all individual metrics in aggregated view
+- [a622da3](https://github.com/thevickypedia/PyObservability/commit/a622da37f307e65e0fe813d6f3c37c861f51aba8) refactor: Remove code redundancy in JavaScript for unified updates
+- [06c0854](https://github.com/thevickypedia/PyObservability/commit/06c08542a5aa8b87201123f978aa74cb59d0820c) chore: Update release notes for v1.4.0
+
 v1.4.0 (12/08/2025)
 -------------------
 - [99492cf](https://github.com/thevickypedia/PyObservability/commit/99492cf52351517a05e7fff571c5dc3c5caafa69) chore: Release v1.4.0
