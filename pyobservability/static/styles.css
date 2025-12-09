@@ -436,33 +436,19 @@ input#proc-filter {
 }
 
 .unified-tables-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .unified-table-panel {
-    max-height: 260px;
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    gap: 8px;
 }
 
 .unified-table-panel .table {
     font-size: 12px;
-}
-
-.unified-table-panel .table tbody {
-    display: block;
-    max-height: 190px;
-    overflow-y: auto;
-}
-
-.unified-table-panel .table thead,
-.unified-table-panel .table tbody tr {
-    display: table;
-    width: 100%;
-    table-layout: fixed;
 }
 
 body.unified-mode .meta-row,
