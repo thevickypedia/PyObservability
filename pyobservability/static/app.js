@@ -123,16 +123,19 @@
             chunk.forEach(r => bodyEl.insertAdjacentHTML("beforeend", r));
 
             const fillerCount = Math.max(0, state.pageSize - chunk.length);
-            const colCount = state.columns?.length || headEl.querySelectorAll("th").length || 1;
-            for (let i = 0; i < fillerCount; i++) {
-                const fillerRow = document.createElement("tr");
-                fillerRow.className = "placeholder-row";
-                for (let c = 0; c < colCount; c++) {
-                    const cell = document.createElement("td");
-                    cell.innerHTML = "&nbsp;";
-                    fillerRow.appendChild(cell);
+            const shouldPad = state.page > 1 && fillerCount > 0;
+            if (shouldPad) {
+                const colCount = state.columns?.length || headEl.querySelectorAll("th").length || 1;
+                for (let i = 0; i < fillerCount; i++) {
+                    const fillerRow = document.createElement("tr");
+                    fillerRow.className = "placeholder-row";
+                    for (let c = 0; c < colCount; c++) {
+                        const cell = document.createElement("td");
+                        cell.innerHTML = "&nbsp;";
+                        fillerRow.appendChild(cell);
+                    }
+                    bodyEl.appendChild(fillerRow);
                 }
-                bodyEl.appendChild(fillerRow);
             }
             renderPagination(pages);
         }
