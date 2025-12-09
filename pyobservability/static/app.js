@@ -5,7 +5,7 @@
     // ------------------------------------------------------------
     const MAX_POINTS = 60;
     const targets = window.MONITOR_TARGETS || [];
-    const DEFAULT_PAGE_SIZE = 15;
+    const DEFAULT_PAGE_SIZE = 10;
     const panelSpinners = {};
 
     // ------------------------------------------------------------
@@ -117,11 +117,23 @@
             const chunk = rows.slice(start, start + state.pageSize);
 
             info.textContent =
-                `Showing ${start + 1} to ${Math.min(start + state.pageSize, rows.length)} of ${rows.length} entries`;
+                `Showing ${rows.length ? start + 1 : 0} to ${rows.length ? Math.min(start + state.pageSize, rows.length) : 0} of ${rows.length} entries`;
 
             bodyEl.innerHTML = "";
             chunk.forEach(r => bodyEl.insertAdjacentHTML("beforeend", r));
 
+            const fillerCount = Math.max(0, state.pageSize - chunk.length);
+            const colCount = state.columns?.length || headEl.querySelectorAll("th").length || 1;
+            for (let i = 0; i < fillerCount; i++) {
+                const fillerRow = document.createElement("tr");
+                fillerRow.className = "placeholder-row";
+                for (let c = 0; c < colCount; c++) {
+                    const cell = document.createElement("td");
+                    cell.innerHTML = "&nbsp;";
+                    fillerRow.appendChild(cell);
+                }
+                bodyEl.appendChild(fillerRow);
+            }
             renderPagination(pages);
         }
 

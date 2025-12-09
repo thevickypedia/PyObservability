@@ -201,6 +201,16 @@ html, body {
     text-align: left;
 }
 
+.table tbody tr.placeholder-row td {
+    color: transparent;
+    border-bottom: 1px solid transparent;
+    padding: 8px;
+}
+
+.table tbody tr.placeholder-row td::after {
+    content: "";
+}
+
 .pre {
     background: rgba(255, 255, 255, 0.02);
     padding: 8px;
