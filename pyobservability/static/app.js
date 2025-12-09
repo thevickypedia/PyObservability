@@ -438,8 +438,16 @@
     );
 
     let unifiedNodes = [];
-    // TODO: Update colorPalette to use contrasting colors
-    const colorPalette = ["#63b3ff", "#ff99c8", "#7dd3fc", "#fbbf24", "#a3e635", "#f87171", "#c084fc", "#38bdf8"];
+    const colorPalette = [
+      "#ff0000",
+      "#ffff00",
+      "#00ff00",
+      "#0066ff",
+      "#b300ff",
+      "#ff7f00",
+      "#8b4513",
+      "#7f7f7f"
+    ];
     const nodeColor = {};
     const unifiedCharts = {memory: null, cpu: null, disk: null};
 
