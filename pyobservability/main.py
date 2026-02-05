@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from pyobservability.config import enums, settings
-from pyobservability.kuma import UptimeKumaClient, extract_monitors, group_by_host
+from pyobservability.kuma import UptimeKumaClient, extract_monitors
 from pyobservability.transport import websocket_endpoint
 from pyobservability.version import __version__
 
@@ -42,7 +42,7 @@ async def index(request: Request):
         Rendered HTML template with targets and version.
     """
     kuma_data = {} if all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password)) else None
-    args = dict(request=request, service_map=kuma_data, targets=settings.env.targets, version=__version__)
+    args = dict(request=request, kuma_data=kuma_data, targets=settings.env.targets, version=__version__)
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
     return templates.TemplateResponse("index.html", args)
@@ -63,9 +63,7 @@ async def kuma():
             status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
             detail="Unable to retrieve data from kuma server.",
         )
-    json_monitors = await extract_monitors(kuma_data)
-    LOGGER.info("Extracted JSON monitors from kuma payload.")
-    return await group_by_host(json_monitors)
+    return list(extract_monitors(kuma_data))
 
 
 async def health() -> Dict[str, str]:

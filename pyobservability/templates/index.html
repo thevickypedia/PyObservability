@@ -19,7 +19,7 @@
 <header class="topbar">
     <div class="brand">Node Monitor</div>
 
-    {% if service_map is not none %}
+    {% if kuma_data is not none %}
     <div class="tab-navigation">
         <button id="nodes-tab" class="tab-btn active">Nodes</button>
         <button id="kuma-tab" class="tab-btn">Uptime Kuma</button>
@@ -293,9 +293,9 @@
     window.MONITOR_TARGETS = {{ targets | tojson }};
 </script>
 
-{% if service_map is not none %}
+{% if kuma_data is not none %}
 <script>
-    window.SERVICE_MAP = {{ service_map | tojson }};
+    window.KUMA_DATA = {{ kuma_data | tojson }};
 </script>
 {% endif %}
 

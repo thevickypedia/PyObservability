@@ -1,6 +1,6 @@
 import logging
 import time
-from collections import defaultdict
+from collections.abc import Generator
 from typing import Any, Dict, List
 from urllib.parse import urlparse
 
@@ -81,18 +81,16 @@ class UptimeKumaClient:
         return self.monitors
 
 
-async def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> List[Dict[str, Any]]:
+def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, Any]]:
     """Convert raw API payload into a list of dicts with name, url, tag_names, host.
 
     Args:
         payload: Raw payload from Uptime Kuma server.
 
-    Returns:
-        List[Dict[str, Any]]:
-        List of monitors with relevant fields.
+    Yields:
+        Dict[str, Any]:
+        Monitors with relevant fields.
     """
-    monitors = []
-
     grouped = {}
     for monitor in payload.values():
         if children_ids := monitor.get("childrenIDs"):
@@ -104,23 +102,10 @@ async def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> List[Dict[str,
         host = urlparse(url).hostname if url else None
         if not host:
             continue
-        monitors.append(
-            {
-                "name": monitor.get("name"),
-                "parent": grouped.get(monitor.get("id")),
-                "url": url,
-                "host": host,
-                "tag_names": [tag.get("name") for tag in monitor.get("tags", []) if "name" in tag],
-            }
-        )
-    return monitors
-
-
-async def group_by_host(monitors: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Group monitors by host."""
-    grouped = defaultdict(list)
-
-    for monitor in monitors:
-        grouped[monitor["host"]].append(monitor)
-
-    return dict(grouped)
+        yield {
+            "name": monitor.get("name"),
+            "parent": grouped.get(monitor.get("id")),
+            "url": url,
+            "host": host,
+            "tag_names": [tag.get("name") for tag in monitor.get("tags", []) if "name" in tag],
+        }

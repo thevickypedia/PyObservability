@@ -366,26 +366,24 @@
         });
     }
 
-    function normalizeServiceMap(serviceMap) {
+    function normalizeKumaMap(monitors) {
         const rows = [];
-        Object.entries(serviceMap || {}).forEach(([host, services]) => {
-            services.forEach(svc => {
-                rows.push({
-                    Node: host,
-                    Name: svc.name || "",
-                    Parent: svc.parent || "—",
-                    Tags: (svc.tag_names || []).join(", "),
-                    URL: `<a href="${svc.url}" target="_blank">${svc.url}</a>`
-                });
+        monitors.forEach(monitor => {
+            rows.push({
+                Node: monitor.host,
+                Name: monitor.name,
+                Parent: monitor.parent || "—",
+                Tags: (monitor.tag_names || []).join(", "),
+                URL: `<a href="${monitor.url}" target="_blank">${monitor.url}</a>`
             });
         });
         return rows;
     }
 
     function renderEndpoints() {
-        if (!window.SERVICE_MAP) return;
+        if (!window.KUMA_DATA) return;
 
-        const rows = normalizeServiceMap(window.SERVICE_MAP);
+        const rows = normalizeKumaMap(window.KUMA_DATA);
         const columns = ["Node", "Name", "Parent", "Tags", "URL"];
 
         PAG_ENDPOINTS.setData(rows, columns);
@@ -1197,12 +1195,12 @@
 
         try {
             const response = await fetch('/kuma');
-            if (!response.ok) throw new Error('Failed to fetch service map');
+            if (!response.ok) throw new Error('Failed to fetch kuma map');
 
             kumaMapData = await response.json();
             kumaMapLoaded = true;
 
-            allKumaRows = normalizeServiceMap(kumaMapData);
+            allKumaRows = normalizeKumaMap(kumaMapData);
             PAG_KUMA_TAB.setData(allKumaRows, ["Node", "Name", "Parent", "Tags", "URL"]);
         } catch (err) {
             console.error("Error loading Kuma map:", err);
