@@ -1,7 +1,7 @@
 import logging
 import time
 from collections.abc import Generator
-from typing import Any, Dict, List
+from typing import Any, Dict
 from urllib.parse import urlparse
 
 import socketio
