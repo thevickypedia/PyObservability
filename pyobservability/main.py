@@ -40,22 +40,6 @@ async def index(request: Request):
         TemplateResponse:
         Rendered HTML template with targets and version.
     """
-    args: Dict[str, Any] = dict(request=request, targets=settings.env.targets, version=__version__)
-    if settings.env.username and settings.env.password:
-        args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
-    return templates.TemplateResponse("index.html", args)
-
-
-async def kuma(request: Request):
-    """Pass configured targets to the template so frontend can prebuild UI.
-
-    Args:
-        request: FastAPI request object.
-
-    Returns:
-        TemplateResponse:
-        Rendered HTML template with targets and version.
-    """
     try:
         kuma_data = await get_kuma_data()
         LOGGER.info("Retrieved payload from kuma server.")
@@ -65,10 +49,10 @@ async def kuma(request: Request):
         LOGGER.info("Grouped monitors by host.")
     except RuntimeError:
         service_map = {}
-    args: Dict[str, Any] = dict(request=request, service_map=service_map, version=__version__)
+    args: Dict[str, Any] = dict(request=request, targets=settings.env.targets, service_map=service_map, version=__version__)
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
-    return templates.TemplateResponse("kuma.html", args)
+    return templates.TemplateResponse("index.html", args)
 
 
 async def health() -> Dict[str, str]:
@@ -91,7 +75,6 @@ def include_routes() -> None:
             include_in_schema=False,
         ),
     )
-    include_kuma = all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password))
     if all((settings.env.username, settings.env.password)):
         auth_endpoints = [
             uiauth.Parameters(
@@ -105,12 +88,6 @@ def include_routes() -> None:
                 route=APIWebSocketRoute,
             ),
         ]
-        if include_kuma:
-            auth_endpoints.append(uiauth.Parameters(
-                path=enums.APIEndpoints.kuma,
-                function=kuma,
-                methods=[uiauth.enums.APIMethods.GET],
-            ))
         uiauth.protect(
             app=PyObservability,
             username=settings.env.username,
@@ -135,15 +112,6 @@ def include_routes() -> None:
                 endpoint=websocket_endpoint,
             ),
         )
-        if include_kuma:
-            PyObservability.routes.append(
-                APIRoute(
-                    path=enums.APIEndpoints.kuma,
-                    endpoint=kuma,
-                    methods=["GET"],
-                    include_in_schema=False
-                )
-            )
 
 
 def start(**kwargs) -> None:

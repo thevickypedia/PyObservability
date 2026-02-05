@@ -211,29 +211,6 @@ html, body {
     content: "";
 }
 
-/* -------- Compact table to populate kuma data -------- */
-.table td[rowspan] {
-    background: rgba(255, 255, 255, 0.02);
-}
-
-.compact-services-table th,
-.compact-services-table td {
-    padding: 4px 6px;      /* vertical | horizontal */
-    line-height: 1.25;     /* tighter text stack */
-}
-.compact-services-table td.pre {
-    padding: 3px 6px;
-}
-.compact-services-table td.pre a {
-    display: inline-block;
-    line-height: 1.2;
-}
-.compact-services-table th {
-    padding: 5px 6px;
-    font-size: 12px;
-}
-/* ----------------------------------------------------- */
-
 .pre {
     background: rgba(255, 255, 255, 0.02);
     padding: 8px;

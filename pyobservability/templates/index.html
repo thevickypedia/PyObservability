@@ -249,6 +249,16 @@
                     </table>
                 </div>
             </div>
+
+            <div class="panel">
+                <div class="panel-header"><h3>Kuma Endpoints</h3></div>
+                <div class="panel-body">
+                    <table class="table" id="endpoints-table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </section>
     </section>
 </main>
@@ -263,6 +273,11 @@
     // inject server-side targets
     window.MONITOR_TARGETS = {{ targets | tojson }};
 </script>
+
+<script>
+    window.SERVICE_MAP = {{ service_map | tojson }};
+</script>
+
 <script>
     const logoutEndpoint = "{{ logout }}";
 

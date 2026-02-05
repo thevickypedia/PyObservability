@@ -9,7 +9,6 @@ class APIEndpoints(StrEnum):
     """
 
     health = "/health"
-    kuma = "/kuma"
     root = "/"
     ws = "/ws"
 
