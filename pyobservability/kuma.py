@@ -1,6 +1,7 @@
 import logging
 import time
 from collections import defaultdict
+from typing import Any, Dict, List
 from urllib.parse import urlparse
 
 import socketio
@@ -11,19 +12,28 @@ LOGGER = logging.getLogger("uvicorn.default")
 
 
 async def get_kuma_data(timeout=5):
+    """Connect to Uptime Kuma server via socket.io and retrieve monitor list.
+
+    Args:
+        timeout:
+        Timeout for login and data retrieval. Defaults to 5s.
+    """
     sio = socketio.Client()
     monitors = {}
 
     @sio.on("monitorList")
     def on_monitor_list(data):
+        """Receive monitor list from Uptime Kuma server."""
         LOGGER.info("Received monitor list: %d", len(data))
         nonlocal monitors
         monitors = data
 
     def login():
+        """Authenticate to Uptime Kuma server."""
         result = {"ok": False}
 
         def cb(resp):
+            """Callback for login response."""
             # TODO:
             #   1. Re-use token from response payload upon successful login
             #   2. Cache the result
@@ -64,10 +74,15 @@ async def get_kuma_data(timeout=5):
     return monitors
 
 
-async def extract_monitors(payload: dict) -> list[dict]:
-    """
-    Convert raw API payload into a list of dicts with:
-    name, url, tag_names, host
+async def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Convert raw API payload into a list of dicts with name, url, tag_names, host.
+
+    Args:
+        payload: Raw payload from Uptime Kuma server.
+
+    Returns:
+        List[Dict[str, Any]]:
+        List of monitors with relevant fields.
     """
     monitors = []
 
@@ -80,20 +95,22 @@ async def extract_monitors(payload: dict) -> list[dict]:
     for monitor in payload.values():
         url = monitor.get("url").replace("host.docker.internal", urlparse(settings.env.kuma_url).hostname)
         host = urlparse(url).hostname if url else None
-        if not host: continue
-        monitors.append({
-            "name": monitor.get("name"),
-            "parent": grouped.get(monitor.get("id")),
-            "url": url,
-            "host": host,
-            "tag_names": [
-                tag.get("name") for tag in monitor.get("tags", []) if "name" in tag
-            ],
-        })
+        if not host:
+            continue
+        monitors.append(
+            {
+                "name": monitor.get("name"),
+                "parent": grouped.get(monitor.get("id")),
+                "url": url,
+                "host": host,
+                "tag_names": [tag.get("name") for tag in monitor.get("tags", []) if "name" in tag],
+            }
+        )
     return monitors
 
 
-async def group_by_host(monitors: list[dict]) -> dict:
+async def group_by_host(monitors: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Group monitors by host."""
     grouped = defaultdict(list)
 
     for monitor in monitors:

@@ -2,12 +2,12 @@ import logging
 import pathlib
 import warnings
 from datetime import datetime
-from typing import Any, Dict
+from http import HTTPStatus
+from typing import Dict
 
 import uiauth
 import uvicorn
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.routing import APIRoute, APIWebSocketRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -49,11 +49,20 @@ async def index(request: Request):
 
 
 async def kuma():
+    """Kuma endpoint to retrieve monitors from Kuma server.
+
+    Returns:
+        Dict[str, Any]:
+        Grouped monitors by host from Kuma server.
+    """
     try:
         kuma_data = await get_kuma_data()
         LOGGER.info("Retrieved payload from kuma server.")
     except RuntimeError:
-        return {}
+        raise HTTPException(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
+            detail="Unable to retrieve data from kuma server.",
+        )
     json_monitors = await extract_monitors(kuma_data)
     LOGGER.info("Extracted JSON monitors from kuma payload.")
     return await group_by_host(json_monitors)
@@ -107,7 +116,7 @@ def include_routes() -> None:
             password=settings.env.password,
             timeout=settings.env.timeout,
             custom_logger=LOGGER,
-            params=auth_endpoints
+            params=auth_endpoints,
         )
     else:
         warnings.warn("\n\tRunning PyObservability without any protection.", UserWarning)
