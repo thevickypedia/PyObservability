@@ -269,6 +269,22 @@
                 };
             });
 
+            function isIPv4(v) {
+                return typeof v === "string" &&
+                    /^\d{1,3}(\.\d{1,3}){3}$/.test(v);
+            }
+
+            function compareIPs(a, b) {
+                const pa = a.split('.').map(Number);
+                const pb = b.split('.').map(Number);
+                for (let i = 0; i < 4; i++) {
+                    if (pa[i] !== pb[i]) {
+                        return pa[i] - pb[i];
+                    }
+                }
+                return 0;
+            }
+
             function sortAndRender() {
                 // Rebuild all headers with correct HTML
                 headEl.querySelectorAll("th").forEach((th, idx) => {
@@ -288,11 +304,20 @@
                 });
                 if (state.sortCol) {
                     state.dataRaw.sort((a, b) => {
-                        let va = a[state.sortCol], vb = b[state.sortCol];
-                        let na = parseFloat(va), nb = parseFloat(vb);
+                        let va = a[state.sortCol];
+                        let vb = b[state.sortCol];
+                        // ---- IP address sort ----
+                        if (isIPv4(va) && isIPv4(vb)) {
+                            const cmp = compareIPs(va, vb);
+                            return state.sortAsc ? cmp : -cmp;
+                        }
+                        // ---- Numeric sort ----
+                        let na = Number(va);
+                        let nb = Number(vb);
                         if (!isNaN(na) && !isNaN(nb)) {
                             return state.sortAsc ? na - nb : nb - na;
                         }
+                        // ---- String sort ----
                         va = (va ?? "").toString().toLowerCase();
                         vb = (vb ?? "").toString().toLowerCase();
                         if (va < vb) return state.sortAsc ? -1 : 1;
