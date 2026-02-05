@@ -1135,7 +1135,6 @@
     // ------------------------------------------------------------
     const nodesTab = document.getElementById("nodes-tab");
     const servicesTab = document.getElementById("services-tab");
-    const servicesContent = document.getElementById("services-content");
     const servicesMainTable = document.getElementById("services-main-table");
     const servicesMainThead = servicesMainTable.querySelector("thead");
     const servicesMainTbody = servicesMainTable.querySelector("tbody");
@@ -1256,8 +1255,10 @@
         loadServiceMap();
     }
 
-    nodesTab.addEventListener('click', switchToNodesTab);
-    servicesTab.addEventListener('click', switchToServicesTab);
+    if (nodesTab && servicesTab) {
+        nodesTab.addEventListener('click', switchToNodesTab);
+        servicesTab.addEventListener('click', switchToServicesTab);
+    }
 
     // ------------------------------------------------------------
     // WEBSOCKET (Managed by tabs)

@@ -41,7 +41,8 @@ async def index(request: Request):
         TemplateResponse:
         Rendered HTML template with targets and version.
     """
-    args: Dict[str, Any] = dict(request=request, service_map={}, targets=settings.env.targets, version=__version__)
+    kuma_data = {} if all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password)) else None
+    args = dict(request=request, service_map=kuma_data, targets=settings.env.targets, version=__version__)
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
     return templates.TemplateResponse("index.html", args)
@@ -78,6 +79,7 @@ def include_routes() -> None:
             include_in_schema=False,
         ),
     )
+    kuma_enabled = all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password))
     if all((settings.env.username, settings.env.password)):
         auth_endpoints = [
             uiauth.Parameters(
@@ -91,6 +93,14 @@ def include_routes() -> None:
                 route=APIWebSocketRoute,
             ),
         ]
+        if kuma_enabled:
+            auth_endpoints.append(
+                uiauth.Parameters(
+                    path=enums.APIEndpoints.kuma,
+                    function=kuma,
+                    methods=[uiauth.enums.APIMethods.GET],
+                )
+            )
         uiauth.protect(
             app=PyObservability,
             username=settings.env.username,
@@ -115,16 +125,18 @@ def include_routes() -> None:
                 endpoint=websocket_endpoint,
             ),
         )
-        PyObservability.routes.append(
-            APIRoute(
-                path=enums.APIEndpoints.kuma,
-                endpoint=kuma,
-                methods=["GET"],
-                include_in_schema=False,
-            ),
-        )
+        if kuma_enabled:
+            PyObservability.routes.append(
+                APIRoute(
+                    path=enums.APIEndpoints.kuma,
+                    endpoint=kuma,
+                    methods=["GET"],
+                    include_in_schema=False,
+                ),
+            )
 
 
+# noinspection PyTypeChecker
 def start(**kwargs) -> None:
     """Start the FastAPI app with Uvicorn server."""
     settings.env = settings.env_loader(**kwargs)

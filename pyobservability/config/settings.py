@@ -132,9 +132,9 @@ class EnvConfig(PydanticEnvConfig):
     password: str | None = Field(None, validation_alias=alias_choices("PASSWORD"))
     timeout: PositiveInt = Field(300, validation_alias=alias_choices("TIMEOUT"))
 
-    kuma_url: str | None
-    kuma_username: str | None
-    kuma_password: str | None
+    kuma_url: str | None = None
+    kuma_username: str | None = None
+    kuma_password: str | None = None
 
     class Config:
         """Environment variables configuration."""
