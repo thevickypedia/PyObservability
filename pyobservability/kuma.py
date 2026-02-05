@@ -105,6 +105,7 @@ def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, 
         yield {
             "name": monitor.get("name"),
             "parent": grouped.get(monitor.get("id")),
+            "description": monitor.get("description"),
             "url": url,
             "host": host,
             "tags": [tag.get("name") for tag in monitor.get("tags", []) if "name" in tag],

@@ -398,8 +398,9 @@
                 Host: monitor.host,
                 Name: monitor.name,
                 Parent: monitor.parent || "—",
-                Tags: (monitor.tags || []).join(", "),
-                URL: `<a href="${monitor.url}" target="_blank">${monitor.url}</a>`
+                URL: `<a href="${monitor.url}" target="_blank">${monitor.url}</a>`,
+                Description: monitor.description || "-",
+                Tags: (monitor.tags || []).join(", ")
             });
         });
         return rows;
@@ -409,7 +410,7 @@
         if (!window.KUMA_DATA) return;
 
         const rows = normalizeKumaMap(window.KUMA_DATA);
-        const columns = ["Host", "Name", "Parent", "Tags", "URL"];
+        const columns = ["Host", "Name", "Parent", "URL", "Description", "Tags"];
 
         PAG_ENDPOINTS.setData(rows, columns);
         hideSpinner("endpoints-table");
@@ -1215,7 +1216,7 @@
 
     async function loadKumaMap() {
         if (kumaMapLoaded) {
-            PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "Tags", "URL"]);
+            PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
             return;
         }
 
@@ -1231,7 +1232,7 @@
             kumaMapLoaded = true;
 
             allKumaRows = normalizeKumaMap(kumaMapData);
-            PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "Tags", "URL"]);
+            PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
         } catch (err) {
             console.error("Error loading Kuma map:", err);
             kumaMainThead.innerHTML = '<tr><th>Error</th></tr>';
@@ -1243,16 +1244,17 @@
         const searchTerm = e.target.value.toLowerCase();
 
         if (!searchTerm) {
-            PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "Tags", "URL"]);
+            PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
         } else {
             const filtered = allKumaRows.filter(row =>
                 row.Host.toLowerCase().includes(searchTerm) ||
                 row.Name.toLowerCase().includes(searchTerm) ||
                 row.Parent.toLowerCase().includes(searchTerm) ||
-                row.Tags.toLowerCase().includes(searchTerm) ||
-                row.URL.toLowerCase().includes(searchTerm)
+                row.URL.toLowerCase().includes(searchTerm) ||
+                row.Description.toLowerCase().includes(searchTerm) ||
+                row.Tags.toLowerCase().includes(searchTerm)
             );
-            PAG_KUMA_TAB.setData(filtered, ["Host", "Name", "Parent", "Tags", "URL"]);
+            PAG_KUMA_TAB.setData(filtered, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
         }
     });
 
