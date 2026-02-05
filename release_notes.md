@@ -1,6 +1,23 @@
 Release Notes
 =============
 
+v2.0.0 (02/05/2026)
+-------------------
+- [66722ca](https://github.com/thevickypedia/PyObservability/commit/66722ca1b139d9e6dbda5bfbc2ee5382045b83c4) chore: Release ``v2.0.0``
+- [74c8b81](https://github.com/thevickypedia/PyObservability/commit/74c8b81fdd3c376999df602547d326cdfe56e72b) docs: Update README.md
+- [e547417](https://github.com/thevickypedia/PyObservability/commit/e5474177f0cecdca25e009f0ad6ff64aadb9c0a8) feat: Include kuma timeout option and objectify kuma rest API client
+- [9292ffc](https://github.com/thevickypedia/PyObservability/commit/9292ffcddb8cc09237ec57050442ffa58334e4f5) docs: Update docstrings and run linter
+- [f720fb5](https://github.com/thevickypedia/PyObservability/commit/f720fb5408bdfcde028648a34bd3cd0e562530e2) refactor: Rename all services' references kuma
+- [fe652a6](https://github.com/thevickypedia/PyObservability/commit/fe652a6f6d2f43a3bbb2f797cb5a1bda32429a8f) style: Display `nodes` and `services` tab only when kuma is enabled
+- [db90cb8](https://github.com/thevickypedia/PyObservability/commit/db90cb8cb65ae4a503cfe0920b0b61cfa1bf5740) perf: Reduce kuma specific JS and CSS customizations to avoid redundancy
+- [91a7f31](https://github.com/thevickypedia/PyObservability/commit/91a7f316e3f5e25ecf7486bd7e038b1ba730e8a5) perf: Remove dead code related to legacy endpoints table
+- [510cf26](https://github.com/thevickypedia/PyObservability/commit/510cf26b9cd4965592e8a218fcaad0298282d186) fix: Restructure the JSON data from /kuma to a proper table
+- [8c1fe62](https://github.com/thevickypedia/PyObservability/commit/8c1fe622ff37907d8f75a6a14d359f638d261d1b) refactor: Use a split screen for node vs kuma view
+- [1bff957](https://github.com/thevickypedia/PyObservability/commit/1bff957666e13eb78f56a2d5c104905a63f9e7cb) refactor: Integrate kuma information in existing index page instead of a new endpoint
+- [f8e3d95](https://github.com/thevickypedia/PyObservability/commit/f8e3d9587961f19b4c362e25e651ddfef424c5f2) feat: Integrate UpTime Kuma on a new endpoint
+- [16c06e2](https://github.com/thevickypedia/PyObservability/commit/16c06e2e466824eb905ea509144288053948d508) style: Add more color codes for CPU line graph
+- [7ae5050](https://github.com/thevickypedia/PyObservability/commit/7ae5050b1b57e56472020013e2dba9be3608ceac) chore: Update release notes for v1.4.1
+
 v1.4.1 (12/08/2025)
 -------------------
 - [5b6e83f](https://github.com/thevickypedia/PyObservability/commit/5b6e83f8916833aa639abd82647089ed015fcb97) chore: Release v1.4.1
