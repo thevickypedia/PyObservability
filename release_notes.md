@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v2.2.0 (02/05/2026)
+-------------------
+- [1f50d35](https://github.com/thevickypedia/PyObservability/commit/1f50d35ba35968766068cae0336fa316cac5fc83) chore: Release ``v2.2.0``
+- [22d918b](https://github.com/thevickypedia/PyObservability/commit/22d918bfb2466b817f59ef3373153d9c8bd37e68) feat: Add a new column ``description`` for kuma UI
+- [ef7fca0](https://github.com/thevickypedia/PyObservability/commit/ef7fca0821e6ec58e433517a869a00a4cb1e23fc) fix: Update sorting logic to work for IP addresses
+- [89af7b4](https://github.com/thevickypedia/PyObservability/commit/89af7b40b964dfb12085c66ff68f5c0e546457f0) refactor: Rename ``Node`` to ``Host`` in kuma data
+- [413902e](https://github.com/thevickypedia/PyObservability/commit/413902e416208788aa036fbfd65c99233565ebcd) chore: Update release notes for v2.1.1
+
 v2.1.1 (02/05/2026)
 -------------------
 - [22300f3](https://github.com/thevickypedia/PyObservability/commit/22300f3d716fc66bccfdb2e7f7a8c8bfe98f0739) chore: Release ``v2.1.1``
