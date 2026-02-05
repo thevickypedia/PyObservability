@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from pyobservability.config import enums, settings
-from pyobservability.kuma import extract_monitors, get_kuma_data, group_by_host
+from pyobservability.kuma import UptimeKumaClient, extract_monitors, group_by_host
 from pyobservability.transport import websocket_endpoint
 from pyobservability.version import __version__
 
@@ -56,7 +56,7 @@ async def kuma():
         Grouped monitors by host from Kuma server.
     """
     try:
-        kuma_data = await get_kuma_data()
+        kuma_data = UptimeKumaClient().get_monitors()
         LOGGER.info("Retrieved payload from kuma server.")
     except RuntimeError:
         raise HTTPException(

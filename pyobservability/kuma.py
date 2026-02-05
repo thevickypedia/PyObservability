@@ -11,67 +11,74 @@ from pyobservability.config import settings
 LOGGER = logging.getLogger("uvicorn.default")
 
 
-async def get_kuma_data(timeout=5):
-    """Connect to Uptime Kuma server via socket.io and retrieve monitor list.
+class UptimeKumaClient:
+    """Client to interact with Uptime Kuma server via Socket.IO.
 
-    Args:
-        timeout:
-        Timeout for login and data retrieval. Defaults to 5s.
+    >>> UptimeKumaClient
+
     """
-    sio = socketio.Client()
-    monitors = {}
 
-    @sio.on("monitorList")
-    def on_monitor_list(data):
-        """Receive monitor list from Uptime Kuma server."""
-        LOGGER.info("Received monitor list: %d", len(data))
-        nonlocal monitors
-        monitors = data
+    def __init__(self):
+        """Initialize the Uptime Kuma client."""
+        self.sio = socketio.Client()
+        self.monitors = {}
+        self.logged_in = False
 
-    def login():
-        """Authenticate to Uptime Kuma server."""
+        self.sio.on("monitorList", self._on_monitor_list)
+
+    def _on_monitor_list(self, data):
+        """Handle incoming monitor list from Uptime Kuma server."""
+        LOGGER.debug("Received monitor list from Uptime Kuma server.")
+        self.monitors = data
+
+    def connect(self):
+        """Connect to the Uptime Kuma server via Socket.IO."""
+        LOGGER.debug("Connecting to Uptime Kuma server at %s", settings.env.kuma_url)
+        self.sio.connect(settings.env.kuma_url)
+
+    def login(self):
+        """Log in to the Uptime Kuma server."""
         result = {"ok": False}
 
-        def cb(resp):
-            """Callback for login response."""
-            # TODO:
-            #   1. Re-use token from response payload upon successful login
-            #   2. Cache the result
-            #   3. Remove the logging
-            #   4. Objectify this
-            LOGGER.info("Response received from kuma server: %s", resp)
-            nonlocal result
-            result = resp or {"ok": False}
+        def callback(resp):
+            """Callback to handle login response."""
+            result.update(resp or {"ok": False})
 
-        sio.emit(
+        self.sio.emit(
             "login",
-            {"username": settings.env.kuma_username, "password": settings.env.kuma_password, "token": ""},
-            callback=cb,
+            {
+                "username": settings.env.kuma_username,
+                "password": settings.env.kuma_password,
+                "token": "",
+            },
+            callback=callback,
         )
 
-        end_auth = time.time()
-        while not result.get("ok") and time.time() < (end_auth + timeout):
+        end = time.time() + settings.env.kuma_timeout
+        while not result.get("ok") and time.time() < end:
             time.sleep(0.05)
 
         if not result.get("ok"):
-            LOGGER.error("Failed to login to kuma endpoint.")
             raise RuntimeError("Uptime Kuma login failed")
 
-    LOGGER.info("Connecting to the kuma endpoint")
-    sio.connect(settings.env.kuma_url)
-    login()
+        self.logged_in = True
 
-    end_retrieve = time.time()
-    while not monitors and time.time() < (end_retrieve + timeout):
-        time.sleep(0.05)
+    def get_monitors(self):
+        """Retrieve monitors from the Uptime Kuma server."""
+        if not self.sio.connected:
+            self.connect()
 
-    sio.disconnect()
+        if not self.logged_in:
+            self.login()
 
-    if not monitors:
-        LOGGER.error("No monitors were received.")
-        raise RuntimeError("No monitors received")
+        end = time.time() + settings.env.kuma_timeout
+        while not self.monitors and time.time() < end:
+            time.sleep(0.05)
 
-    return monitors
+        if not self.monitors:
+            raise RuntimeError("No monitors received")
+
+        return self.monitors
 
 
 async def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> List[Dict[str, Any]]:

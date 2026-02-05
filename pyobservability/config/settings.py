@@ -135,6 +135,7 @@ class EnvConfig(PydanticEnvConfig):
     kuma_url: str | None = None
     kuma_username: str | None = None
     kuma_password: str | None = None
+    kuma_timeout: PositiveInt = 5
 
     class Config:
         """Environment variables configuration."""
