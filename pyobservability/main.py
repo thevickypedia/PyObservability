@@ -52,18 +52,20 @@ async def kuma():
     """Kuma endpoint to retrieve monitors from Kuma server.
 
     Returns:
-        Dict[str, Any]:
-        Grouped monitors by host from Kuma server.
+        List[Dict[str, Any]]:
+        List of monitors from Kuma server after filtering the required fields.
     """
     try:
         kuma_data = UptimeKumaClient().get_monitors()
-        LOGGER.info("Retrieved payload from kuma server.")
+        LOGGER.info("Retrieved monitors from kuma server - %d found.", len(kuma_data))
     except RuntimeError:
         raise HTTPException(
             status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
             detail="Unable to retrieve data from kuma server.",
         )
-    return list(extract_monitors(kuma_data))
+    monitors = list(extract_monitors(kuma_data))
+    LOGGER.info("Processed [%d] monitors for UI payload.", len(monitors))
+    return monitors
 
 
 async def health() -> Dict[str, str]:
