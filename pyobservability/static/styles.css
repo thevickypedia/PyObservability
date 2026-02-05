@@ -51,13 +51,18 @@ html, body {
     transition: all 0.2s;
 }
 
-.tab-btn:hover {
+.tab-btn:hover:not(:disabled) {
     color: #e6eef8;
 }
 
 .tab-btn.active {
     color: var(--accent);
     border-bottom-color: var(--accent);
+}
+
+.tab-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 .brand {

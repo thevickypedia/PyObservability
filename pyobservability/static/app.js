@@ -825,6 +825,9 @@
     function resetUI() {
         firstMessage = true;
         hideSpinners();
+        // Disable Kuma tab during loading
+        kumaTab.disabled = true;
+
         const EMPTY_DATA = Array(MAX_POINTS).fill(null);
         const EMPTY_LABELS = Array(MAX_POINTS).fill("");
 
@@ -938,6 +941,8 @@
         if (firstMessage) {
             hideSpinners();
             firstMessage = false;
+            // Enable Kuma tab once initial data is loaded
+            kumaTab.disabled = false;
         }
 
         const now = new Date().toLocaleTimeString();
@@ -1271,5 +1276,6 @@
 
     // Initialize nodes view by default
     document.body.classList.add('nodes-view');
+    kumaTab.disabled = true;  // Disable until first metrics load
     initWebSocket();
 })();
