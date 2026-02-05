@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v2.2.1 (02/05/2026)
+-------------------
+- [4fa507d](https://github.com/thevickypedia/PyObservability/commit/4fa507d34891ed3fbf00c238101b5e024f232e8f) chore: Release ``v2.2.1``
+- [bfa68c2](https://github.com/thevickypedia/PyObservability/commit/bfa68c205d04b0705ec3a4b9e1099e9ecd919c29) perf: Use a fallback func if kuma IP is also localhost
+- [57b4fe7](https://github.com/thevickypedia/PyObservability/commit/57b4fe7eea59cf9b51f0c66c9dc55717cf01bb80) perf: Replace all local hostnames with an internal IP host
+- [e937af8](https://github.com/thevickypedia/PyObservability/commit/e937af864430daf2ec86ebb83c8bb731e8c21335) style: Change color code for hyperlinks
+- [ff379a0](https://github.com/thevickypedia/PyObservability/commit/ff379a07481967b41d1f339bc85ad1c1b395b131) style: Add hyperlink is description is a URL in kuma table
+- [031fbd0](https://github.com/thevickypedia/PyObservability/commit/031fbd09e138779806a180e7ae6f3e733474af88) chore: Update release notes for v2.2.0
+
 v2.2.0 (02/05/2026)
 -------------------
 - [1f50d35](https://github.com/thevickypedia/PyObservability/commit/1f50d35ba35968766068cae0336fa316cac5fc83) chore: Release ``v2.2.0``
