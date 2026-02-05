@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v5
       - run: |
           pip install pre-commit
+          export PATH="$HOME/.local/bin:$PATH"
           echo "$HOME/.local/bin" >> $GITHUB_PATH
           pre-commit run --all-files
         shell: bash
