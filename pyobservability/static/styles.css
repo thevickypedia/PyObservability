@@ -32,6 +32,34 @@ html, body {
     border-bottom: 1px solid rgba(255, 255, 255, 0.02);
 }
 
+.tab-navigation {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    justify-content: center;
+}
+
+.tab-btn {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 10px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: #e6eef8;
+}
+
+.tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+
 .brand {
     font-weight: 700;
     font-size: 18px;
@@ -471,4 +499,75 @@ body.unified-mode footer {
 
 body.unified-mode #unified-panel {
     flex: 1;
+}
+
+/* Tab view controls */
+body.services-view .meta-row,
+body.services-view .charts-row,
+body.services-view .details-row,
+body.services-view .tables-row {
+    display: none !important;
+}
+
+body.services-view #services-content {
+    display: block !important;
+}
+
+body.nodes-view #services-content {
+    display: none !important;
+}
+
+#services-content {
+    display: none;
+}
+
+.service-item {
+    background: var(--panel);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 12px rgba(2, 6, 23, 0.6);
+}
+
+.service-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.service-name {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.service-details {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+.service-list-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.service-search {
+    margin-bottom: 16px;
+}
+
+.service-search input {
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--panel);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: inherit;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.loading-message {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-size: 14px;
 }

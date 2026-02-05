@@ -19,8 +19,13 @@
 <header class="topbar">
     <div class="brand">Node Monitor</div>
 
+    <div class="tab-navigation">
+        <button id="nodes-tab" class="tab-btn active">Nodes</button>
+        <button id="services-tab" class="tab-btn">Services</button>
+    </div>
+
     <div class="controls">
-        <label for="node-select">Node:</label>
+        <label for="node-select" id="node-select-label">Node:</label>
         <select id="node-select" aria-label="Select node"></select>
         <button id="refresh-btn" title="Force refresh">Refresh</button>
         <button id="logout" title="Logout" onclick="logout()">Logout</button>
@@ -262,6 +267,15 @@
         </section>
     </section>
 </main>
+
+<div id="services-content" class="container">
+    <section class="service-list-container">
+        <div class="service-search">
+            <input type="text" id="service-search-input" placeholder="Search services...">
+        </div>
+        <div id="services-list"></div>
+    </section>
+</div>
 
 <footer class="footer">
     <div><code>PyObservability: v{{ version }}</code><br>

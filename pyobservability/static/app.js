@@ -8,6 +8,12 @@
     const DEFAULT_PAGE_SIZE = 10;
     const panelSpinners = {};
 
+    // Tab management
+    let currentTab = 'nodes';
+    let ws = null;
+    let serviceMapData = null;
+    let serviceMapLoaded = false;
+
     // ------------------------------------------------------------
     // VISUAL SPINNERS
     // ------------------------------------------------------------
@@ -1125,24 +1131,143 @@
     });
 
     // ------------------------------------------------------------
-    // WEBSOCKET
+    // TAB MANAGEMENT
     // ------------------------------------------------------------
-    const protocol = location.protocol === "https:" ? "wss" : "ws";
-    const ws = new WebSocket(`${protocol}://${location.host}/ws`);
+    const nodesTab = document.getElementById("nodes-tab");
+    const servicesTab = document.getElementById("services-tab");
+    const servicesContent = document.getElementById("services-content");
+    const servicesList = document.getElementById("services-list");
+    const serviceSearchInput = document.getElementById("service-search-input");
+    const nodeSelectLabel = document.getElementById("node-select-label");
 
-    ws.onopen = () => {
-        ws.send(JSON.stringify({type: "select_target", base_url: selectedBase}));
-    };
+    function initWebSocket() {
+        if (ws) return; // Already connected
 
-    ws.onmessage = evt => {
-        try {
-            const msg = JSON.parse(evt.data);
-            if (msg.type === "metrics") handleMetrics(msg.data);
-            if (msg.type === "error") alert(msg.message);
-        } catch (err) {
-            console.error("WS parse error:", err);
+        const protocol = location.protocol === "https:" ? "wss" : "ws";
+        ws = new WebSocket(`${protocol}://${location.host}/ws`);
+
+        ws.onopen = () => {
+            ws.send(JSON.stringify({type: "select_target", base_url: selectedBase}));
+        };
+
+        ws.onmessage = evt => {
+            try {
+                const msg = JSON.parse(evt.data);
+                if (msg.type === "metrics") handleMetrics(msg.data);
+                if (msg.type === "error") alert(msg.message);
+            } catch (err) {
+                console.error("WS parse error:", err);
+            }
+        };
+
+        ws.onerror = (err) => {
+            console.error("WebSocket error:", err);
+        };
+
+        ws.onclose = () => {
+            console.log("WebSocket closed");
+            ws = null;
+        };
+    }
+
+    function closeWebSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.close();
+            ws = null;
         }
-    };
+    }
+
+    async function loadServiceMap() {
+        if (serviceMapLoaded) {
+            renderServices();
+            return;
+        }
+
+        servicesList.innerHTML = '<div class="loading-message">Loading services...</div>';
+
+        try {
+            const response = await fetch('/kuma');
+            if (!response.ok) throw new Error('Failed to fetch service map');
+            console.log(response)
+            serviceMapData = await response.json();
+            serviceMapLoaded = true;
+            renderServices();
+        } catch (err) {
+            console.error("Error loading service map:", err);
+            servicesList.innerHTML = '<div class="loading-message">Error loading services. Please try again.</div>';
+        }
+    }
+
+    function renderServices(searchTerm = '') {
+        if (!serviceMapData) return;
+
+        const filteredServices = Object.entries(serviceMapData).filter(([name]) =>
+            name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        if (filteredServices.length === 0) {
+            servicesList.innerHTML = '<div class="loading-message">No services found.</div>';
+            return;
+        }
+
+        servicesList.innerHTML = filteredServices.map(([name, details]) => `
+            <div class="service-item">
+                <div class="service-header">
+                    <div class="service-name">${name}</div>
+                </div>
+                <div class="service-details">
+                    ${Object.entries(details).map(([key, value]) => 
+                        `<div><strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}</div>`
+                    ).join('')}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    serviceSearchInput.addEventListener('input', (e) => {
+        renderServices(e.target.value);
+    });
+
+    function switchToNodesTab() {
+        currentTab = 'nodes';
+        nodesTab.classList.add('active');
+        servicesTab.classList.remove('active');
+        document.body.classList.remove('services-view');
+        document.body.classList.add('nodes-view');
+
+        // Show node controls
+        nodeSelect.style.display = 'block';
+        nodeSelectLabel.style.display = 'block';
+        refreshBtn.style.display = 'block';
+
+        // Close WebSocket if switching from services, then reconnect
+        closeWebSocket();
+        initWebSocket();
+    }
+
+    function switchToServicesTab() {
+        currentTab = 'services';
+        servicesTab.classList.add('active');
+        nodesTab.classList.remove('active');
+        document.body.classList.add('services-view');
+        document.body.classList.remove('nodes-view');
+
+        // Hide node controls
+        nodeSelect.style.display = 'none';
+        nodeSelectLabel.style.display = 'none';
+        refreshBtn.style.display = 'none';
+
+        // Close WebSocket and load service map
+        closeWebSocket();
+        loadServiceMap();
+    }
+
+    nodesTab.addEventListener('click', switchToNodesTab);
+    servicesTab.addEventListener('click', switchToServicesTab);
+
+    // ------------------------------------------------------------
+    // WEBSOCKET (Managed by tabs)
+    // ------------------------------------------------------------
 
     // ------------------------------------------------------------
     // INIT
@@ -1151,4 +1276,8 @@
     attachSpinners();
     resetUI();           // reset UI, keep spinners visible
     showAllSpinners();   // show spinners until first metrics arrive
+
+    // Initialize nodes view by default
+    document.body.classList.add('nodes-view');
+    initWebSocket();
 })();

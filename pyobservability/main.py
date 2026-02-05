@@ -7,6 +7,7 @@ from typing import Any, Dict
 import uiauth
 import uvicorn
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute, APIWebSocketRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -40,19 +41,21 @@ async def index(request: Request):
         TemplateResponse:
         Rendered HTML template with targets and version.
     """
-    try:
-        kuma_data = await get_kuma_data()
-        LOGGER.info("Retrieved payload from kuma server.")
-        json_monitors = await extract_monitors(kuma_data)
-        LOGGER.info("Extracted JSON monitors from kuma payload.")
-        service_map = await group_by_host(json_monitors)
-        LOGGER.info("Grouped monitors by host.")
-    except RuntimeError:
-        service_map = {}
-    args: Dict[str, Any] = dict(request=request, targets=settings.env.targets, service_map=service_map, version=__version__)
+    args: Dict[str, Any] = dict(request=request, service_map={}, targets=settings.env.targets, version=__version__)
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
     return templates.TemplateResponse("index.html", args)
+
+
+async def kuma():
+    try:
+        kuma_data = await get_kuma_data()
+        LOGGER.info("Retrieved payload from kuma server.")
+    except RuntimeError:
+        return {}
+    json_monitors = await extract_monitors(kuma_data)
+    LOGGER.info("Extracted JSON monitors from kuma payload.")
+    return await group_by_host(json_monitors)
 
 
 async def health() -> Dict[str, str]:
@@ -110,6 +113,14 @@ def include_routes() -> None:
             APIWebSocketRoute(
                 path=enums.APIEndpoints.ws,
                 endpoint=websocket_endpoint,
+            ),
+        )
+        PyObservability.routes.append(
+            APIRoute(
+                path=enums.APIEndpoints.kuma,
+                endpoint=kuma,
+                methods=["GET"],
+                include_in_schema=False,
             ),
         )
 
