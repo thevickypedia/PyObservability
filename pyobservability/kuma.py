@@ -98,10 +98,22 @@ def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, 
                 grouped[child] = monitor.get("name")
 
     for monitor in payload.values():
-        url = monitor.get("url").replace("host.docker.internal", urlparse(settings.env.kuma_url).hostname)
+        url = monitor.get("url")
         host = urlparse(url).hostname if url else None
         if not host:
             continue
+        current_host = urlparse(settings.env.kuma_url).hostname
+        replacements = (
+            "0.0.0.0",
+            "host.docker.internal",
+            "localhost",
+            "127.0.0.1",
+        )
+        if host in replacements:
+            # 1. Replace the host in the URL with the current host
+            url = url.replace(host, current_host)
+            # 2. Update the host variable to reflect the new host
+            host = current_host
         yield {
             "name": monitor.get("name"),
             "parent": grouped.get(monitor.get("id")),

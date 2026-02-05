@@ -57,7 +57,7 @@ async def kuma():
     """
     try:
         kuma_data = UptimeKumaClient().get_monitors()
-        LOGGER.info("Retrieved monitors from kuma server - %d found.", len(kuma_data))
+        LOGGER.info("Retrieved monitors from kuma server - %d found", len(kuma_data))
     except RuntimeError:
         raise HTTPException(
             status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
