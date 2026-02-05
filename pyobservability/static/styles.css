@@ -549,3 +549,9 @@ body.nodes-view #kuma-content {
     border-radius: 6px;
     font-size: 14px;
 }
+
+/* Change color codes for hyperlinks */
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
