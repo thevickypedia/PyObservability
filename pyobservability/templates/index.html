@@ -22,7 +22,7 @@
     {% if service_map is not none %}
     <div class="tab-navigation">
         <button id="nodes-tab" class="tab-btn active">Nodes</button>
-        <button id="services-tab" class="tab-btn">Services</button>
+        <button id="kuma-tab" class="tab-btn">Uptime Kuma</button>
     </div>
     {% endif %}
 
@@ -270,12 +270,12 @@
     </section>
 </main>
 
-<div id="services-content" class="container">
+<div id="kuma-content" class="container">
     <section class="panel">
-        <div class="service-search">
-            <input type="text" id="service-search-input" placeholder="Search services by node, name, parent, or tags...">
+        <div class="kuma-search">
+            <input type="text" id="kuma-search-input" placeholder="Search Kuma endpoints by node, name, parent, or tags...">
         </div>
-        <table class="table" id="services-main-table">
+        <table class="table" id="kuma-main-table">
             <thead></thead>
             <tbody></tbody>
         </table>

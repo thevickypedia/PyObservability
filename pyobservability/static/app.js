@@ -11,8 +11,8 @@
     // Tab management
     let currentTab = 'nodes';
     let ws = null;
-    let serviceMapData = null;
-    let serviceMapLoaded = false;
+    let kumaMapData = null;
+    let kumaMapLoaded = false;
 
     // ------------------------------------------------------------
     // VISUAL SPINNERS
@@ -1134,19 +1134,19 @@
     // TAB MANAGEMENT
     // ------------------------------------------------------------
     const nodesTab = document.getElementById("nodes-tab");
-    const servicesTab = document.getElementById("services-tab");
-    const servicesMainTable = document.getElementById("services-main-table");
-    const servicesMainThead = servicesMainTable.querySelector("thead");
-    const servicesMainTbody = servicesMainTable.querySelector("tbody");
-    const serviceSearchInput = document.getElementById("service-search-input");
+    const kumaTab = document.getElementById("kuma-tab");
+    const kumaMainTable = document.getElementById("kuma-main-table");
+    const kumaMainThead = kumaMainTable.querySelector("thead");
+    const kumaMainTbody = kumaMainTable.querySelector("tbody");
+    const kumaSearchInput = document.getElementById("kuma-search-input");
     const controlsDiv = document.querySelector(".controls");
 
-    // Create paginated table for services using existing infrastructure
-    const PAG_SERVICES_TAB = createPaginatedTable(
-        servicesMainTable, servicesMainThead, servicesMainTbody, 20
+    // Create paginated table for kuma using existing infrastructure
+    const PAG_KUMA_TAB = createPaginatedTable(
+        kumaMainTable, kumaMainThead, kumaMainTbody, 20
     );
 
-    let allServiceRows = [];
+    let allKumaRows = [];
 
     function initWebSocket() {
         if (ws) return;
@@ -1185,55 +1185,54 @@
         }
     }
 
-    async function loadServiceMap() {
-        if (serviceMapLoaded) {
-            PAG_SERVICES_TAB.setData(allServiceRows, ["Node", "Name", "Parent", "Tags", "URL"]);
+    async function loadKumaMap() {
+        if (kumaMapLoaded) {
+            PAG_KUMA_TAB.setData(allKumaRows, ["Node", "Name", "Parent", "Tags", "URL"]);
             return;
         }
 
         // Show loading state
-        servicesMainThead.innerHTML = '<tr><th colspan="5">Loading...</th></tr>';
-        servicesMainTbody.innerHTML = '';
+        kumaMainThead.innerHTML = '<tr><th colspan="5">Loading...</th></tr>';
+        kumaMainTbody.innerHTML = '';
 
         try {
             const response = await fetch('/kuma');
             if (!response.ok) throw new Error('Failed to fetch service map');
 
-            serviceMapData = await response.json();
-            serviceMapLoaded = true;
+            kumaMapData = await response.json();
+            kumaMapLoaded = true;
 
-            // Use existing normalizeServiceMap function
-            allServiceRows = normalizeServiceMap(serviceMapData);
-            PAG_SERVICES_TAB.setData(allServiceRows, ["Node", "Name", "Parent", "Tags", "URL"]);
+            allKumaRows = normalizeServiceMap(kumaMapData);
+            PAG_KUMA_TAB.setData(allKumaRows, ["Node", "Name", "Parent", "Tags", "URL"]);
         } catch (err) {
-            console.error("Error loading service map:", err);
-            servicesMainThead.innerHTML = '<tr><th>Error</th></tr>';
-            servicesMainTbody.innerHTML = '<tr><td>Error loading services. Please try again.</td></tr>';
+            console.error("Error loading Kuma map:", err);
+            kumaMainThead.innerHTML = '<tr><th>Error</th></tr>';
+            kumaMainTbody.innerHTML = '<tr><td>Error loading Kuma endpoints. Please try again.</td></tr>';
         }
     }
 
-    serviceSearchInput.addEventListener('input', (e) => {
+    kumaSearchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
 
         if (!searchTerm) {
-            PAG_SERVICES_TAB.setData(allServiceRows, ["Node", "Name", "Parent", "Tags", "URL"]);
+            PAG_KUMA_TAB.setData(allKumaRows, ["Node", "Name", "Parent", "Tags", "URL"]);
         } else {
-            const filtered = allServiceRows.filter(row =>
+            const filtered = allKumaRows.filter(row =>
                 row.Node.toLowerCase().includes(searchTerm) ||
                 row.Name.toLowerCase().includes(searchTerm) ||
                 row.Parent.toLowerCase().includes(searchTerm) ||
                 row.Tags.toLowerCase().includes(searchTerm) ||
                 row.URL.toLowerCase().includes(searchTerm)
             );
-            PAG_SERVICES_TAB.setData(filtered, ["Node", "Name", "Parent", "Tags", "URL"]);
+            PAG_KUMA_TAB.setData(filtered, ["Node", "Name", "Parent", "Tags", "URL"]);
         }
     });
 
     function switchToNodesTab() {
         currentTab = 'nodes';
         nodesTab.classList.add('active');
-        servicesTab.classList.remove('active');
-        document.body.classList.remove('services-view');
+        kumaTab.classList.remove('active');
+        document.body.classList.remove('kuma-view');
         document.body.classList.add('nodes-view');
 
         controlsDiv.classList.remove('invisible');
@@ -1242,22 +1241,22 @@
         initWebSocket();
     }
 
-    function switchToServicesTab() {
-        currentTab = 'services';
-        servicesTab.classList.add('active');
+    function switchToKumaTab() {
+        currentTab = 'kuma';
+        kumaTab.classList.add('active');
         nodesTab.classList.remove('active');
-        document.body.classList.add('services-view');
+        document.body.classList.add('kuma-view');
         document.body.classList.remove('nodes-view');
 
         controlsDiv.classList.add('invisible');
 
         closeWebSocket();
-        loadServiceMap();
+        loadKumaMap();
     }
 
-    if (nodesTab && servicesTab) {
+    if (nodesTab && kumaTab) {
         nodesTab.addEventListener('click', switchToNodesTab);
-        servicesTab.addEventListener('click', switchToServicesTab);
+        kumaTab.addEventListener('click', switchToKumaTab);
     }
 
     // ------------------------------------------------------------

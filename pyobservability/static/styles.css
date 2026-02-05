@@ -507,35 +507,35 @@ body.unified-mode #unified-panel {
 }
 
 /* Tab view controls */
-body.services-view .meta-row,
-body.services-view .charts-row,
-body.services-view .details-row,
-body.services-view .tables-row {
+body.kuma-view .meta-row,
+body.kuma-view .charts-row,
+body.kuma-view .details-row,
+body.kuma-view .tables-row {
     display: none !important;
 }
 
-body.services-view #services-content {
+body.kuma-view #kuma-content {
     display: block !important;
 }
 
-body.nodes-view #services-content {
+body.nodes-view #kuma-content {
     display: none !important;
 }
 
-#services-content {
+#kuma-content {
     display: none;
 }
 
-#services-content .panel {
+#kuma-content .panel {
     max-width: 1400px;
     margin: 0 auto;
 }
 
-.service-search {
+.kuma-search {
     margin-bottom: 12px;
 }
 
-.service-search input {
+.kuma-search input {
     width: 100%;
     padding: 10px 16px;
     background: var(--glass);
