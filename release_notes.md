@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v2.1.0 (02/05/2026)
+-------------------
+- [39df955](https://github.com/thevickypedia/PyObservability/commit/39df95558655ea71e1a464d397471e201fce5d5a) chore: Release ``v2.1.0``
+- [0ac5906](https://github.com/thevickypedia/PyObservability/commit/0ac590637e2d16e6014579ea11906a10fae90ddc) lint: Remove unused import
+- [6781dcc](https://github.com/thevickypedia/PyObservability/commit/6781dcc91341fa795f53da3d63f478016c2e8094) fix: Update GHA to avoid intermittent failures on missing path
+- [b0fee86](https://github.com/thevickypedia/PyObservability/commit/b0fee86412a8576e1b9b7fceec880f33f4eee881) fix: Resolve fastapi-ui-auth dependency conflict
+- [d1a1aaa](https://github.com/thevickypedia/PyObservability/commit/d1a1aaa4bceb944bdfdf3d7ddd7dcaa670368542) refactor: Change ``tag_names`` to ``tags`` in kuma response payload
+- [d954684](https://github.com/thevickypedia/PyObservability/commit/d954684b6a5e4804a09e436c7ab29173c08b1d1d) fix: Change dry run ``kuma_data`` from ``dict`` to ``list``
+- [8c27375](https://github.com/thevickypedia/PyObservability/commit/8c273753405dd503f63a60ae6671f2bf1e53a53e) perf: Remove grouping logic for kuma data on the server side
+- [89441ac](https://github.com/thevickypedia/PyObservability/commit/89441acecc5234ba70181b6cd84cc30f0243145c) chore: Update release notes for v2.0.0
+
 v2.0.0 (02/05/2026)
 -------------------
 - [66722ca](https://github.com/thevickypedia/PyObservability/commit/66722ca1b139d9e6dbda5bfbc2ee5382045b83c4) chore: Release ``v2.0.0``
