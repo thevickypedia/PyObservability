@@ -85,6 +85,13 @@ docker run \
 - **LOGS_PATH** - Directory path to store log files if `LOG` is set to `file`.
 - **LOG_CONFIG** - Path to a custom logging configuration file.
 
+**Uptime Kuma**
+> Uptime Kuma integration can be enabled by setting the following environment variables.
+- **KUMA_URL** - Base URL of the Uptime Kuma server.
+- **KUMA_USERNAME** - Username to authenticate with Uptime Kuma.
+- **KUMA_PASSWORD** - Password to authenticate with Uptime Kuma.
+- **KUMA_TIMEOUT** - Timeout (in seconds) for Uptime Kuma authentication. Defaults to 5s.
+
 ## License & copyright
 
 &copy; Vignesh Rao
