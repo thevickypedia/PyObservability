@@ -82,7 +82,7 @@ class UptimeKumaClient:
 
 
 def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, Any]]:
-    """Convert raw API payload into a list of dicts with name, url, tag_names, host.
+    """Convert raw API payload into a list of dicts with name, url, tags, host.
 
     Args:
         payload: Raw payload from Uptime Kuma server.
@@ -107,5 +107,5 @@ def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, 
             "parent": grouped.get(monitor.get("id")),
             "url": url,
             "host": host,
-            "tag_names": [tag.get("name") for tag in monitor.get("tags", []) if "name" in tag],
+            "tags": [tag.get("name") for tag in monitor.get("tags", []) if "name" in tag],
         }

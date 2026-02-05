@@ -373,7 +373,7 @@
                 Node: monitor.host,
                 Name: monitor.name,
                 Parent: monitor.parent || "—",
-                Tags: (monitor.tag_names || []).join(", "),
+                Tags: (monitor.tags || []).join(", "),
                 URL: `<a href="${monitor.url}" target="_blank">${monitor.url}</a>`
             });
         });
