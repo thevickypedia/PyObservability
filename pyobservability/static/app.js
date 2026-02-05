@@ -394,6 +394,11 @@
     function normalizeKumaMap(monitors) {
         const rows = [];
         monitors.forEach(monitor => {
+            // If description is a URL, hyperlink it
+            if (monitor.description && typeof monitor.description === "string" &&
+                /^https?:\/\//.test(monitor.description.trim())) {
+                monitor.description = `<a href="${monitor.description.trim()}" target="_blank">${monitor.description.trim()}</a>`;
+            }
             rows.push({
                 Host: monitor.host,
                 Name: monitor.name,
