@@ -94,6 +94,10 @@
     const certsTableHead = certsTable.querySelector("thead");
     const certsTableBody = certsTable.querySelector("tbody");
 
+    const endpointsTable = document.getElementById("endpoints-table");
+    const endpointsTableHead = endpointsTable.querySelector("thead");
+    const endpointsTableBody = endpointsTable.querySelector("tbody");
+
     const showCoresCheckbox = document.getElementById("show-cores");
 
     // ------------------------------------------------------------
@@ -326,6 +330,11 @@
     const PAG_CERTS = createPaginatedTable(
         certsTable, certsTableHead, certsTableBody
     );
+    const PAG_ENDPOINTS = createPaginatedTable(
+        endpointsTable,
+        endpointsTableHead,
+        endpointsTableBody
+    );
 
     // ------------------------------------------------------------
     // CHART HELPERS
@@ -371,6 +380,16 @@
             });
         });
         return rows;
+    }
+
+    function renderEndpoints() {
+        if (!window.SERVICE_MAP) return;
+
+        const rows = normalizeServiceMap(window.SERVICE_MAP);
+        const columns = ["Node", "Name", "Parent", "Tags", "URL"];
+
+        PAG_ENDPOINTS.setData(rows, columns);
+        hideSpinner("endpoints-table");
     }
 
     function makeCoreSparkline(ctx, coreName) {
@@ -1117,17 +1136,21 @@
     const nodesTab = document.getElementById("nodes-tab");
     const servicesTab = document.getElementById("services-tab");
     const servicesContent = document.getElementById("services-content");
-    const servicesMainTbody = document.getElementById("services-main-tbody");
+    const servicesMainTable = document.getElementById("services-main-table");
+    const servicesMainThead = servicesMainTable.querySelector("thead");
+    const servicesMainTbody = servicesMainTable.querySelector("tbody");
     const serviceSearchInput = document.getElementById("service-search-input");
     const controlsDiv = document.querySelector(".controls");
 
+    // Create paginated table for services using existing infrastructure
+    const PAG_SERVICES_TAB = createPaginatedTable(
+        servicesMainTable, servicesMainThead, servicesMainTbody, 20
+    );
+
     let allServiceRows = [];
-    let filteredServiceRows = [];
-    let currentServicePage = 1;
-    const SERVICE_PAGE_SIZE = 20;
 
     function initWebSocket() {
-        if (ws) return; // Already connected
+        if (ws) return;
 
         const protocol = location.protocol === "https:" ? "wss" : "ws";
         ws = new WebSocket(`${protocol}://${location.host}/ws`);
@@ -1165,11 +1188,13 @@
 
     async function loadServiceMap() {
         if (serviceMapLoaded) {
-            renderServicesTable();
+            PAG_SERVICES_TAB.setData(allServiceRows, ["Node", "Name", "Parent", "Tags", "URL"]);
             return;
         }
 
-        servicesMainTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--muted);">Loading services...</td></tr>';
+        // Show loading state
+        servicesMainThead.innerHTML = '<tr><th colspan="5">Loading...</th></tr>';
+        servicesMainTbody.innerHTML = '';
 
         try {
             const response = await fetch('/kuma');
@@ -1178,97 +1203,31 @@
             serviceMapData = await response.json();
             serviceMapLoaded = true;
 
+            // Use existing normalizeServiceMap function
             allServiceRows = normalizeServiceMap(serviceMapData);
-            filteredServiceRows = [...allServiceRows];
-            currentServicePage = 1;
-
-            renderServicesTable();
+            PAG_SERVICES_TAB.setData(allServiceRows, ["Node", "Name", "Parent", "Tags", "URL"]);
         } catch (err) {
             console.error("Error loading service map:", err);
-            servicesMainTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--muted);">Error loading services. Please try again.</td></tr>';
+            servicesMainThead.innerHTML = '<tr><th>Error</th></tr>';
+            servicesMainTbody.innerHTML = '<tr><td>Error loading services. Please try again.</td></tr>';
         }
     }
-
-    function renderServicesTable() {
-        if (filteredServiceRows.length === 0) {
-            servicesMainTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--muted);">No services found.</td></tr>';
-            document.getElementById('services-pagination').innerHTML = '';
-            return;
-        }
-
-        // Calculate pagination
-        const totalPages = Math.ceil(filteredServiceRows.length / SERVICE_PAGE_SIZE);
-        const startIdx = (currentServicePage - 1) * SERVICE_PAGE_SIZE;
-        const endIdx = startIdx + SERVICE_PAGE_SIZE;
-        const pageRows = filteredServiceRows.slice(startIdx, endIdx);
-
-        // Render rows
-        servicesMainTbody.innerHTML = pageRows.map(row => `
-            <tr>
-                <td>${row.Node}</td>
-                <td>${row.Name}</td>
-                <td>${row.Parent}</td>
-                <td>${row.Tags}</td>
-                <td>${row.URL}</td>
-            </tr>
-        `).join('');
-
-        // Render pagination
-        renderServicesPagination(totalPages);
-    }
-
-    function renderServicesPagination(totalPages) {
-        const paginationDiv = document.getElementById('services-pagination');
-
-        if (totalPages <= 1) {
-            paginationDiv.innerHTML = '';
-            return;
-        }
-
-        let html = `<div class="pagination-info">Page ${currentServicePage} of ${totalPages} (${filteredServiceRows.length} services)</div>`;
-        html += '<div class="pagination">';
-
-        // Previous button
-        html += `<button ${currentServicePage === 1 ? 'disabled' : ''} onclick="window.changeServicePage(${currentServicePage - 1})">Previous</button>`;
-
-        // Page numbers
-        for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentServicePage - 2 && i <= currentServicePage + 2)) {
-                html += `<button class="${i === currentServicePage ? 'active' : ''}" onclick="window.changeServicePage(${i})">${i}</button>`;
-            } else if (i === currentServicePage - 3 || i === currentServicePage + 3) {
-                html += '<span>...</span>';
-            }
-        }
-
-        // Next button
-        html += `<button ${currentServicePage === totalPages ? 'disabled' : ''} onclick="window.changeServicePage(${currentServicePage + 1})">Next</button>`;
-        html += '</div>';
-
-        paginationDiv.innerHTML = html;
-    }
-
-    window.changeServicePage = function(page) {
-        currentServicePage = page;
-        renderServicesTable();
-    };
 
     serviceSearchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
 
         if (!searchTerm) {
-            filteredServiceRows = [...allServiceRows];
+            PAG_SERVICES_TAB.setData(allServiceRows, ["Node", "Name", "Parent", "Tags", "URL"]);
         } else {
-            filteredServiceRows = allServiceRows.filter(row =>
+            const filtered = allServiceRows.filter(row =>
                 row.Node.toLowerCase().includes(searchTerm) ||
                 row.Name.toLowerCase().includes(searchTerm) ||
                 row.Parent.toLowerCase().includes(searchTerm) ||
                 row.Tags.toLowerCase().includes(searchTerm) ||
                 row.URL.toLowerCase().includes(searchTerm)
             );
+            PAG_SERVICES_TAB.setData(filtered, ["Node", "Name", "Parent", "Tags", "URL"]);
         }
-
-        currentServicePage = 1;
-        renderServicesTable();
     });
 
     function switchToNodesTab() {
@@ -1278,10 +1237,8 @@
         document.body.classList.remove('services-view');
         document.body.classList.add('nodes-view');
 
-        // Show node controls using visibility
         controlsDiv.classList.remove('invisible');
 
-        // Close WebSocket if switching from services, then reconnect
         closeWebSocket();
         initWebSocket();
     }
@@ -1293,10 +1250,8 @@
         document.body.classList.add('services-view');
         document.body.classList.remove('nodes-view');
 
-        // Hide node controls using visibility (keeps space)
         controlsDiv.classList.add('invisible');
 
-        // Close WebSocket and load service map
         closeWebSocket();
         loadServiceMap();
     }
@@ -1311,6 +1266,7 @@
     // ------------------------------------------------------------
     // INIT
     // ------------------------------------------------------------
+    renderEndpoints();
     attachSpinners();
     resetUI();           // reset UI, keep spinners visible
     showAllSpinners();   // show spinners until first metrics arrive

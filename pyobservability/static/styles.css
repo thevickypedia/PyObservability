@@ -526,67 +526,21 @@ body.nodes-view #services-content {
     display: none;
 }
 
-.service-list-container {
+#services-content .panel {
     max-width: 1400px;
     margin: 0 auto;
 }
 
 .service-search {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .service-search input {
     width: 100%;
     padding: 10px 16px;
-    background: var(--panel);
+    background: var(--glass);
     border: 1px solid rgba(255, 255, 255, 0.08);
     color: inherit;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 14px;
-}
-
-.loading-message {
-    text-align: center;
-    padding: 40px;
-    color: var(--muted);
-    font-size: 14px;
-}
-
-#services-table-wrapper {
-    background: var(--panel);
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
-}
-
-#services-main-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-}
-
-#services-main-table th,
-#services-main-table td {
-    padding: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    text-align: left;
-}
-
-#services-main-table th {
-    font-weight: 600;
-    color: var(--accent);
-    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
-}
-
-#services-main-table tbody tr:hover {
-    background: rgba(255, 255, 255, 0.02);
-}
-
-#services-main-table a {
-    color: var(--accent);
-    text-decoration: none;
-}
-
-#services-main-table a:hover {
-    text-decoration: underline;
 }

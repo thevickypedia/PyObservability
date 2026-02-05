@@ -254,32 +254,29 @@
                     </table>
                 </div>
             </div>
+
+            <div class="panel">
+                <div class="panel-header"><h3>Kuma Endpoints</h3></div>
+                <div class="panel-body">
+                    <table class="table" id="endpoints-table">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </section>
     </section>
 </main>
 
 <div id="services-content" class="container">
-    <section class="service-list-container">
+    <section class="panel">
         <div class="service-search">
             <input type="text" id="service-search-input" placeholder="Search services by node, name, parent, or tags...">
         </div>
-        <div id="services-table-wrapper">
-            <table id="services-main-table">
-                <thead>
-                    <tr>
-                        <th>Node</th>
-                        <th>Name</th>
-                        <th>Parent</th>
-                        <th>Tags</th>
-                        <th>URL</th>
-                    </tr>
-                </thead>
-                <tbody id="services-main-tbody">
-                    <!-- Services will be populated here -->
-                </tbody>
-            </table>
-        </div>
-        <div id="services-pagination" class="pagination"></div>
+        <table class="table" id="services-main-table">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
     </section>
 </div>
 
