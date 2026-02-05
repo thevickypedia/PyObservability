@@ -1,4 +1,5 @@
 import logging
+import socket
 import time
 from collections.abc import Generator
 from typing import Any, Dict
@@ -9,6 +10,7 @@ import socketio
 from pyobservability.config import settings
 
 LOGGER = logging.getLogger("uvicorn.default")
+cache = {"private_ip": None}
 
 
 class UptimeKumaClient:
@@ -81,6 +83,27 @@ class UptimeKumaClient:
         return self.monitors
 
 
+def ip_address() -> str | None:
+    """Uses simple check on network id to get the private IP address of the host machine.
+
+    Returns:
+        str:
+        Private IP address of host machine.
+    """
+    if private_ip := cache.get("private_ip"):
+        return private_ip
+    socket_ = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        socket_.connect(("8.8.8.8", 80))
+    except OSError as error:
+        LOGGER.error(error)
+        return None
+    ip_address_ = socket_.getsockname()[0]
+    socket_.close()
+    cache["private_ip"] = ip_address_
+    return ip_address_
+
+
 def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, Any]]:
     """Convert raw API payload into a list of dicts with name, url, tags, host.
 
@@ -97,18 +120,23 @@ def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, 
             for child in children_ids:
                 grouped[child] = monitor.get("name")
 
+    replacements = (
+        "0.0.0.0",
+        "host.docker.internal",
+        "localhost",
+        "127.0.0.1",
+    )
+    # If current host is a localhost IP, then replace it with internal
+    current_host = urlparse(settings.env.kuma_url).hostname
+    if current_host in replacements:
+        current_host = ip_address() or current_host
+
     for monitor in payload.values():
         url = monitor.get("url")
         host = urlparse(url).hostname if url else None
         if not host:
             continue
-        current_host = urlparse(settings.env.kuma_url).hostname
-        replacements = (
-            "0.0.0.0",
-            "host.docker.internal",
-            "localhost",
-            "127.0.0.1",
-        )
+        # If any monitor has localhost, replace it with kuma host
         if host in replacements:
             # 1. Replace the host in the URL with the current host
             url = url.replace(host, current_host)
