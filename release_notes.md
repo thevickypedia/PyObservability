@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v2.1.1 (02/05/2026)
+-------------------
+- [22300f3](https://github.com/thevickypedia/PyObservability/commit/22300f3d716fc66bccfdb2e7f7a8c8bfe98f0739) chore: Release ``v2.1.1``
+- [520e6b6](https://github.com/thevickypedia/PyObservability/commit/520e6b60e423c3fcb0d9ab3daa538f4b8a0e3ac7) fix: Disable ``kuma`` tab only when available
+- [67f365b](https://github.com/thevickypedia/PyObservability/commit/67f365b26ba83a29780aa7ca944cb9c2fb561b8e) refactor: Log the number of monitors received
+- [1f5a277](https://github.com/thevickypedia/PyObservability/commit/1f5a277f13a73b14bca674a81a6a7756c519ee56) perf: Disable navigation to ``Uptime Kuma`` tab whilst node(s) information is being retrieved
+- [8ff9e0c](https://github.com/thevickypedia/PyObservability/commit/8ff9e0c7b51ccd369a70fffe613de6567427a3fd) chore: Update release notes for v2.1.0
+
 v2.1.0 (02/05/2026)
 -------------------
 - [39df955](https://github.com/thevickypedia/PyObservability/commit/39df95558655ea71e1a464d397471e201fce5d5a) chore: Release ``v2.1.0``
