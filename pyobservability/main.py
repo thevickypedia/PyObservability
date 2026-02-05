@@ -41,7 +41,7 @@ async def index(request: Request):
         TemplateResponse:
         Rendered HTML template with targets and version.
     """
-    kuma_data = {} if all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password)) else None
+    kuma_data = [{}] if all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password)) else None
     args = dict(request=request, kuma_data=kuma_data, targets=settings.env.targets, version=__version__)
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
