@@ -94,10 +94,6 @@
     const certsTableHead = certsTable.querySelector("thead");
     const certsTableBody = certsTable.querySelector("tbody");
 
-    const endpointsTable = document.getElementById("endpoints-table");
-    const endpointsTableHead = endpointsTable.querySelector("thead");
-    const endpointsTableBody = endpointsTable.querySelector("tbody");
-
     const showCoresCheckbox = document.getElementById("show-cores");
 
     // ------------------------------------------------------------
@@ -330,11 +326,6 @@
     const PAG_CERTS = createPaginatedTable(
         certsTable, certsTableHead, certsTableBody
     );
-    const PAG_ENDPOINTS = createPaginatedTable(
-        endpointsTable,
-        endpointsTableHead,
-        endpointsTableBody
-    );
 
     // ------------------------------------------------------------
     // CHART HELPERS
@@ -380,16 +371,6 @@
             });
         });
         return rows;
-    }
-
-    function renderEndpoints() {
-        if (!window.SERVICE_MAP) return;
-
-        const rows = normalizeServiceMap(window.SERVICE_MAP);
-        const columns = ["Node", "Name", "Parent", "Tags", "URL"];
-
-        PAG_ENDPOINTS.setData(rows, columns);
-        hideSpinner("endpoints-table");
     }
 
     function makeCoreSparkline(ctx, coreName) {
@@ -1330,7 +1311,6 @@
     // ------------------------------------------------------------
     // INIT
     // ------------------------------------------------------------
-    renderEndpoints();
     attachSpinners();
     resetUI();           // reset UI, keep spinners visible
     showAllSpinners();   // show spinners until first metrics arrive
