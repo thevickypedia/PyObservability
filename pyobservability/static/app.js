@@ -1136,9 +1136,14 @@
     const nodesTab = document.getElementById("nodes-tab");
     const servicesTab = document.getElementById("services-tab");
     const servicesContent = document.getElementById("services-content");
-    const servicesList = document.getElementById("services-list");
+    const servicesMainTbody = document.getElementById("services-main-tbody");
     const serviceSearchInput = document.getElementById("service-search-input");
-    const nodeSelectLabel = document.getElementById("node-select-label");
+    const controlsDiv = document.querySelector(".controls");
+
+    let allServiceRows = [];
+    let filteredServiceRows = [];
+    let currentServicePage = 1;
+    const SERVICE_PAGE_SIZE = 20;
 
     function initWebSocket() {
         if (ws) return; // Already connected
@@ -1179,53 +1184,110 @@
 
     async function loadServiceMap() {
         if (serviceMapLoaded) {
-            renderServices();
+            renderServicesTable();
             return;
         }
 
-        servicesList.innerHTML = '<div class="loading-message">Loading services...</div>';
+        servicesMainTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--muted);">Loading services...</td></tr>';
 
         try {
             const response = await fetch('/kuma');
             if (!response.ok) throw new Error('Failed to fetch service map');
-            console.log(response)
+
             serviceMapData = await response.json();
             serviceMapLoaded = true;
-            renderServices();
+
+            allServiceRows = normalizeServiceMap(serviceMapData);
+            filteredServiceRows = [...allServiceRows];
+            currentServicePage = 1;
+
+            renderServicesTable();
         } catch (err) {
             console.error("Error loading service map:", err);
-            servicesList.innerHTML = '<div class="loading-message">Error loading services. Please try again.</div>';
+            servicesMainTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--muted);">Error loading services. Please try again.</td></tr>';
         }
     }
 
-    function renderServices(searchTerm = '') {
-        if (!serviceMapData) return;
-
-        const filteredServices = Object.entries(serviceMapData).filter(([name]) =>
-            name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-
-        if (filteredServices.length === 0) {
-            servicesList.innerHTML = '<div class="loading-message">No services found.</div>';
+    function renderServicesTable() {
+        if (filteredServiceRows.length === 0) {
+            servicesMainTbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: var(--muted);">No services found.</td></tr>';
+            document.getElementById('services-pagination').innerHTML = '';
             return;
         }
 
-        servicesList.innerHTML = filteredServices.map(([name, details]) => `
-            <div class="service-item">
-                <div class="service-header">
-                    <div class="service-name">${name}</div>
-                </div>
-                <div class="service-details">
-                    ${Object.entries(details).map(([key, value]) => 
-                        `<div><strong>${key}:</strong> ${typeof value === 'object' ? JSON.stringify(value) : value}</div>`
-                    ).join('')}
-                </div>
-            </div>
+        // Calculate pagination
+        const totalPages = Math.ceil(filteredServiceRows.length / SERVICE_PAGE_SIZE);
+        const startIdx = (currentServicePage - 1) * SERVICE_PAGE_SIZE;
+        const endIdx = startIdx + SERVICE_PAGE_SIZE;
+        const pageRows = filteredServiceRows.slice(startIdx, endIdx);
+
+        // Render rows
+        servicesMainTbody.innerHTML = pageRows.map(row => `
+            <tr>
+                <td>${row.Node}</td>
+                <td>${row.Name}</td>
+                <td>${row.Parent}</td>
+                <td>${row.Tags}</td>
+                <td>${row.URL}</td>
+            </tr>
         `).join('');
+
+        // Render pagination
+        renderServicesPagination(totalPages);
     }
 
+    function renderServicesPagination(totalPages) {
+        const paginationDiv = document.getElementById('services-pagination');
+
+        if (totalPages <= 1) {
+            paginationDiv.innerHTML = '';
+            return;
+        }
+
+        let html = `<div class="pagination-info">Page ${currentServicePage} of ${totalPages} (${filteredServiceRows.length} services)</div>`;
+        html += '<div class="pagination">';
+
+        // Previous button
+        html += `<button ${currentServicePage === 1 ? 'disabled' : ''} onclick="window.changeServicePage(${currentServicePage - 1})">Previous</button>`;
+
+        // Page numbers
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentServicePage - 2 && i <= currentServicePage + 2)) {
+                html += `<button class="${i === currentServicePage ? 'active' : ''}" onclick="window.changeServicePage(${i})">${i}</button>`;
+            } else if (i === currentServicePage - 3 || i === currentServicePage + 3) {
+                html += '<span>...</span>';
+            }
+        }
+
+        // Next button
+        html += `<button ${currentServicePage === totalPages ? 'disabled' : ''} onclick="window.changeServicePage(${currentServicePage + 1})">Next</button>`;
+        html += '</div>';
+
+        paginationDiv.innerHTML = html;
+    }
+
+    window.changeServicePage = function(page) {
+        currentServicePage = page;
+        renderServicesTable();
+    };
+
     serviceSearchInput.addEventListener('input', (e) => {
-        renderServices(e.target.value);
+        const searchTerm = e.target.value.toLowerCase();
+
+        if (!searchTerm) {
+            filteredServiceRows = [...allServiceRows];
+        } else {
+            filteredServiceRows = allServiceRows.filter(row =>
+                row.Node.toLowerCase().includes(searchTerm) ||
+                row.Name.toLowerCase().includes(searchTerm) ||
+                row.Parent.toLowerCase().includes(searchTerm) ||
+                row.Tags.toLowerCase().includes(searchTerm) ||
+                row.URL.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        currentServicePage = 1;
+        renderServicesTable();
     });
 
     function switchToNodesTab() {
@@ -1235,10 +1297,8 @@
         document.body.classList.remove('services-view');
         document.body.classList.add('nodes-view');
 
-        // Show node controls
-        nodeSelect.style.display = 'block';
-        nodeSelectLabel.style.display = 'block';
-        refreshBtn.style.display = 'block';
+        // Show node controls using visibility
+        controlsDiv.classList.remove('invisible');
 
         // Close WebSocket if switching from services, then reconnect
         closeWebSocket();
@@ -1252,10 +1312,8 @@
         document.body.classList.add('services-view');
         document.body.classList.remove('nodes-view');
 
-        // Hide node controls
-        nodeSelect.style.display = 'none';
-        nodeSelectLabel.style.display = 'none';
-        refreshBtn.style.display = 'none';
+        // Hide node controls using visibility (keeps space)
+        controlsDiv.classList.add('invisible');
 
         // Close WebSocket and load service map
         closeWebSocket();

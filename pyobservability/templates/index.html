@@ -271,9 +271,25 @@
 <div id="services-content" class="container">
     <section class="service-list-container">
         <div class="service-search">
-            <input type="text" id="service-search-input" placeholder="Search services...">
+            <input type="text" id="service-search-input" placeholder="Search services by node, name, parent, or tags...">
         </div>
-        <div id="services-list"></div>
+        <div id="services-table-wrapper">
+            <table id="services-main-table">
+                <thead>
+                    <tr>
+                        <th>Node</th>
+                        <th>Name</th>
+                        <th>Parent</th>
+                        <th>Tags</th>
+                        <th>URL</th>
+                    </tr>
+                </thead>
+                <tbody id="services-main-tbody">
+                    <!-- Services will be populated here -->
+                </tbody>
+            </table>
+        </div>
+        <div id="services-pagination" class="pagination"></div>
     </section>
 </div>
 

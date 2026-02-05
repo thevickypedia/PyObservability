@@ -69,6 +69,11 @@ html, body {
     display: flex;
     gap: 8px;
     align-items: center;
+    min-width: 300px; /* Maintain space even when hidden */
+}
+
+.controls.invisible {
+    visibility: hidden;
 }
 
 .controls select, .controls button {
@@ -521,33 +526,8 @@ body.nodes-view #services-content {
     display: none;
 }
 
-.service-item {
-    background: var(--panel);
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    box-shadow: 0 4px 12px rgba(2, 6, 23, 0.6);
-}
-
-.service-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.service-name {
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.service-details {
-    font-size: 13px;
-    color: var(--muted);
-}
-
 .service-list-container {
-    max-width: 1000px;
+    max-width: 1400px;
     margin: 0 auto;
 }
 
@@ -570,4 +550,43 @@ body.nodes-view #services-content {
     padding: 40px;
     color: var(--muted);
     font-size: 14px;
+}
+
+#services-table-wrapper {
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 6px 18px rgba(2, 6, 23, 0.6);
+}
+
+#services-main-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+#services-main-table th,
+#services-main-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    text-align: left;
+}
+
+#services-main-table th {
+    font-weight: 600;
+    color: var(--accent);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+}
+
+#services-main-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+#services-main-table a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+#services-main-table a:hover {
+    text-decoration: underline;
 }
