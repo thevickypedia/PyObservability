@@ -84,7 +84,6 @@ async def runners():
         List of self-hosted runners from GitHub organization after filtering the required fields.
     """
     # TODO: Include an interval in the UI (including kuma) - add drop down 3s, 5s, 10s, 30s, 1m in place of Node
-    # TODO: Remove the tag `self-hosted`
     # TODO: Refresh in a tab should refresh in the same tag
     # TODO: Logout button should be shared in all the pages
     # TODO: If both kuma and runners are disabled, then don't show a title for Nodes

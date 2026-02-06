@@ -94,10 +94,13 @@ class GitHub:
 
         Yields:
             Runner:
-            Yields a Runner object for each runner in the runners information.
+            Yields a Runner object for each runner in the runners' information.
         """
         for runner in runners_info:
-            labels = [label["name"] for label in runner["labels"]]
+            labels = sorted(
+                (label["name"] for label in runner["labels"] if label["name"] != "self-hosted"),
+                key=lambda s: s.lower(),
+            )
             yield Runner(**{**runner, **{"labels": labels}})
 
     def runners(self) -> Runners | None:
