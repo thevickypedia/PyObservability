@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v3.1.0 (02/06/2026)
+-------------------
+- [bf3335e](https://github.com/thevickypedia/PyObservability/commit/bf3335e58bfde053a453a73200cbfbfceb8fe71d) chore: Release ``v3.1.0``
+- [7fb1ac3](https://github.com/thevickypedia/PyObservability/commit/7fb1ac3db85b21c9bda4e03cd37968444b3ccc7a) feat: Interval option, static page refresh, logout ability in tabs and no title if only nodes tab is rendered
+- [1269b84](https://github.com/thevickypedia/PyObservability/commit/1269b849a775dd89bcca89e254510eba1fe16f21) feat: Add more alias options for env vars
+- [a82e164](https://github.com/thevickypedia/PyObservability/commit/a82e16468617f6b0223f954d0d88062c20e4a9d7) perf: Avoid collecting all runners immediately after parsing results from GH API
+- [d88f5d9](https://github.com/thevickypedia/PyObservability/commit/d88f5d97765d8c194fdd69897d8f51b407a11425) refactor: Remove ``self-hosted`` label for GitHub runners and sort the labels before response
+- [3f3bf80](https://github.com/thevickypedia/PyObservability/commit/3f3bf804825b90d8699bdd3d4ed753332e88a252) chore: Update release notes for v3.0.0
+
 v3.0.0 (02/05/2026)
 -------------------
 - [6416ad5](https://github.com/thevickypedia/PyObservability/commit/6416ad582e5ec1b899b4334b0eea6d0a031fdbfc) chore: Release ``v3.0.0``
