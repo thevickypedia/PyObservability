@@ -20,7 +20,9 @@
     <div class="brand">Node Monitor</div>
 
     <div class="tab-navigation">
+        {% if kuma_data is not none or runners_data is not none %}
         <button id="nodes-tab" class="tab-btn active">Nodes</button>
+        {% endif %}
         {% if kuma_data is not none %}
         <button id="kuma-tab" class="tab-btn">Uptime Kuma</button>
         {% endif %}
@@ -32,6 +34,23 @@
     <div class="controls">
         <label for="node-select" id="node-select-label">Node:</label>
         <select id="node-select" aria-label="Select node"></select>
+
+        <label for="kuma-interval" id="kuma-interval-label" class="hidden">Interval:</label>
+        <select id="kuma-interval" aria-label="Kuma refresh interval" class="hidden">
+            <option value="60000">1m</option>
+            <option value="180000">3m</option>
+            <option value="300000">5m</option>
+        </select>
+
+        <label for="runners-interval" id="runners-interval-label" class="hidden">Interval:</label>
+        <select id="runners-interval" aria-label="Runners refresh interval" class="hidden">
+            <option value="3000">3s</option>
+            <option value="5000" selected>5s</option>
+            <option value="10000">10s</option>
+            <option value="30000">30s</option>
+            <option value="60000">1m</option>
+        </select>
+
         <button id="refresh-btn" title="Force refresh">Refresh</button>
         <button id="logout" title="Logout" onclick="logout()">Logout</button>
     </div>

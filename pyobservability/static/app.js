@@ -18,6 +18,10 @@
     let runnersData = null;
     let runnersDataLoaded = false;
 
+    // Interval management
+    let kumaIntervalId = null;
+    let runnersIntervalId = null;
+
     // ------------------------------------------------------------
     // VISUAL SPINNERS
     // ------------------------------------------------------------
@@ -1144,8 +1148,6 @@
         ws.send(JSON.stringify({type: "update_flags", all_services: svcGetAll.checked}));
     })
 
-    refreshBtn.addEventListener("click", resetUI);
-
     showCoresCheckbox.addEventListener("change", () => {
         const visible = showCoresCheckbox.checked;
         Object.values(coreMini).forEach(c => c.el.style.display = visible ? "block" : "none");
@@ -1160,7 +1162,6 @@
     const kumaMainThead = kumaMainTable?.querySelector("thead");
     const kumaMainTbody = kumaMainTable?.querySelector("tbody");
     const kumaSearchInput = document.getElementById("kuma-search-input");
-    const controlsDiv = document.querySelector(".controls");
 
     // GitHub Runners tab elements
     const runnersTab = document.getElementById("runners-tab");
@@ -1168,6 +1169,13 @@
     const runnersMainThead = runnersMainTable?.querySelector("thead");
     const runnersMainTbody = runnersMainTable?.querySelector("tbody");
     const runnersSearchInput = document.getElementById("runners-search-input");
+
+    // Control elements
+    const nodeSelectLabel = document.getElementById("node-select-label");
+    const kumaIntervalSelect = document.getElementById("kuma-interval");
+    const kumaIntervalLabel = document.getElementById("kuma-interval-label");
+    const runnersIntervalSelect = document.getElementById("runners-interval");
+    const runnersIntervalLabel = document.getElementById("runners-interval-label");
 
     // Create paginated table for kuma using existing infrastructure
     const PAG_KUMA_TAB = kumaMainTable ? createPaginatedTable(
@@ -1250,6 +1258,49 @@
         }
     }
 
+    async function refreshKumaMap() {
+        if (!PAG_KUMA_TAB) return;
+
+        try {
+            const response = await fetch('/kuma');
+            if (!response.ok) throw new Error('Failed to fetch kuma map');
+
+            kumaMapData = await response.json();
+            allKumaRows = normalizeKumaMap(kumaMapData);
+
+            // Reapply current search filter if any
+            const searchTerm = kumaSearchInput?.value?.toLowerCase() || '';
+            if (!searchTerm) {
+                PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
+            } else {
+                const filtered = allKumaRows.filter(row =>
+                    row.Host.toLowerCase().includes(searchTerm) ||
+                    row.Name.toLowerCase().includes(searchTerm) ||
+                    row.Parent.toLowerCase().includes(searchTerm) ||
+                    row.URL.toLowerCase().includes(searchTerm) ||
+                    row.Description.toLowerCase().includes(searchTerm) ||
+                    row.Tags.toLowerCase().includes(searchTerm)
+                );
+                PAG_KUMA_TAB.setData(filtered, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
+            }
+        } catch (err) {
+            console.error("Error refreshing Kuma map:", err);
+        }
+    }
+
+    function startKumaInterval() {
+        if (kumaIntervalId) clearInterval(kumaIntervalId);
+        const interval = parseInt(kumaIntervalSelect?.value || 60000);
+        kumaIntervalId = setInterval(refreshKumaMap, interval);
+    }
+
+    function stopKumaInterval() {
+        if (kumaIntervalId) {
+            clearInterval(kumaIntervalId);
+            kumaIntervalId = null;
+        }
+    }
+
     if (kumaSearchInput) {
         kumaSearchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
@@ -1307,6 +1358,56 @@
         }
     }
 
+    async function refreshRunnersData() {
+        if (!PAG_RUNNERS_TAB) return;
+
+        try {
+            const response = await fetch('/runners');
+            if (!response.ok) throw new Error('Failed to fetch runners data');
+
+            runnersData = await response.json();
+            allRunnersRows = runnersData.map(runner => ({
+                ID: runner.id || "—",
+                Name: runner.name || "—",
+                OS: runner.os || "—",
+                Status: runner.status || "—",
+                Busy: runner.busy ? "Yes" : "No",
+                Labels: Array.isArray(runner.labels) ? runner.labels.join(", ") : (runner.labels || "—")
+            }));
+
+            // Reapply current search filter if any
+            const searchTerm = runnersSearchInput?.value?.toLowerCase() || '';
+            if (!searchTerm) {
+                PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+            } else {
+                const filtered = allRunnersRows.filter(row =>
+                    row.ID.toString().toLowerCase().includes(searchTerm) ||
+                    row.Name.toLowerCase().includes(searchTerm) ||
+                    row.OS.toLowerCase().includes(searchTerm) ||
+                    row.Status.toLowerCase().includes(searchTerm) ||
+                    row.Busy.toLowerCase().includes(searchTerm) ||
+                    row.Labels.toLowerCase().includes(searchTerm)
+                );
+                PAG_RUNNERS_TAB.setData(filtered, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+            }
+        } catch (err) {
+            console.error("Error refreshing runners data:", err);
+        }
+    }
+
+    function startRunnersInterval() {
+        if (runnersIntervalId) clearInterval(runnersIntervalId);
+        const interval = parseInt(runnersIntervalSelect?.value || 5000);
+        runnersIntervalId = setInterval(refreshRunnersData, interval);
+    }
+
+    function stopRunnersInterval() {
+        if (runnersIntervalId) {
+            clearInterval(runnersIntervalId);
+            runnersIntervalId = null;
+        }
+    }
+
     if (runnersSearchInput) {
         runnersSearchInput.addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase();
@@ -1327,8 +1428,27 @@
         });
     }
 
+    // Interval change listeners
+    if (kumaIntervalSelect) {
+        kumaIntervalSelect.addEventListener('change', () => {
+            if (currentTab === 'kuma') {
+                startKumaInterval();
+            }
+        });
+    }
+
+    if (runnersIntervalSelect) {
+        runnersIntervalSelect.addEventListener('change', () => {
+            if (currentTab === 'runners') {
+                startRunnersInterval();
+            }
+        });
+    }
+
     function switchToNodesTab() {
         currentTab = 'nodes';
+        localStorage.setItem('activeTab', 'nodes');
+
         nodesTab.classList.add('active');
         if (kumaTab) kumaTab.classList.remove('active');
         if (runnersTab) runnersTab.classList.remove('active');
@@ -1336,7 +1456,17 @@
         document.body.classList.remove('runners-view');
         document.body.classList.add('nodes-view');
 
-        controlsDiv.classList.remove('invisible');
+        // Show node controls, hide others
+        nodeSelect.classList.remove('hidden');
+        nodeSelectLabel.classList.remove('hidden');
+        if (kumaIntervalSelect) kumaIntervalSelect.classList.add('hidden');
+        if (kumaIntervalLabel) kumaIntervalLabel.classList.add('hidden');
+        if (runnersIntervalSelect) runnersIntervalSelect.classList.add('hidden');
+        if (runnersIntervalLabel) runnersIntervalLabel.classList.add('hidden');
+
+        // Stop intervals
+        stopKumaInterval();
+        stopRunnersInterval();
 
         closeWebSocket();
         initWebSocket();
@@ -1344,6 +1474,8 @@
 
     function switchToKumaTab() {
         currentTab = 'kuma';
+        localStorage.setItem('activeTab', 'kuma');
+
         if (kumaTab) kumaTab.classList.add('active');
         nodesTab.classList.remove('active');
         if (runnersTab) runnersTab.classList.remove('active');
@@ -1351,14 +1483,27 @@
         document.body.classList.remove('nodes-view');
         document.body.classList.remove('runners-view');
 
-        controlsDiv.classList.add('invisible');
+        // Show kuma controls, hide others
+        nodeSelect.classList.add('hidden');
+        nodeSelectLabel.classList.add('hidden');
+        if (kumaIntervalSelect) kumaIntervalSelect.classList.remove('hidden');
+        if (kumaIntervalLabel) kumaIntervalLabel.classList.remove('hidden');
+        if (runnersIntervalSelect) runnersIntervalSelect.classList.add('hidden');
+        if (runnersIntervalLabel) runnersIntervalLabel.classList.add('hidden');
+
+        // Stop other intervals
+        stopRunnersInterval();
 
         closeWebSocket();
-        loadKumaMap();
+        loadKumaMap().then(() => {
+            startKumaInterval();
+        });
     }
 
     function switchToRunnersTab() {
         currentTab = 'runners';
+        localStorage.setItem('activeTab', 'runners');
+
         if (runnersTab) runnersTab.classList.add('active');
         nodesTab.classList.remove('active');
         if (kumaTab) kumaTab.classList.remove('active');
@@ -1366,26 +1511,54 @@
         document.body.classList.remove('nodes-view');
         document.body.classList.remove('kuma-view');
 
-        controlsDiv.classList.add('invisible');
+        // Show runners controls, hide others
+        nodeSelect.classList.add('hidden');
+        nodeSelectLabel.classList.add('hidden');
+        if (kumaIntervalSelect) kumaIntervalSelect.classList.add('hidden');
+        if (kumaIntervalLabel) kumaIntervalLabel.classList.add('hidden');
+        if (runnersIntervalSelect) runnersIntervalSelect.classList.remove('hidden');
+        if (runnersIntervalLabel) runnersIntervalLabel.classList.remove('hidden');
+
+        // Stop other intervals
+        stopKumaInterval();
 
         closeWebSocket();
-        loadRunnersData();
+        loadRunnersData().then(() => {
+            startRunnersInterval();
+        });
     }
 
-    nodesTab.addEventListener('click', switchToNodesTab);
+    if (nodesTab) nodesTab.addEventListener('click', switchToNodesTab);
     if (kumaTab) kumaTab.addEventListener('click', switchToKumaTab);
     if (runnersTab) runnersTab.addEventListener('click', switchToRunnersTab);
+
+    // Update refresh button to handle all tabs
+    refreshBtn.addEventListener("click", () => {
+        if (currentTab === 'nodes' && ws && ws.readyState === WebSocket.OPEN) {
+            resetUI();
+        } else if (currentTab === 'kuma') {
+            refreshKumaMap();
+        } else if (currentTab === 'runners') {
+            refreshRunnersData();
+        }
+    });
 
     // ------------------------------------------------------------
     // INIT
     // ------------------------------------------------------------
     attachSpinners();
-    resetUI();           // reset UI, keep spinners visible
-    showAllSpinners();   // show spinners until first metrics arrive
+    resetUI();
+    showAllSpinners();
 
-    // Initialize nodes view by default
-    document.body.classList.add('nodes-view');
-    // Disable until first metrics load
-    if (kumaTab) { kumaTab.disabled = true; }
-    initWebSocket();
+    // Restore last active tab or default to nodes
+    const savedTab = localStorage.getItem('activeTab');
+    if (savedTab === 'kuma' && kumaTab) {
+        switchToKumaTab();
+    } else if (savedTab === 'runners' && runnersTab) {
+        switchToRunnersTab();
+    } else {
+        // Initialize nodes view by default
+        document.body.classList.add('nodes-view');
+        initWebSocket();
+    }
 })();

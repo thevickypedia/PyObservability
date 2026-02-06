@@ -74,11 +74,6 @@ html, body {
     display: flex;
     gap: 8px;
     align-items: center;
-    min-width: 300px; /* Maintain space even when hidden */
-}
-
-.controls.invisible {
-    visibility: hidden;
 }
 
 .controls select, .controls button {
