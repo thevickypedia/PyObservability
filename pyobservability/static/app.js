@@ -859,6 +859,8 @@
         hideSpinners();
         // Disable Kuma tab during loading if present
         if (kumaTab) { kumaTab.disabled = true; }
+        // Disable Runners tab during loading if present
+        if (runnersTab) { runnersTab.disabled = true; }
 
         const EMPTY_DATA = Array(MAX_POINTS).fill(null);
         const EMPTY_LABELS = Array(MAX_POINTS).fill("");
@@ -975,6 +977,8 @@
             firstMessage = false;
             // Enable Kuma tab once initial data is loaded
             if (kumaTab) { kumaTab.disabled = false; }
+            // Enable Runners tab once initial data is loaded
+            if (runnersTab) { runnersTab.disabled = false; }
         }
 
         const now = new Date().toLocaleTimeString();

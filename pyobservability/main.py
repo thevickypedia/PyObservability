@@ -83,8 +83,6 @@ async def runners():
         List[Dict[str, Any]]:
         List of self-hosted runners from GitHub organization after filtering the required fields.
     """
-    # TODO: Include an interval in the UI (including kuma) - perf: Increase interval (too short)
-    # TODO: Refresh in a tab should refresh in the same tag - bug: Refresh freezes occasionally
     if runners_data := GitHub().runners():
         LOGGER.info("Retrieved self-hosted runners from GitHub - %d found", runners_data.total)
         return [runner.__dict__ for runner in runners_data.runners]
