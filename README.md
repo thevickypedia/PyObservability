@@ -92,6 +92,11 @@ docker run \
 - **KUMA_PASSWORD** - Password to authenticate with Uptime Kuma.
 - **KUMA_TIMEOUT** - Timeout (in seconds) for Uptime Kuma authentication. Defaults to 5s.
 
+**GitHub Runners**
+> GitHub Runners integration can be enabled by setting the following environment variables.
+- **GIT_ORG** - GitHub organization name.
+- **GIT_TOKEN** - GitHub token with `read:org` permissions.
+
 ## License & copyright
 
 &copy; Vignesh Rao
