@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Generator
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import requests
 from requests.auth import AuthBase
@@ -46,6 +46,12 @@ class BearerAuth(AuthBase):
 
 @dataclass
 class Runner:
+    """Runner dataclass to represent a GitHub Actions runner.
+
+    >>> Runner
+
+    """
+
     id: int
     name: str
     os: str
@@ -56,6 +62,12 @@ class Runner:
 
 @dataclass
 class Runners:
+    """Runners dataclass to represent a collection of GitHub Actions runners.
+
+    >>> Runners
+
+    """
+
     total: int
     runners: List[Runner]
 
@@ -75,18 +87,30 @@ class GitHub:
 
     @staticmethod
     def parser(runners_info: List[Dict[str, Any]]) -> Generator[Runner]:
+        """Parses the runners information from the GitHub API response.
+
+        Args:
+            runners_info: Runners information as a list of dictionaries from the GitHub API response.
+
+        Yields:
+            Runner:
+            Yields a Runner object for each runner in the runners information.
+        """
         for runner in runners_info:
-            labels = [label['name'] for label in runner['labels']]
-            yield Runner(**{**runner, **{'labels': labels}})
+            labels = [label["name"] for label in runner["labels"]]
+            yield Runner(**{**runner, **{"labels": labels}})
 
     def runners(self) -> Runners | None:
+        """Fetches the runners information from the GitHub API.
+
+        Returns:
+            Runners | None:
+            Returns a Runners object containing the total count and a list of Runner objects,
+        """
         try:
-            response = self.SESSION.get(f'https://api.github.com/orgs/{settings.env.git_org}/actions/runners')
+            response = self.SESSION.get(f"https://api.github.com/orgs/{settings.env.git_org}/actions/runners")
             response_json = response.json()
         except (requests.RequestException, requests.JSONDecodeError) as error:
             LOGGER.error(error)
             return None
-        return Runners(
-            total=response_json['total_count'],
-            runners=list(self.parser(response_json['runners']))
-        )
+        return Runners(total=response_json["total_count"], runners=list(self.parser(response_json["runners"])))

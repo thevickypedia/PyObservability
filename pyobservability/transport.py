@@ -7,7 +7,6 @@ from fastapi import WebSocket, WebSocketDisconnect
 
 from pyobservability.config import settings
 from pyobservability.monitor import Monitor
-from pyobservability.github import GitHub
 
 LOGGER = logging.getLogger("uvicorn.default")
 
@@ -19,12 +18,8 @@ async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue) -> None:
         websocket: FastAPI WebSocket connection.
         q: asyncio.Queue to receive metrics from the monitor.
     """
-    runners = all((settings.env.git_org, settings.env.git_token))
-    github = GitHub() if runners else None
     while True:
         payload = await q.get()
-        # if github:
-        #     payload["github_runners"] = github.runners()
         await websocket.send_json(payload)
 
 
