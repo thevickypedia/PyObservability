@@ -1,6 +1,17 @@
 Release Notes
 =============
 
+v3.0.0 (02/05/2026)
+-------------------
+- [6416ad5](https://github.com/thevickypedia/PyObservability/commit/6416ad582e5ec1b899b4334b0eea6d0a031fdbfc) chore: Release ``v3.0.0``
+- [b908038](https://github.com/thevickypedia/PyObservability/commit/b90803816fb8f7f0d4a1b462afd18ebcd20af6b7) docs: Update README.md
+- [af93ed0](https://github.com/thevickypedia/PyObservability/commit/af93ed0ce41aa3541439132c757abb25f46f372e) feat: Render tabs individually without dependencies
+- [d551fa0](https://github.com/thevickypedia/PyObservability/commit/d551fa006316376698a7a70d7c455c50400bf36e) feat: Add UI and backend API endpoint for GHA runners
+- [a7dc3d3](https://github.com/thevickypedia/PyObservability/commit/a7dc3d38b3f1b2b1e761d6dbaf83867083242397) docs: Add missing docstrings
+- [2b5c190](https://github.com/thevickypedia/PyObservability/commit/2b5c190b932c333b7edd859744db72e001a64b04) refactor: Remove dead code
+- [0f099ec](https://github.com/thevickypedia/PyObservability/commit/0f099ec8982f0126823b702c074d3d03277a6586) feat: Update backend code to include GitHub actions runners' status
+- [55b6496](https://github.com/thevickypedia/PyObservability/commit/55b649618beb8ca947106220228c6a215cc558a5) chore: Update release notes for v2.2.1
+
 v2.2.1 (02/05/2026)
 -------------------
 - [4fa507d](https://github.com/thevickypedia/PyObservability/commit/4fa507d34891ed3fbf00c238101b5e024f232e8f) chore: Release ``v2.2.1``
