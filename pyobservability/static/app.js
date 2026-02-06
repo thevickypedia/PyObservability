@@ -857,10 +857,15 @@
     function resetUI() {
         firstMessage = true;
         hideSpinners();
-        // Disable Kuma tab during loading if present
-        if (kumaTab) { kumaTab.disabled = true; }
-        // Disable Runners tab during loading if present
-        if (runnersTab) { runnersTab.disabled = true; }
+        // Disable other tabs only while we're actively on Nodes and waiting for the first WS payload.
+        // If we restore directly into Kuma/Runners, we don't want these tabs stuck disabled.
+        if (currentTab === 'nodes') {
+            if (kumaTab) { kumaTab.disabled = true; }
+            if (runnersTab) { runnersTab.disabled = true; }
+        } else {
+            if (kumaTab) { kumaTab.disabled = false; }
+            if (runnersTab) { runnersTab.disabled = false; }
+        }
 
         const EMPTY_DATA = Array(MAX_POINTS).fill(null);
         const EMPTY_LABELS = Array(MAX_POINTS).fill("");
@@ -1496,6 +1501,10 @@
         currentTab = 'kuma';
         localStorage.setItem('activeTab', 'kuma');
 
+        // Ensure tabs aren't left disabled from a previous Nodes loading state
+        if (kumaTab) { kumaTab.disabled = false; }
+        if (runnersTab) { runnersTab.disabled = false; }
+
         if (kumaTab) kumaTab.classList.add('active');
         nodesTab.classList.remove('active');
         if (runnersTab) runnersTab.classList.remove('active');
@@ -1526,6 +1535,10 @@
     function switchToRunnersTab() {
         currentTab = 'runners';
         localStorage.setItem('activeTab', 'runners');
+
+        // Ensure tabs aren't left disabled from a previous Nodes loading state
+        if (kumaTab) { kumaTab.disabled = false; }
+        if (runnersTab) { runnersTab.disabled = false; }
 
         if (runnersTab) runnersTab.classList.add('active');
         nodesTab.classList.remove('active');
