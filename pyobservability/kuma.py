@@ -61,6 +61,7 @@ class UptimeKumaClient:
             time.sleep(0.05)
 
         if not result.get("ok"):
+            LOGGER.error("Uptime Kuma login failed: %s", result)
             raise RuntimeError("Uptime Kuma login failed")
 
         self.logged_in = True
@@ -71,14 +72,14 @@ class UptimeKumaClient:
             self.connect()
 
         if not self.logged_in:
-            self.login()
+            try:
+                self.login()
+            except RuntimeError:
+                return None
 
         end = time.time() + settings.env.kuma_timeout
         while not self.monitors and time.time() < end:
             time.sleep(0.05)
-
-        if not self.monitors:
-            raise RuntimeError("No monitors received")
 
         return self.monitors
 

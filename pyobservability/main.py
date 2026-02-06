@@ -63,17 +63,15 @@ async def kuma():
         List[Dict[str, Any]]:
         List of monitors from Kuma server after filtering the required fields.
     """
-    try:
-        kuma_data = UptimeKumaClient().get_monitors()
+    if kuma_data := UptimeKumaClient().get_monitors():
         LOGGER.info("Retrieved monitors from kuma server - %d found", len(kuma_data))
-    except RuntimeError:
-        raise HTTPException(
-            status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
-            detail="Unable to retrieve data from kuma server.",
-        )
-    monitors = list(extract_monitors(kuma_data))
-    LOGGER.info("Processed [%d] monitors for UI payload.", len(monitors))
-    return monitors
+        monitors = list(extract_monitors(kuma_data))
+        LOGGER.info("Processed [%d] monitors for UI payload.", len(monitors))
+        return monitors
+    raise HTTPException(
+        status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
+        detail="Unable to retrieve data from kuma server.",
+    )
 
 
 async def runners():
@@ -86,11 +84,10 @@ async def runners():
     if runners_data := GitHub().runners():
         LOGGER.info("Retrieved self-hosted runners from GitHub - %d found", runners_data.total)
         return [runner.__dict__ for runner in runners_data.runners]
-    else:
-        raise HTTPException(
-            status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
-            detail="Unable to retrieve data from GitHub.",
-        )
+    raise HTTPException(
+        status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
+        detail="Unable to retrieve data from GitHub.",
+    )
 
 
 async def health() -> Dict[str, str]:
