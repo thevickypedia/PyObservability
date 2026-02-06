@@ -2,7 +2,7 @@ import json
 import os
 import pathlib
 import socket
-from typing import Any, Dict, List
+from typing import Any, Dict, Iterable, List
 
 import yaml
 from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt
@@ -96,17 +96,24 @@ class MonitorTarget(BaseModel):
     apikey: str
 
 
-def alias_choices(variable: str) -> AliasChoices:
+def alias_choices(variable: str = None, prefix: str = None, choices: Iterable = None) -> AliasChoices:
     """Custom alias choices for environment variables for GitHub.
 
     Args:
         variable: Variable name.
+        prefix: Prefix for the variable.
+        choices: Additional custom choices for the variable.
 
     Returns:
         AliasChoices:
         Returns the alias choices for the variable.
     """
-    choices = (variable, variable.lower(), f"MONITOR_{variable}", f"monitor_{variable.lower()}")
+    if choices:
+        choices = tuple(x for choice in choices for x in (choice.upper(), choice.lower()))
+    else:
+        choices = (variable.upper(), variable.lower())
+        if prefix:
+            choices += (f"{prefix}_{variable}".upper(), f"{prefix}_{variable}".lower())
     return AliasChoices(*choices)
 
 
@@ -117,28 +124,28 @@ class EnvConfig(PydanticEnvConfig):
 
     """
 
-    host: str = Field(socket.gethostbyname("localhost") or "0.0.0.0", validation_alias=alias_choices("HOST"))
-    port: PositiveInt = Field(8080, validation_alias=alias_choices("PORT"))
+    host: str = Field(socket.gethostbyname("localhost") or "0.0.0.0", validation_alias=alias_choices("HOST", "MONITOR"))
+    port: PositiveInt = Field(8080, validation_alias=alias_choices("PORT", "MONITOR"))
 
-    targets: List[MonitorTarget] = Field(..., validation_alias=alias_choices("TARGETS"))
-    interval: PositiveInt = Field(3, validation_alias=alias_choices("INTERVAL"))
+    targets: List[MonitorTarget] = Field(..., validation_alias=alias_choices("TARGETS", "MONITOR"))
+    interval: PositiveInt = Field(3, validation_alias=alias_choices("INTERVAL", "MONITOR"))
 
     log: enums.Log | None = None
     logs_path: str = "logs"
     debug: bool = False
     log_config: Dict[str, Any] | FilePath | None = None
 
-    username: str | None = Field(None, validation_alias=alias_choices("USERNAME"))
-    password: str | None = Field(None, validation_alias=alias_choices("PASSWORD"))
-    timeout: PositiveInt = Field(300, validation_alias=alias_choices("TIMEOUT"))
+    username: str | None = Field(None, validation_alias=alias_choices("USERNAME", "MONITOR"))
+    password: str | None = Field(None, validation_alias=alias_choices("PASSWORD", "MONITOR"))
+    timeout: PositiveInt = Field(300, validation_alias=alias_choices("TIMEOUT", "MONITOR"))
 
-    git_org: str | None = None
-    git_token: str | None = None
+    kuma_url: str | None = Field(None, validation_alias=alias_choices("KUMA_URL", "UPTIME"))
+    kuma_username: str | None = Field(None, validation_alias=alias_choices("KUMA_USERNAME", "UPTIME"))
+    kuma_password: str | None = Field(None, validation_alias=alias_choices("KUMA_PASSWORD", "UPTIME"))
+    kuma_timeout: PositiveInt = Field(5, validation_alias=alias_choices("KUMA_TIMEOUT", "UPTIME"))
 
-    kuma_url: str | None = None
-    kuma_username: str | None = None
-    kuma_password: str | None = None
-    kuma_timeout: PositiveInt = 5
+    git_org: str | None = Field(None, validation_alias=alias_choices(choices=("GIT_ORG", "GITHUB_ORG")))
+    git_token: str | None = Field(None, validation_alias=alias_choices(choices=("GIT_TOKEN", "GITHUB_TOKEN")))
 
     class Config:
         """Environment variables configuration."""
