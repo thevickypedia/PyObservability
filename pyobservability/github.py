@@ -112,6 +112,7 @@ class GitHub:
         """
         try:
             response = self.SESSION.get(f"https://api.github.com/orgs/{settings.env.git_org}/actions/runners")
+            response.raise_for_status()
             response_json = response.json()
         except (requests.RequestException, requests.JSONDecodeError) as error:
             LOGGER.error(error)
