@@ -1290,7 +1290,8 @@
 
     function startKumaInterval() {
         if (kumaIntervalId) clearInterval(kumaIntervalId);
-        const interval = parseInt(kumaIntervalSelect?.value || 60000);
+        // Default is 3m if not set
+        const interval = parseInt(kumaIntervalSelect?.value || 180000);
         kumaIntervalId = setInterval(refreshKumaMap, interval);
     }
 
@@ -1397,7 +1398,8 @@
 
     function startRunnersInterval() {
         if (runnersIntervalId) clearInterval(runnersIntervalId);
-        const interval = parseInt(runnersIntervalSelect?.value || 5000);
+        // Default to 10 seconds if not set
+        const interval = parseInt(runnersIntervalSelect?.value || 10000);
         runnersIntervalId = setInterval(refreshRunnersData, interval);
     }
 
