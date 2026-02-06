@@ -1,6 +1,18 @@
 Release Notes
 =============
 
+v3.2.0 (02/06/2026)
+-------------------
+- [13189df](https://github.com/thevickypedia/PyObservability/commit/13189dfd12dacf7de64fad0005efd2ba82e7de7c) chore: Release ``v3.2.0``
+- [2e091ce](https://github.com/thevickypedia/PyObservability/commit/2e091cec36d7febea3132585dcc172afdbcfc321) fix: Handle errors from GitHub API to avoid crashing
+- [65c614f](https://github.com/thevickypedia/PyObservability/commit/65c614f589d7260bf497cb70949b399e55bb806b) perf: Remove exception handlers from kuma endpoint
+- [78afe22](https://github.com/thevickypedia/PyObservability/commit/78afe2249925a6da6b2837e3ff42fc0967ac7849) fix: Ensure tabs aren't left disabled from older sessions
+- [898d0e3](https://github.com/thevickypedia/PyObservability/commit/898d0e305947193ecd1dcd41612a6918d43bcb70) perf: Extend default interval for both kuma and runners interval
+- [954f467](https://github.com/thevickypedia/PyObservability/commit/954f467014d5df63999ac99a0f41c8483a69a24c) perf: Disable ``GitHub Runners`` tab when nodes are loading
+- [f567073](https://github.com/thevickypedia/PyObservability/commit/f56707301ac573e6b21063d7596acb309b783768) fix: Avoid freezing on a particular view when refreshed
+- [b9e1193](https://github.com/thevickypedia/PyObservability/commit/b9e1193f3d90c9d0aacbd9d3cd40fe0b5792b63d) perf: Increase interval option for kuma and runners' metrics
+- [df3093c](https://github.com/thevickypedia/PyObservability/commit/df3093c782a7e537814cd5f5d89029d32b77f6d8) chore: Update release notes for v3.1.0
+
 v3.1.0 (02/06/2026)
 -------------------
 - [bf3335e](https://github.com/thevickypedia/PyObservability/commit/bf3335e58bfde053a453a73200cbfbfceb8fe71d) chore: Release ``v3.1.0``
