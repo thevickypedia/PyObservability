@@ -57,6 +57,16 @@
         });
     }
 
+    // Spinners are only meaningful for Nodes (they get cleared on the first WS metrics payload).
+    // If we leave Nodes, hide them immediately so they don't block other tabs.
+    function setNodesLoading(loading) {
+        if (loading) {
+            showAllSpinners();
+        } else {
+            hideSpinners();
+        }
+    }
+
     // ------------------------------------------------------------
     // DOM REFERENCES
     // ------------------------------------------------------------
@@ -1470,6 +1480,10 @@
         stopKumaInterval();
         stopRunnersInterval();
 
+        // Nodes uses WS-driven first message to clear the loading overlays
+        firstMessage = true;
+        setNodesLoading(true);
+
         closeWebSocket();
         initWebSocket();
     }
@@ -1495,6 +1509,9 @@
 
         // Stop other intervals
         stopRunnersInterval();
+
+        // Leaving Nodes: always hide Nodes loading overlays so Kuma doesn't look frozen
+        setNodesLoading(false);
 
         closeWebSocket();
         loadKumaMap().then(() => {
@@ -1524,6 +1541,9 @@
         // Stop other intervals
         stopKumaInterval();
 
+        // Leaving Nodes: always hide Nodes loading overlays so Runners doesn't look frozen
+        setNodesLoading(false);
+
         closeWebSocket();
         loadRunnersData().then(() => {
             startRunnersInterval();
@@ -1550,7 +1570,6 @@
     // ------------------------------------------------------------
     attachSpinners();
     resetUI();
-    showAllSpinners();
 
     // Restore last active tab or default to nodes
     const savedTab = localStorage.getItem('activeTab');
@@ -1561,6 +1580,7 @@
     } else {
         // Initialize nodes view by default
         document.body.classList.add('nodes-view');
+        setNodesLoading(true);
         initWebSocket();
     }
 })();
