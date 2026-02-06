@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from pyobservability.config import enums, settings
+from pyobservability.github import GitHub
 from pyobservability.kuma import UptimeKumaClient, extract_monitors
 from pyobservability.transport import websocket_endpoint
 from pyobservability.version import __version__
@@ -68,6 +69,23 @@ async def kuma():
     return monitors
 
 
+async def runners():
+    """Git runners endpoint to retrieve self-hosted runners from GitHub organization.
+
+    Returns:
+        List[Dict[str, Any]]:
+        List of self-hosted runners from GitHub organization after filtering the required fields.
+    """
+    if runners_data := GitHub().runners():
+        LOGGER.info("Retrieved self-hosted runners from GitHub - %d found", runners_data.total)
+        return [runner.__dict__ for runner in runners_data.runners]
+    else:
+        raise HTTPException(
+            status_code=HTTPStatus.SERVICE_UNAVAILABLE.real,
+            detail="Unable to retrieve data from GitHub.",
+        )
+
+
 async def health() -> Dict[str, str]:
     """Health check endpoint.
 
@@ -89,6 +107,7 @@ def include_routes() -> None:
         ),
     )
     kuma_enabled = all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password))
+    runners_enabled = all((settings.env.git_org, settings.env.git_token))
     if all((settings.env.username, settings.env.password)):
         auth_endpoints = [
             uiauth.Parameters(
@@ -107,6 +126,14 @@ def include_routes() -> None:
                 uiauth.Parameters(
                     path=enums.APIEndpoints.kuma,
                     function=kuma,
+                    methods=[uiauth.enums.APIMethods.GET],
+                )
+            )
+        if runners_enabled:
+            auth_endpoints.append(
+                uiauth.Parameters(
+                    path=enums.APIEndpoints.runners,
+                    function=runners,
                     methods=[uiauth.enums.APIMethods.GET],
                 )
             )
@@ -139,6 +166,15 @@ def include_routes() -> None:
                 APIRoute(
                     path=enums.APIEndpoints.kuma,
                     endpoint=kuma,
+                    methods=["GET"],
+                    include_in_schema=False,
+                ),
+            )
+        if runners_enabled:
+            PyObservability.routes.append(
+                APIRoute(
+                    path=enums.APIEndpoints.runners,
+                    endpoint=runners,
                     methods=["GET"],
                     include_in_schema=False,
                 ),

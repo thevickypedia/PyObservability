@@ -1,4 +1,6 @@
 // app/static/app.js
+// noinspection ExceptionCaughtLocallyJS,JSUnresolvedReference
+
 (function () {
     // ------------------------------------------------------------
     // CONFIG
@@ -13,6 +15,8 @@
     let ws = null;
     let kumaMapData = null;
     let kumaMapLoaded = false;
+    let runnersData = null;
+    let runnersDataLoaded = false;
 
     // ------------------------------------------------------------
     // VISUAL SPINNERS
@@ -668,7 +672,9 @@
         // Processes
         if (PAG_UNIFIED_PROCESSES) {
             const procRows = [];
-            const procColsSet = new Set(["Node", "PID", "Name", "Status", "CPU", "Memory", "Uptime", "Threads", "Open Files"]);
+            const procColsSet = new Set(
+                ["Node", "PID", "Name", "Status", "CPU", "Memory", "Uptime", "Threads", "Open Files"]
+            );
             metrics.forEach(host => {
                 if (!host.metrics) return;
                 const m = host.metrics;
@@ -1156,13 +1162,29 @@
     const kumaSearchInput = document.getElementById("kuma-search-input");
     const controlsDiv = document.querySelector(".controls");
 
+    // GitHub Runners tab elements
+    const runnersTab = document.getElementById("runners-tab");
+    const runnersMainTable = document.getElementById("runners-main-table");
+    const runnersMainThead = runnersMainTable?.querySelector("thead");
+    const runnersMainTbody = runnersMainTable?.querySelector("tbody");
+    const runnersSearchInput = document.getElementById("runners-search-input");
+
     // Create paginated table for kuma using existing infrastructure
     const PAG_KUMA_TAB = createPaginatedTable(
         kumaMainTable, kumaMainThead, kumaMainTbody, 20
     );
 
-    let allKumaRows = [];
+    // Create paginated table for runners
+    const PAG_RUNNERS_TAB = runnersMainTable ? createPaginatedTable(
+        runnersMainTable, runnersMainThead, runnersMainTbody, 20
+    ) : null;
 
+    let allKumaRows = [];
+    let allRunnersRows = [];
+
+    // ------------------------------------------------------------
+    // WEBSOCKET (Managed by tabs)
+    // ------------------------------------------------------------
     function initWebSocket() {
         if (ws) return;
 
@@ -1244,11 +1266,70 @@
         }
     });
 
+    async function loadRunnersData() {
+        if (!PAG_RUNNERS_TAB) return; // Runners tab not enabled
+
+        if (runnersDataLoaded) {
+            PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+            return;
+        }
+
+        // Show loading state
+        runnersMainThead.innerHTML = '<tr><th colspan="6">Loading...</th></tr>';
+        runnersMainTbody.innerHTML = '';
+
+        try {
+            const response = await fetch('/runners');
+            if (!response.ok) throw new Error('Failed to fetch runners data');
+
+            runnersData = await response.json();
+            runnersDataLoaded = true;
+
+            // Normalize runners data
+            allRunnersRows = runnersData.map(runner => ({
+                ID: runner.id || "—",
+                Name: runner.name || "—",
+                OS: runner.os || "—",
+                Status: runner.status || "—",
+                Busy: runner.busy ? "Yes" : "No",
+                Labels: Array.isArray(runner.labels) ? runner.labels.join(", ") : (runner.labels || "—")
+            }));
+
+            PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+        } catch (err) {
+            console.error("Error loading runners data:", err);
+            runnersMainThead.innerHTML = '<tr><th>Error</th></tr>';
+            runnersMainTbody.innerHTML = '<tr><td>Error loading GitHub Runners. Please try again.</td></tr>';
+        }
+    }
+
+    if (runnersSearchInput) {
+        runnersSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+
+            if (!searchTerm) {
+                PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+            } else {
+                const filtered = allRunnersRows.filter(row =>
+                    row.ID.toString().toLowerCase().includes(searchTerm) ||
+                    row.Name.toLowerCase().includes(searchTerm) ||
+                    row.OS.toLowerCase().includes(searchTerm) ||
+                    row.Status.toLowerCase().includes(searchTerm) ||
+                    row.Busy.toLowerCase().includes(searchTerm) ||
+                    row.Labels.toLowerCase().includes(searchTerm)
+                );
+                PAG_RUNNERS_TAB.setData(filtered, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+            }
+        });
+    }
+
     function switchToNodesTab() {
         currentTab = 'nodes';
         nodesTab.classList.add('active');
         kumaTab.classList.remove('active');
+        if (runnersTab) runnersTab.classList.remove('active');
         document.body.classList.remove('kuma-view');
+        document.body.classList.remove('runners-view');
         document.body.classList.add('nodes-view');
 
         controlsDiv.classList.remove('invisible');
@@ -1261,8 +1342,10 @@
         currentTab = 'kuma';
         kumaTab.classList.add('active');
         nodesTab.classList.remove('active');
+        if (runnersTab) runnersTab.classList.remove('active');
         document.body.classList.add('kuma-view');
         document.body.classList.remove('nodes-view');
+        document.body.classList.remove('runners-view');
 
         controlsDiv.classList.add('invisible');
 
@@ -1270,14 +1353,26 @@
         loadKumaMap();
     }
 
+    function switchToRunnersTab() {
+        currentTab = 'runners';
+        if (runnersTab) runnersTab.classList.add('active');
+        nodesTab.classList.remove('active');
+        kumaTab.classList.remove('active');
+        document.body.classList.add('runners-view');
+        document.body.classList.remove('nodes-view');
+        document.body.classList.remove('kuma-view');
+
+        controlsDiv.classList.add('invisible');
+
+        closeWebSocket();
+        loadRunnersData();
+    }
+
     if (nodesTab && kumaTab) {
         nodesTab.addEventListener('click', switchToNodesTab);
         kumaTab.addEventListener('click', switchToKumaTab);
+        if (runnersTab) runnersTab.addEventListener('click', switchToRunnersTab);
     }
-
-    // ------------------------------------------------------------
-    // WEBSOCKET (Managed by tabs)
-    // ------------------------------------------------------------
 
     // ------------------------------------------------------------
     // INIT

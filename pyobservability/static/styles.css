@@ -550,6 +550,46 @@ body.nodes-view #kuma-content {
     font-size: 14px;
 }
 
+/* GitHub Runners view controls */
+body.runners-view .meta-row,
+body.runners-view .charts-row,
+body.runners-view .details-row,
+body.runners-view .tables-row {
+    display: none !important;
+}
+
+body.runners-view #runners-content {
+    display: block !important;
+}
+
+body.nodes-view #runners-content,
+body.kuma-view #runners-content {
+    display: none !important;
+}
+
+#runners-content {
+    display: none;
+}
+
+#runners-content .panel {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.runners-search {
+    margin-bottom: 12px;
+}
+
+.runners-search input {
+    width: 100%;
+    padding: 10px 16px;
+    background: var(--glass);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: inherit;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
 /* Change color codes for hyperlinks */
 a {
     color: var(--accent);
