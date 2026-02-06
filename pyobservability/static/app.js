@@ -1,5 +1,5 @@
 // app/static/app.js
-// noinspection ExceptionCaughtLocallyJS,JSUnresolvedReference
+// noinspection ExceptionCaughtLocallyJS,JSUnresolvedReference,JSIgnoredPromiseFromCall,DuplicatedCode
 
 (function () {
     // ------------------------------------------------------------
@@ -1304,8 +1304,8 @@
 
     function startKumaInterval() {
         if (kumaIntervalId) clearInterval(kumaIntervalId);
-        // Default is 3m if not set
-        const interval = parseInt(kumaIntervalSelect?.value || 180000);
+        // Default is 5m if not set
+        const interval = parseInt(kumaIntervalSelect?.value || 5_000_000);
         kumaIntervalId = setInterval(refreshKumaMap, interval);
     }
 
@@ -1412,8 +1412,8 @@
 
     function startRunnersInterval() {
         if (runnersIntervalId) clearInterval(runnersIntervalId);
-        // Default to 10 seconds if not set
-        const interval = parseInt(runnersIntervalSelect?.value || 10000);
+        // Default to 30 seconds if not set
+        const interval = parseInt(runnersIntervalSelect?.value || 30_000);
         runnersIntervalId = setInterval(refreshRunnersData, interval);
     }
 
