@@ -132,6 +132,9 @@ class EnvConfig(PydanticEnvConfig):
     password: str | None = Field(None, validation_alias=alias_choices("PASSWORD"))
     timeout: PositiveInt = Field(300, validation_alias=alias_choices("TIMEOUT"))
 
+    git_org: str | None = None
+    git_token: str | None = None
+
     kuma_url: str | None = None
     kuma_username: str | None = None
     kuma_password: str | None = None
