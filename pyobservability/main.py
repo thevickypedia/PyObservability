@@ -43,7 +43,14 @@ async def index(request: Request):
         Rendered HTML template with targets and version.
     """
     kuma_data = [{}] if all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password)) else None
-    args = dict(request=request, kuma_data=kuma_data, targets=settings.env.targets, version=__version__)
+    runners_data = [{}] if all((settings.env.git_org, settings.env.git_token)) else None
+    args = dict(
+        request=request,
+        kuma_data=kuma_data,
+        runners_data=runners_data,
+        targets=settings.env.targets,
+        version=__version__,
+    )
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
     return templates.TemplateResponse("index.html", args)
@@ -76,6 +83,11 @@ async def runners():
         List[Dict[str, Any]]:
         List of self-hosted runners from GitHub organization after filtering the required fields.
     """
+    # TODO: Include an interval in the UI (including kuma) - add drop down 3s, 5s, 10s, 30s, 1m in place of Node
+    # TODO: Remove the tag `self-hosted`
+    # TODO: Refresh in a tab should refresh in the same tag
+    # TODO: Logout button should be shared in all the pages
+    # TODO: If both kuma and runners are disabled, then don't show a title for Nodes
     if runners_data := GitHub().runners():
         LOGGER.info("Retrieved self-hosted runners from GitHub - %d found", runners_data.total)
         return [runner.__dict__ for runner in runners_data.runners]

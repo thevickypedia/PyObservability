@@ -1157,8 +1157,8 @@
     const nodesTab = document.getElementById("nodes-tab");
     const kumaTab = document.getElementById("kuma-tab");
     const kumaMainTable = document.getElementById("kuma-main-table");
-    const kumaMainThead = kumaMainTable.querySelector("thead");
-    const kumaMainTbody = kumaMainTable.querySelector("tbody");
+    const kumaMainThead = kumaMainTable?.querySelector("thead");
+    const kumaMainTbody = kumaMainTable?.querySelector("tbody");
     const kumaSearchInput = document.getElementById("kuma-search-input");
     const controlsDiv = document.querySelector(".controls");
 
@@ -1170,9 +1170,9 @@
     const runnersSearchInput = document.getElementById("runners-search-input");
 
     // Create paginated table for kuma using existing infrastructure
-    const PAG_KUMA_TAB = createPaginatedTable(
+    const PAG_KUMA_TAB = kumaMainTable ? createPaginatedTable(
         kumaMainTable, kumaMainThead, kumaMainTbody, 20
-    );
+    ) : null;
 
     // Create paginated table for runners
     const PAG_RUNNERS_TAB = runnersMainTable ? createPaginatedTable(
@@ -1223,13 +1223,15 @@
     }
 
     async function loadKumaMap() {
+        if (!PAG_KUMA_TAB) return; // Kuma tab not enabled
+
         if (kumaMapLoaded) {
             PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
             return;
         }
 
         // Show loading state
-        kumaMainThead.innerHTML = '<tr><th colspan="5">Loading...</th></tr>';
+        kumaMainThead.innerHTML = '<tr><th colspan="6">Loading...</th></tr>';
         kumaMainTbody.innerHTML = '';
 
         try {
@@ -1248,23 +1250,25 @@
         }
     }
 
-    kumaSearchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
+    if (kumaSearchInput) {
+        kumaSearchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
 
-        if (!searchTerm) {
-            PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
-        } else {
-            const filtered = allKumaRows.filter(row =>
-                row.Host.toLowerCase().includes(searchTerm) ||
-                row.Name.toLowerCase().includes(searchTerm) ||
-                row.Parent.toLowerCase().includes(searchTerm) ||
-                row.URL.toLowerCase().includes(searchTerm) ||
-                row.Description.toLowerCase().includes(searchTerm) ||
-                row.Tags.toLowerCase().includes(searchTerm)
-            );
-            PAG_KUMA_TAB.setData(filtered, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
-        }
-    });
+            if (!searchTerm) {
+                PAG_KUMA_TAB.setData(allKumaRows, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
+            } else {
+                const filtered = allKumaRows.filter(row =>
+                    row.Host.toLowerCase().includes(searchTerm) ||
+                    row.Name.toLowerCase().includes(searchTerm) ||
+                    row.Parent.toLowerCase().includes(searchTerm) ||
+                    row.URL.toLowerCase().includes(searchTerm) ||
+                    row.Description.toLowerCase().includes(searchTerm) ||
+                    row.Tags.toLowerCase().includes(searchTerm)
+                );
+                PAG_KUMA_TAB.setData(filtered, ["Host", "Name", "Parent", "URL", "Description", "Tags"]);
+            }
+        });
+    }
 
     async function loadRunnersData() {
         if (!PAG_RUNNERS_TAB) return; // Runners tab not enabled
@@ -1326,7 +1330,7 @@
     function switchToNodesTab() {
         currentTab = 'nodes';
         nodesTab.classList.add('active');
-        kumaTab.classList.remove('active');
+        if (kumaTab) kumaTab.classList.remove('active');
         if (runnersTab) runnersTab.classList.remove('active');
         document.body.classList.remove('kuma-view');
         document.body.classList.remove('runners-view');
@@ -1340,7 +1344,7 @@
 
     function switchToKumaTab() {
         currentTab = 'kuma';
-        kumaTab.classList.add('active');
+        if (kumaTab) kumaTab.classList.add('active');
         nodesTab.classList.remove('active');
         if (runnersTab) runnersTab.classList.remove('active');
         document.body.classList.add('kuma-view');
@@ -1357,7 +1361,7 @@
         currentTab = 'runners';
         if (runnersTab) runnersTab.classList.add('active');
         nodesTab.classList.remove('active');
-        kumaTab.classList.remove('active');
+        if (kumaTab) kumaTab.classList.remove('active');
         document.body.classList.add('runners-view');
         document.body.classList.remove('nodes-view');
         document.body.classList.remove('kuma-view');
@@ -1368,11 +1372,9 @@
         loadRunnersData();
     }
 
-    if (nodesTab && kumaTab) {
-        nodesTab.addEventListener('click', switchToNodesTab);
-        kumaTab.addEventListener('click', switchToKumaTab);
-        if (runnersTab) runnersTab.addEventListener('click', switchToRunnersTab);
-    }
+    nodesTab.addEventListener('click', switchToNodesTab);
+    if (kumaTab) kumaTab.addEventListener('click', switchToKumaTab);
+    if (runnersTab) runnersTab.addEventListener('click', switchToRunnersTab);
 
     // ------------------------------------------------------------
     // INIT

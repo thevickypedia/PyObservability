@@ -19,13 +19,15 @@
 <header class="topbar">
     <div class="brand">Node Monitor</div>
 
-    {% if kuma_data is not none %}
     <div class="tab-navigation">
         <button id="nodes-tab" class="tab-btn active">Nodes</button>
+        {% if kuma_data is not none %}
         <button id="kuma-tab" class="tab-btn">Uptime Kuma</button>
+        {% endif %}
+        {% if runners_data is not none %}
         <button id="runners-tab" class="tab-btn">GitHub Runners</button>
+        {% endif %}
     </div>
-    {% endif %}
 
     <div class="controls">
         <label for="node-select" id="node-select-label">Node:</label>
@@ -295,12 +297,6 @@
     // inject server-side targets
     window.MONITOR_TARGETS = {{ targets | tojson }};
 </script>
-
-{% if kuma_data is not none %}
-<script>
-    window.KUMA_DATA = {{ kuma_data | tojson }};
-</script>
-{% endif %}
 
 <script>
     const logoutEndpoint = "{{ logout }}";
