@@ -69,7 +69,7 @@ class Runners:
     """
 
     total: int
-    runners: List[Runner]
+    runners: Generator[Runner]
 
 
 class GitHub:
@@ -116,4 +116,4 @@ class GitHub:
         except (requests.RequestException, requests.JSONDecodeError) as error:
             LOGGER.error(error)
             return None
-        return Runners(total=response_json["total_count"], runners=list(self.parser(response_json["runners"])))
+        return Runners(total=response_json["total_count"], runners=self.parser(response_json["runners"]))
