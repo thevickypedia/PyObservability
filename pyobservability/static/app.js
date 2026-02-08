@@ -558,7 +558,7 @@
                     tension: 0.3,
                     pointRadius: 0,
                     pointHoverRadius: 4,
-                    pointHitRadius: 30,
+                    pointHitRadius: 25,
                 }))
             },
             options: {
@@ -566,7 +566,7 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 interaction: {
-                    mode: 'nearest',
+                    mode: 'index',
                     intersect: false
                 },
                 scales: {
@@ -576,7 +576,7 @@
                 plugins: {
                     legend: {display: false},
                     tooltip: {
-                        mode: 'nearest',
+                        mode: 'index',
                         intersect: false
                     }
                 }
