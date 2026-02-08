@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v3.2.1 (02/08/2026)
+-------------------
+- [d494df5](https://github.com/thevickypedia/PyObservability/commit/d494df55e3b63b20728686e13313b207927cced3) chore: Release ``v3.2.1``
+- [f1a0740](https://github.com/thevickypedia/PyObservability/commit/f1a074006358ade675a264a0030015d6c7a1b4ed) style: Set hove-button logic to nearest node
+- [9c6f368](https://github.com/thevickypedia/PyObservability/commit/9c6f3682b0185f08bf396344ce4cb6ea6f4ab35d) style: Group all the nodes' metrics in the hover-balloon logic
+- [9e066f9](https://github.com/thevickypedia/PyObservability/commit/9e066f93da2654c60923623bf0f26aea05f58cf7) style: Improve hover-balloon logic for aggregated metrics
+- [4c29840](https://github.com/thevickypedia/PyObservability/commit/4c298405c4c903a4ba8030b62ba95062e976c942) fix: Handle connection error for kuma server endpoint
+- [07d6961](https://github.com/thevickypedia/PyObservability/commit/07d69613a4141b1e5ccbc842e950bf48d1894908) perf: Include a ``wait_timeout`` for socketio connection in kuma tab
+- [cf4417a](https://github.com/thevickypedia/PyObservability/commit/cf4417a5680d9b74ad5c1a38a1bea631bdde50cd) chore: Update release notes for v3.2.0
+
 v3.2.0 (02/06/2026)
 -------------------
 - [13189df](https://github.com/thevickypedia/PyObservability/commit/13189dfd12dacf7de64fad0005efd2ba82e7de7c) chore: Release ``v3.2.0``
