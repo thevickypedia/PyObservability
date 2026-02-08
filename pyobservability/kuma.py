@@ -6,6 +6,7 @@ from typing import Any, Dict
 from urllib.parse import urlparse
 
 import socketio
+from socketio.exceptions import SocketIOError
 
 from pyobservability.config import settings
 
@@ -69,7 +70,11 @@ class UptimeKumaClient:
     def get_monitors(self):
         """Retrieve monitors from the Uptime Kuma server."""
         if not self.sio.connected:
-            self.connect()
+            try:
+                self.connect()
+            except SocketIOError as error:
+                LOGGER.error("Connection to Uptime Kuma server failed: %s", error)
+                return None
 
         if not self.logged_in:
             try:
