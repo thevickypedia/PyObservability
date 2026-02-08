@@ -557,17 +557,29 @@
                     fill: false,
                     tension: 0.3,
                     pointRadius: 0,
+                    pointHoverRadius: 4,
+                    pointHitRadius: 30,
                 }))
             },
             options: {
                 animation: false,
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'nearest',
+                    intersect: false
+                },
                 scales: {
                     x: {display: false},
                     y: {beginAtZero: true, suggestedMax: 100}
                 },
-                plugins: {legend: {display: false}}
+                plugins: {
+                    legend: {display: false},
+                    tooltip: {
+                        mode: 'nearest',
+                        intersect: false
+                    }
+                }
             }
         });
     }
