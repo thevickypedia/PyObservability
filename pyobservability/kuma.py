@@ -36,7 +36,7 @@ class UptimeKumaClient:
     def connect(self):
         """Connect to the Uptime Kuma server via Socket.IO."""
         LOGGER.debug("Connecting to Uptime Kuma server at %s", settings.env.kuma_url)
-        self.sio.connect(settings.env.kuma_url)
+        self.sio.connect(settings.env.kuma_url, wait_timeout=settings.env.kuma_timeout)
 
     def login(self):
         """Log in to the Uptime Kuma server."""
