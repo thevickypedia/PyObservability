@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import requests
 from asyncio import CancelledError
 from collections.abc import Generator
 from typing import Any, AsyncGenerator, Dict, List
@@ -137,6 +138,15 @@ class Monitor:
         url = self.base_url.rstrip("/") + OBS_PATH + query
         headers = {"Accept": "application/json", "Authorization": f"Bearer {self.apikey}"}
 
+        version = {}
+        try:
+            version = requests.get(self.base_url + "version", headers=headers).json()
+            assert version.get("python_version") and version.get("pyninja_version"), "Invalid version payload received."
+        except (requests.RequestException, requests.JSONDecodeError) as error:
+            LOGGER.warning(error)
+        except AssertionError as debug:
+            LOGGER.debug(debug)
+            LOGGER.info("Please ensure the host [%s], has the latest PyNinja [4.9.92+] installed.", self.name)
         async with self.session.get(
             url, headers=headers, timeout=aiohttp.ClientTimeout(total=None, connect=3, sock_read=None, sock_connect=3)
         ) as resp:
@@ -150,7 +160,7 @@ class Monitor:
                     continue
 
                 try:
-                    parsed = json.loads(line)
+                    parsed = {**json.loads(line), **version}
                     try:
                         if service_stats := parsed.get("service_stats"):
                             parsed["service_stats"] = list(refine_service(service_stats))

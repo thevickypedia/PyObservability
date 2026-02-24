@@ -1020,7 +1020,9 @@
                 `OS: ${m.system || "-"}\n` +
                 `Architecture: ${m.architecture || "-"}\n\n` +
                 `CPU Cores: ${m.cores || "-"}\n` +
-                `Up Time: ${m.uptime || "-"}\n`;
+                `Up Time: ${m.uptime || "-"}\n\n` +
+                `Python Version: ${m.python_version || "-"}\n` +
+                `PyNinja Version: ${m.pyninja_version || "-"}`;
 
             if (m.ip_info)
                 ipEl.textContent =
