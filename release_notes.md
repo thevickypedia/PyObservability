@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v3.2.2 (02/24/2026)
+-------------------
+- [2cf9448](https://github.com/thevickypedia/PyObservability/commit/2cf94482bf125d8ebba98419f1697248dcc176da) chore: Release ``v3.2.2``
+- [6dff9cf](https://github.com/thevickypedia/PyObservability/commit/6dff9cfdd15be12b97f038f31d834482980ab73e) perf: Include a helper function to join url and add query params
+- [9e5e4e5](https://github.com/thevickypedia/PyObservability/commit/9e5e4e57c40514ca6123911326b6beda36c8499e) feat: Include host version information in the UI
+- [c24dd32](https://github.com/thevickypedia/PyObservability/commit/c24dd328a9aebc4b3bcb6011d97612c1499153a2) chore: Update release notes for v3.2.1
+
 v3.2.1 (02/08/2026)
 -------------------
 - [d494df5](https://github.com/thevickypedia/PyObservability/commit/d494df55e3b63b20728686e13313b207927cced3) chore: Release ``v3.2.1``
