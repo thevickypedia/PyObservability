@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: "pyobservability"
+    static_configs:
+      # TODO: Upload as sample with port from env
+      - targets: ["host.docker.internal:<PORT>"]

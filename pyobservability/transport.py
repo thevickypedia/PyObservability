@@ -9,6 +9,7 @@ from pyobservability.config import settings
 from pyobservability.monitor import Monitor
 
 LOGGER = logging.getLogger("uvicorn.default")
+GLOBAL_MONITORS: dict[str, Monitor] = {}
 
 
 async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue) -> None:
@@ -166,7 +167,6 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 if monitor:
                     LOGGER.info("Stopping previous monitor task")
                     monitor.unsubscribe(q)
-                    await monitor.stop()
                     monitor = None
                     q = None
 
@@ -201,8 +201,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                     raise WebSocketDisconnect(code=400, reason=f"Invalid base url: {base_url}")
 
                 # create new monitor
-                monitor = Monitor(target)
-                await monitor.start()
+                monitor = GLOBAL_MONITORS[base_url]
 
                 # new subscription queue
                 q = monitor.subscribe()
@@ -221,11 +220,9 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     if monitor:
         if q:
             monitor.unsubscribe(q)
-        await monitor.stop()
 
     if multi_task:
         multi_task.cancel()
 
     for idx, mon in enumerate(monitors):
         mon.unsubscribe(queues[idx])
-        await mon.stop()

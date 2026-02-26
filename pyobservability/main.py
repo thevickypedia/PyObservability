@@ -1,6 +1,7 @@
 import logging
 import pathlib
 import warnings
+from contextlib import asynccontextmanager
 from datetime import datetime
 from http import HTTPStatus
 from typing import Dict
@@ -15,14 +16,37 @@ from fastapi.templating import Jinja2Templates
 from pyobservability.config import enums, settings
 from pyobservability.github import GitHub
 from pyobservability.kuma import UptimeKumaClient, extract_monitors
-from pyobservability.transport import websocket_endpoint
+from pyobservability.monitor import Monitor
+from pyobservability.prometheus import metrics_endpoint
+from pyobservability.transport import GLOBAL_MONITORS, websocket_endpoint
 from pyobservability.version import __version__
 
 LOGGER = logging.getLogger("uvicorn.default")
 
-PyObservability = FastAPI(title="PyObservability")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Lifespan context manager to handle startup and shutdown events."""
+    for target in settings.env.targets:
+        mon = Monitor(target)
+        await mon.start()
+        GLOBAL_MONITORS[target["base_url"]] = mon
+    yield
+    for monitor in GLOBAL_MONITORS.values():
+        await monitor.stop()
+
+
+PyObservability = FastAPI(title="PyObservability", lifespan=lifespan)
 PyObservability.__name__ = "PyObservability"
 PyObservability.description = "Observability page for nodes running PyNinja"
+# TODO: Include dependency to protect behind auth
+PyObservability.routes.append(
+    APIRoute(
+        endpoint=metrics_endpoint,
+        path=enums.APIEndpoints.metrics,
+        methods=["GET"],
+    )
+)
 
 root = pathlib.Path(__file__).parent
 templates_dir = root / "templates"

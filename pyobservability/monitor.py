@@ -10,6 +10,7 @@ import aiohttp
 import requests
 
 from pyobservability.config import settings
+from pyobservability.prometheus import update_metrics
 
 LOGGER = logging.getLogger("uvicorn.default")
 OBS_PATH = "/observability"
@@ -60,7 +61,7 @@ class Monitor:
 
     """
 
-    def __init__(self, target: Dict[str, str]):
+    def __init__(self, target: Dict[str, str] | settings.MonitorTarget):
         """Initialize Monitor with target configuration.
 
         Args:
@@ -211,7 +212,13 @@ class Monitor:
                             }
                         ],
                     }
-
+                    update_metrics(
+                        {
+                            "name": self.name,
+                            "base_url": self.base_url,
+                            "metrics": payload,
+                        }
+                    )
                     for q in list(self._ws_subscribers):
                         try:
                             q.put_nowait(result)
