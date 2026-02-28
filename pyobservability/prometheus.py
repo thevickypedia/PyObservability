@@ -1,12 +1,53 @@
-from typing import Any, Dict
+import secrets
+from typing import Any, Dict, NoReturn
 
-from fastapi import Response
+from fastapi import Depends, HTTPException, Response, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
     CollectorRegistry,
     Gauge,
     generate_latest,
 )
+
+from pyobservability.config import settings
+
+security = HTTPBasic()
+
+
+# TODO: Generate `prometheus.yml` file
+def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) -> None | NoReturn:
+    """Verifies credentials for prometheus endpoint.
+
+    Args:
+        credentials: HTTP basic auth credentials.
+
+    Examples:
+        ```yaml
+            global:
+              scrape_interval: 30s
+
+            scrape_configs:
+              - job_name: "pyobservability"
+                basic_auth:
+                  username: <settings.env.username>
+                  password: <settings.env.password>
+                static_configs:
+                    # TODO: Identify container and then generate this or probably all in ONE
+                    # host: <0.0.0.0 || host.docker.internal>
+                  - targets: ["host:<settings.env.port>"]
+        ```
+    """
+    correct_username = secrets.compare_digest(credentials.username, settings.env.username)
+    correct_password = secrets.compare_digest(credentials.password, settings.env.password)
+
+    if not (correct_username and correct_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+
 
 registry = CollectorRegistry()
 

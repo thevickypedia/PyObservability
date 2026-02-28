@@ -8,7 +8,7 @@ from typing import Dict
 
 import uiauth
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.routing import APIRoute, APIWebSocketRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -17,7 +17,7 @@ from pyobservability.config import enums, settings
 from pyobservability.github import GitHub
 from pyobservability.kuma import UptimeKumaClient, extract_monitors
 from pyobservability.monitor import Monitor
-from pyobservability.prometheus import metrics_endpoint
+from pyobservability.prometheus import metrics_endpoint, verify_credentials
 from pyobservability.transport import GLOBAL_MONITORS, websocket_endpoint
 from pyobservability.version import __version__
 
@@ -39,14 +39,6 @@ async def lifespan(_: FastAPI):
 PyObservability = FastAPI(title="PyObservability", lifespan=lifespan)
 PyObservability.__name__ = "PyObservability"
 PyObservability.description = "Observability page for nodes running PyNinja"
-# TODO: Include dependency to protect behind auth
-PyObservability.routes.append(
-    APIRoute(
-        endpoint=metrics_endpoint,
-        path=enums.APIEndpoints.metrics,
-        methods=["GET"],
-    )
-)
 
 root = pathlib.Path(__file__).parent
 templates_dir = root / "templates"
@@ -175,19 +167,19 @@ def include_routes() -> None:
         )
     else:
         warnings.warn("\n\tRunning PyObservability without any protection.", UserWarning)
-        PyObservability.routes.append(
-            APIRoute(
-                path=enums.APIEndpoints.root,
-                endpoint=index,
-                methods=["GET"],
-                include_in_schema=False,
-            ),
-        )
-        PyObservability.routes.append(
-            APIWebSocketRoute(
-                path=enums.APIEndpoints.ws,
-                endpoint=websocket_endpoint,
-            ),
+        PyObservability.routes.extend(
+            [
+                APIRoute(
+                    path=enums.APIEndpoints.root,
+                    endpoint=index,
+                    methods=["GET"],
+                    include_in_schema=False,
+                ),
+                APIWebSocketRoute(
+                    path=enums.APIEndpoints.ws,
+                    endpoint=websocket_endpoint,
+                ),
+            ]
         )
         if kuma_enabled:
             PyObservability.routes.append(
@@ -206,6 +198,24 @@ def include_routes() -> None:
                     methods=["GET"],
                     include_in_schema=False,
                 ),
+            )
+    if settings.env.prometheus_enabled:
+        if settings.env.username and settings.env.password:
+            PyObservability.routes.append(
+                APIRoute(
+                    endpoint=metrics_endpoint,
+                    path=enums.APIEndpoints.metrics,
+                    methods=["GET"],
+                    dependencies=[Depends(verify_credentials)],
+                )
+            )
+        else:
+            PyObservability.routes.append(
+                APIRoute(
+                    endpoint=metrics_endpoint,
+                    path=enums.APIEndpoints.metrics,
+                    methods=["GET"],
+                )
             )
 
 
