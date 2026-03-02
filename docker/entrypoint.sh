@@ -12,10 +12,12 @@ EXT="${CONFIG_PATH##*.}"
 if [ -f "$CONFIG_PATH" ]; then
     case "$EXT" in
         json)
+		    echo "Config file $CONFIG_PATH found. Parsing JSON."
             HOST=${HOST:-$(jq -r '.host // empty' "$CONFIG_PATH")}
             PORT=${PORT:-$(jq -r '.port // empty' "$CONFIG_PATH")}
             ;;
         yaml|yml)
+		    echo "Config file $CONFIG_PATH found. Parsing YAML."
             HOST=${HOST:-$(yq -r '.host // empty' "$CONFIG_PATH")}
             PORT=${PORT:-$(yq -r '.port // empty' "$CONFIG_PATH")}
             ;;
