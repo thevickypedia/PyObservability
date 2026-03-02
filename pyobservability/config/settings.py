@@ -4,7 +4,6 @@ import pathlib
 import socket
 from typing import Any, Dict, Iterable, List
 
-import yaml
 from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt
 from pydantic.aliases import AliasChoices
 from pydantic_settings import BaseSettings
@@ -189,10 +188,6 @@ def env_loader(**kwargs) -> EnvConfig:
             with env_file.open() as stream:
                 env_data = json.load(stream)
             return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
-        if env_file.suffix.lower() in (".yaml", ".yml"):
-            with env_file.open() as stream:
-                env_data = yaml.load(stream, yaml.FullLoader)
-            return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
         if not env_file.suffix or env_file.suffix.lower() in (
             ".text",
             ".txt",
@@ -200,9 +195,7 @@ def env_loader(**kwargs) -> EnvConfig:
             "",
         ):
             return EnvConfig.from_env_file(env_file)
-        raise ValueError(
-            f"\n\tUnsupported format for {env_file!r}, " "can be one of (.json, .yaml, .yml, .txt, .text, .env)"
-        )
+        raise ValueError(f"\n\tUnsupported format for {env_file!r}, " "can be one of (.json, .txt, .text, .env)")
     # Load env config with regular kwargs
     return EnvConfig(**kwargs)
 

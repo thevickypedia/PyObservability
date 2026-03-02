@@ -15,26 +15,11 @@ fi
 
 # If config file exists
 if [ -f "$CONFIG_PATH" ]; then
-    case "$EXT" in
-        json)
-            HOST=${HOST:-$(jq -r '.host // ""' "$CONFIG_PATH")}
-            PORT=${PORT:-$(jq -r '.port // ""' "$CONFIG_PATH")}
-            PROMETHEUS_ENABLED=${PROMETHEUS_ENABLED:-$(jq -r '.prometheus_enabled // ""' "$CONFIG_PATH")}
-            USERNAME=${USERNAME:-$(jq -r '.username // ""' "$CONFIG_PATH")}
-            USERNAME=${USERNAME:-$(jq -r '.monitor_username // ""' "$CONFIG_PATH")}
-            PASSWORD=${PASSWORD:-$(jq -r '.password // ""' "$CONFIG_PATH")}
-            PASSWORD=${PASSWORD:-$(jq -r '.monitor_password // ""' "$CONFIG_PATH")}
-            ;;
-        yaml|yml)
-            HOST=${HOST:-$(yq -r '.host // ""' "$CONFIG_PATH")}
-            PORT=${PORT:-$(yq -r '.port // ""' "$CONFIG_PATH")}
-            PROMETHEUS_ENABLED=${PROMETHEUS_ENABLED:-$(yq -r '.prometheus_enabled // ""' "$CONFIG_PATH")}
-            USERNAME=${USERNAME:-$(yq -r '.username // ""' "$CONFIG_PATH")}
-            USERNAME=${USERNAME:-$(yq -r '.monitor_username // ""' "$CONFIG_PATH")}
-            PASSWORD=${PASSWORD:-$(yq -r '.password // ""' "$CONFIG_PATH")}
-            PASSWORD=${PASSWORD:-$(yq -r '.monitor_password // ""' "$CONFIG_PATH")}
-            ;;
-    esac
+    if [ "$EXT" == "json" ]; then
+        HOST=${HOST:-$(jq -r '.host // ""' "$CONFIG_PATH")}
+        PORT=${PORT:-$(jq -r '.port // ""' "$CONFIG_PATH")}
+        PROMETHEUS_ENABLED=${PROMETHEUS_ENABLED:-$(jq -r '.prometheus_enabled // ""' "$CONFIG_PATH")}
+    fi
 		ARB="--env $CONFIG_PATH start"
 else
 		echo "Config file $CONFIG_PATH not found. Using default HOST and PORT."

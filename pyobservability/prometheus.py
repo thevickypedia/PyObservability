@@ -15,28 +15,11 @@ from pyobservability.config import settings
 security = HTTPBasic()
 
 
-# TODO: Generate `prometheus.yml` file
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) -> None | NoReturn:
     """Verifies credentials for prometheus endpoint.
 
     Args:
         credentials: HTTP basic auth credentials.
-
-    Examples:
-        ```yaml
-            global:
-              scrape_interval: 30s
-
-            scrape_configs:
-              - job_name: "pyobservability"
-                basic_auth:
-                  username: <settings.env.username>
-                  password: <settings.env.password>
-                static_configs:
-                    # TODO: Identify container and then generate this or probably all in ONE
-                    # host: <0.0.0.0 || host.docker.internal>
-                  - targets: ["host:<settings.env.port>"]
-        ```
     """
     correct_username = secrets.compare_digest(credentials.username, settings.env.username)
     correct_password = secrets.compare_digest(credentials.password, settings.env.password)

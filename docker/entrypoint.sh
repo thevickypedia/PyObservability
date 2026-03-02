@@ -10,18 +10,10 @@ EXT="${CONFIG_PATH##*.}"
 
 # If config file exists
 if [ -f "$CONFIG_PATH" ]; then
-    case "$EXT" in
-        json)
-		    echo "Config file $CONFIG_PATH found. Parsing JSON."
-            HOST=${HOST:-$(jq -r '.host // ""' "$CONFIG_PATH")}
-            PORT=${PORT:-$(jq -r '.port // ""' "$CONFIG_PATH")}
-            ;;
-        yaml|yml)
-		    echo "Config file $CONFIG_PATH found. Parsing YAML."
-            HOST=${HOST:-$(yq -r '.host // ""' "$CONFIG_PATH")}
-            PORT=${PORT:-$(yq -r '.port // ""' "$CONFIG_PATH")}
-            ;;
-    esac
+    if [ "$EXT" == "json" ]; then
+        HOST=${HOST:-$(jq -r '.host // ""' "$CONFIG_PATH")}
+        PORT=${PORT:-$(jq -r '.port // ""' "$CONFIG_PATH")}
+    fi
 		ARB="--env $CONFIG_PATH start"
 else
 		echo "Config file $CONFIG_PATH not found. Using default HOST and PORT."
