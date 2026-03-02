@@ -153,7 +153,7 @@ class EnvConfig(PydanticEnvConfig):
         """Environment variables configuration."""
 
         env_prefix = ""
-        extra = "forbid"
+        extra = "allow"
         hide_input_in_errors = True
 
     @classmethod

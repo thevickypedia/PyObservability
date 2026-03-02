@@ -126,9 +126,10 @@ def include_routes() -> None:
             include_in_schema=False,
         ),
     )
+    secured = all((settings.env.username, settings.env.password))
     kuma_enabled = all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password))
     runners_enabled = all((settings.env.git_org, settings.env.git_token))
-    if all((settings.env.username, settings.env.password)):
+    if secured:
         auth_endpoints = [
             uiauth.Parameters(
                 path=enums.APIEndpoints.root,
@@ -200,7 +201,7 @@ def include_routes() -> None:
                 ),
             )
     if settings.env.prometheus_enabled:
-        if settings.env.username and settings.env.password:
+        if secured:
             PyObservability.routes.append(
                 APIRoute(
                     endpoint=metrics_endpoint,

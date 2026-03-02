@@ -25,9 +25,9 @@ WORKDIR /app
 COPY . /temp/pyobservability
 # Install from pypi if version is specified, otherwise COPY directly from local
 RUN if [ "$VERSION" = "latest" ]; then \
-      cd /temp/pyobservability && pip install . && rm -rf /temp/pyobservability; \
+      cd /temp/pyobservability && pip install --upgrade pip uv && uv pip install . --system && rm -rf /temp/pyobservability; \
     else \
-      pip install "pyobservability==$VERSION"; \
+      pip install --upgrade pip uv && uv pip install "pyobservability==$VERSION" --system; \
     fi
 
 COPY docker/entrypoint.sh /entrypoint.sh
