@@ -77,6 +77,7 @@ class Monitor:
         self._stop = asyncio.Event()
 
         self._ws_subscribers = []  # list of asyncio.Queue
+        self.is_running = False
 
     # ------------------------------
     # SUBSCRIBE / UNSUBSCRIBE
@@ -106,6 +107,7 @@ class Monitor:
     # ------------------------------
     async def start(self):
         """Start the monitor's data streaming."""
+        self.is_running = True
         if self._task:
             return  # already running
 
@@ -116,6 +118,7 @@ class Monitor:
 
     async def stop(self):
         """Stop the monitor's data streaming."""
+        self.is_running = False
         self._stop.set()
         if self._task:
             self._task.cancel()

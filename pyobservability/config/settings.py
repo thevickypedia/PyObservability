@@ -147,7 +147,7 @@ class EnvConfig(PydanticEnvConfig):
     git_org: str | None = Field(None, validation_alias=alias_choices(choices=("GIT_ORG", "GITHUB_ORG")))
     git_token: str | None = Field(None, validation_alias=alias_choices(choices=("GIT_TOKEN", "GITHUB_TOKEN")))
 
-    prometheus_enabled: bool = True
+    prometheus_enabled: bool = False
 
     class Config:
         """Environment variables configuration."""

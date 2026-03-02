@@ -188,7 +188,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                     targets = _normalize_targets()
                     for target in targets:
                         mon = Monitor(target)
-                        await mon.start()
+                        if not mon.is_running:
+                            await mon.start()
                         monitors.append(mon)
                         queues.append(mon.subscribe())
                     multi_task = asyncio.create_task(_forward_metrics_multi(websocket, queues, targets))
@@ -201,7 +202,11 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                     raise WebSocketDisconnect(code=400, reason=f"Invalid base url: {base_url}")
 
                 # create new monitor
+                if not GLOBAL_MONITORS.get(base_url):
+                    GLOBAL_MONITORS[base_url] = Monitor(target)
                 monitor = GLOBAL_MONITORS[base_url]
+                if not monitor.is_running:
+                    await monitor.start()
 
                 # new subscription queue
                 q = monitor.subscribe()
@@ -212,6 +217,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         pass
     except Exception as err:
         LOGGER.error("WS error: %s", err)
+        raise WebSocketDisconnect(code=500, reason="Internal server error") from err
 
     # cleanup
     if forward_task:
