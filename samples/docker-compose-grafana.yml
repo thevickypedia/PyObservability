@@ -8,8 +8,6 @@ services:
 
   prometheus:
     image: prom/prometheus
-    volumes:
-      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
     container_name: prometheus
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"

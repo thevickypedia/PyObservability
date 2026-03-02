@@ -8,14 +8,14 @@ CONFIG_PATH="/config/$CONFIG_FILE"
 
 # If config file is JSON
 if [ -f "$CONFIG_PATH" ] && [ "${CONFIG_PATH##*.}" = "json" ]; then
-    HOST=${HOST:-$(jq -r '.host // empty' "$CONFIG_PATH")}
-    PORT=${PORT:-$(jq -r '.port // empty' "$CONFIG_PATH")}
+    HOST=${HOST:-$(jq -r '.host // ""' "$CONFIG_PATH")}
+    PORT=${PORT:-$(jq -r '.port // ""' "$CONFIG_PATH")}
 fi
 
 # If config file is YAML
 if [ -f "$CONFIG_PATH" ] && [[ "${CONFIG_PATH##*.}" = "yaml" || "${CONFIG_PATH##*.}" = "yml" ]]; then
-    HOST=${HOST:-$(yq -r '.host // empty' "$CONFIG_PATH")}
-    PORT=${PORT:-$(yq -r '.port // empty' "$CONFIG_PATH")}
+    HOST=${HOST:-$(yq -r '.host // ""' "$CONFIG_PATH")}
+    PORT=${PORT:-$(yq -r '.port // ""' "$CONFIG_PATH")}
 fi
 
 # Defaults

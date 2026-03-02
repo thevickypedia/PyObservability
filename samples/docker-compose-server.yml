@@ -2,8 +2,10 @@ services:
   pyobservability:
     image: thevickypedia/pyobservability
     container_name: observability
+    environment:
+      CONFIG_FILE: "${CONFIG_FILE:-settings.json}"
     ports:
-      - "${PORT:-8080}:${PORT:-8080}"
+      - "${HOST_PORT:-8080}:${CONTAINER_PORT:-8080}"
     volumes:
       # Bind mount for persistent storage and config
       # export DOCKER_VOLUME_STORAGE=$(pwd)
