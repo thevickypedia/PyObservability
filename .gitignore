@@ -18,7 +18,9 @@ PyObservability.egg-info/
 *.text
 temp.py
 logging.ini
-!prometheus.yml
+*.yml
+*.yaml
+*.json
 !docker-compose-grafana.yml
 !docker-compose-server.yml
 !.github/workflows/*.yml
