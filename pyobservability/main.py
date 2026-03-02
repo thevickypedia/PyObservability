@@ -27,13 +27,19 @@ LOGGER = logging.getLogger("uvicorn.default")
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Lifespan context manager to handle startup and shutdown events."""
-    for target in settings.env.targets:
-        mon = Monitor(target)
-        await mon.start()
-        GLOBAL_MONITORS[target["base_url"]] = mon
+    if settings.env.prometheus_enabled:
+        for target in settings.env.targets:
+            mon = Monitor(target)
+            LOGGER.info("Starting monitor for target [%s]", target["name"])
+            await mon.start()
+            GLOBAL_MONITORS[target["base_url"]] = mon
+    LOGGER.info("PyObservability is up and running.")
     yield
-    for monitor in GLOBAL_MONITORS.values():
-        await monitor.stop()
+    if settings.env.prometheus_enabled:
+        for monitor in GLOBAL_MONITORS.values():
+            LOGGER.info("Stopping monitor for target [%s]", monitor.name)
+            await monitor.stop()
+    LOGGER.info("PyObservability has shut down.")
 
 
 PyObservability = FastAPI(title="PyObservability", lifespan=lifespan)
