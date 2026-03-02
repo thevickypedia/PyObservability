@@ -6,14 +6,10 @@ set -e
 CONFIG_FILE=${CONFIG_FILE:-settings.json}
 CONFIG_PATH="/config/$CONFIG_FILE"
 
-EXT="${CONFIG_PATH##*.}"
-
 # If config file exists
-if [ -f "$CONFIG_PATH" ]; then
-    if [ "$EXT" == "json" ]; then
-        HOST=${HOST:-$(jq -r '.host // ""' "$CONFIG_PATH")}
-        PORT=${PORT:-$(jq -r '.port // ""' "$CONFIG_PATH")}
-    fi
+if [ -f "$CONFIG_PATH" ] && [ "${CONFIG_PATH##*.}" = "json" ]; then
+    HOST=${HOST:-$(jq -r '.host // ""' "$CONFIG_PATH")}
+    PORT=${PORT:-$(jq -r '.port // ""' "$CONFIG_PATH")}
 		ARB="--env $CONFIG_PATH start"
 else
 		echo "Config file $CONFIG_PATH not found. Using default HOST and PORT."

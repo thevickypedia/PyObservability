@@ -9,6 +9,8 @@ services:
   prometheus:
     image: prom/prometheus
     container_name: prometheus
+    volumes:
+      - ${DOCKER_VOLUME_STORAGE:-${HOME}/.observability}/config/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "${PROMETHEUS_PORT:-9090}:9090"
     restart: unless-stopped
