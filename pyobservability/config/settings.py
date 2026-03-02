@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import pathlib
 import socket
@@ -9,6 +10,16 @@ from pydantic.aliases import AliasChoices
 from pydantic_settings import BaseSettings
 
 from pyobservability.config import enums
+
+
+class HealthCheckFilter(logging.Filter):
+    """Custom logging filter to exclude health check logs from the output."""
+
+    def filter(self, record):
+        """Filter out logs related to health checks."""
+        # 'record.getMessage()' contains the log text
+        # Skip logs containing 'GET /health' (from curl)
+        return "/health" not in record.getMessage()
 
 
 def detailed_log_config(filename: str | None = None, debug: bool = False) -> Dict[str, Any]:

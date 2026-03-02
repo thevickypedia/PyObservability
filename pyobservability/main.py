@@ -22,6 +22,7 @@ from pyobservability.transport import GLOBAL_MONITORS, websocket_endpoint
 from pyobservability.version import __version__
 
 LOGGER = logging.getLogger("uvicorn.default")
+logging.getLogger("uvicorn.access").addFilter(settings.HealthCheckFilter())
 
 
 @asynccontextmanager

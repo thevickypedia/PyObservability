@@ -17,9 +17,11 @@ else
 fi
 
 # Defaults
-export HOST=${HOST:-0.0.0.0}
-export PORT=${PORT:-80}
+export HOST="${HOST:-0.0.0.0}"
+export PORT="${PORT:-80}"
 
 echo "Starting PyObservability with ADDRESS=$HOST PORT=$PORT"
 
+# Individual commands need to be separated by spaces without ""
+# shellcheck disable=SC2086
 pyobservability $ARB
