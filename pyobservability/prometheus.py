@@ -14,6 +14,10 @@ from pyobservability.config import settings
 
 security = HTTPBasic()
 
+# Collector registry and dynamic gauges store
+registry = CollectorRegistry()
+gauges: Dict[str, Gauge] = {}
+
 
 def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) -> None | NoReturn:
     """Verifies credentials for prometheus endpoint.
@@ -32,101 +36,52 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) ->
         )
 
 
-registry = CollectorRegistry()
+def flatten_payload(node: str, data: dict, parent_keys: list[str] = None) -> None:
+    """Recursively traverse the payload and push numeric values to Prometheus.
 
-# TODO: Look into parametrizing all the hard coded values (possible schema expose from PyNinja server)
-# System info gauge with labels (static, always 1)
-system_info = Gauge(
-    "system_info",
-    "System static info labels",
-    ["node", "system", "architecture", "cpu_name", "gpu_name", "python_version", "pyninja_version"],
-)
+    Handles nested dicts and lists of numbers or dicts.
 
-# CPU usage per core
-cpu_usage_percent = Gauge("cpu_usage_percent", "CPU usage percent per core", ["node", "core"])
+    Args:
+        node: The node identifier for labeling metrics.
+        data: The current level of the payload to process.
+        parent_keys: List of parent keys to build metric names from.
+    """
+    for key, value in data.items():
+        metric_path = parent_keys or [] + [key]
 
-# Memory gauges
-memory_total_bytes = Gauge("memory_total_bytes", "Total memory in bytes", ["node"])
-memory_used_bytes = Gauge("memory_used_bytes", "Used memory in bytes", ["node"])
-memory_available_bytes = Gauge("memory_available_bytes", "Available memory in bytes", ["node"])
-memory_free_bytes = Gauge("memory_free_bytes", "Free memory in bytes", ["node"])
-memory_active_bytes = Gauge("memory_active_bytes", "Active memory in bytes", ["node"])
-memory_inactive_bytes = Gauge("memory_inactive_bytes", "Inactive memory in bytes", ["node"])
-memory_wired_bytes = Gauge("memory_wired_bytes", "Wired memory in bytes", ["node"])
+        if isinstance(value, (int, float)):
+            # numeric value → create/update gauge
+            metric_name = "_".join(metric_path).lower()
+            if metric_name not in gauges:
+                gauges[metric_name] = Gauge(metric_name, f"Metric for {metric_name}", ["node"], registry=registry)
+            gauges[metric_name].labels(node=node).set(value)
 
-# Swap info
-swap_total_bytes = Gauge("swap_total_bytes", "Total swap memory in bytes", ["node"])
-swap_used_bytes = Gauge("swap_used_bytes", "Used swap memory in bytes", ["node"])
-swap_free_bytes = Gauge("swap_free_bytes", "Free swap memory in bytes", ["node"])
-swap_percent = Gauge("swap_percent", "Swap usage percent", ["node"])
-swap_sin_bytes = Gauge("swap_sin_bytes", "Swap in bytes", ["node"])
-swap_sout_bytes = Gauge("swap_sout_bytes", "Swap out bytes", ["node"])
+        elif isinstance(value, dict):
+            flatten_payload(node, value, metric_path)
 
-# Load averages
-load_avg_1m = Gauge("load_average_1m", "Load average 1 minute", ["node"])
-load_avg_5m = Gauge("load_average_5m", "Load average 5 minutes", ["node"])
-load_avg_15m = Gauge("load_average_15m", "Load average 15 minutes", ["node"])
-
-# Disk info per disk
-disk_total_bytes = Gauge("disk_total_bytes", "Total disk size in bytes", ["node", "disk_name"])
-disk_used_bytes = Gauge("disk_used_bytes", "Used disk size in bytes", ["node", "disk_name"])
-disk_free_bytes = Gauge("disk_free_bytes", "Free disk size in bytes", ["node", "disk_name"])
+        elif isinstance(value, list):
+            for idx, item in enumerate(value):
+                if isinstance(item, (int, float)):
+                    metric_name = "_".join(metric_path + [str(idx)]).lower()
+                    if metric_name not in gauges:
+                        gauges[metric_name] = Gauge(
+                            metric_name, f"Metric for {metric_name}", ["node"], registry=registry
+                        )
+                    gauges[metric_name].labels(node=node).set(item)
+                elif isinstance(item, dict):
+                    flatten_payload(node, item, metric_path + [str(idx)])
 
 
 def update_metrics(payload: Dict[str, Any]) -> None:
-    """Push metrics to prometheus."""
-    node = payload["name"]
-    metrics = payload["metrics"]
+    """Push metrics dynamically from a payload.
 
-    # Update static info metric with labels (value=1)
-    system_info.labels(
-        node=node,
-        system=metrics.get("system", ""),
-        architecture=metrics.get("architecture", ""),
-        cpu_name=metrics.get("cpu_name", ""),
-        gpu_name=metrics.get("gpu_name", ""),
-        python_version=metrics.get("python_version", ""),
-        pyninja_version=metrics.get("pyninja_version", ""),
-    ).set(1)
-
-    # Update CPU usage per core
-    for core_index, usage in enumerate(metrics.get("cpu_usage", [])):
-        cpu_usage_percent.labels(node=node, core=str(core_index)).set(usage)
-
-    # Update memory info
-    mem = metrics.get("memory_info", {})
-    memory_total_bytes.labels(node=node).set(mem.get("total", 0))
-    memory_used_bytes.labels(node=node).set(mem.get("used", 0))
-    memory_available_bytes.labels(node=node).set(mem.get("available", 0))
-    memory_free_bytes.labels(node=node).set(mem.get("free", 0))
-    memory_active_bytes.labels(node=node).set(mem.get("active", 0))
-    memory_inactive_bytes.labels(node=node).set(mem.get("inactive", 0))
-    memory_wired_bytes.labels(node=node).set(mem.get("wired", 0))
-
-    # Swap info
-    swap = metrics.get("swap_info", {})
-    swap_total_bytes.labels(node=node).set(swap.get("total", 0))
-    swap_used_bytes.labels(node=node).set(swap.get("used", 0))
-    swap_free_bytes.labels(node=node).set(swap.get("free", 0))
-    swap_percent.labels(node=node).set(swap.get("percent", 0))
-    swap_sin_bytes.labels(node=node).set(swap.get("sin", 0))
-    swap_sout_bytes.labels(node=node).set(swap.get("sout", 0))
-
-    # Load averages
-    load = metrics.get("load_averages", {})
-    load_avg_1m.labels(node=node).set(load.get("m1", 0))
-    load_avg_5m.labels(node=node).set(load.get("m5", 0))
-    load_avg_15m.labels(node=node).set(load.get("m15", 0))
-
-    # Disk info
-    disks = metrics.get("disk_info", [])
-    for disk in disks:
-        disk_name = disk.get("name", "unknown")
-        disk_total_bytes.labels(node=node, disk_name=disk_name).set(disk.get("total", 0))
-        disk_used_bytes.labels(node=node, disk_name=disk_name).set(disk.get("used", 0))
-        disk_free_bytes.labels(node=node, disk_name=disk_name).set(disk.get("free", 0))
+    Args:
+        payload: The payload containing metrics data, expected to have a "node" key and various nested metrics.
+    """
+    node = payload.get("node", "unknown")
+    flatten_payload(node, payload)
 
 
 async def metrics_endpoint():
-    """Endpoint for prometheus metrics."""
-    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+    """Endpoint for Prometheus to scrape metrics."""
+    return Response(generate_latest(registry), media_type=CONTENT_TYPE_LATEST)
