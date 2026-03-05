@@ -167,7 +167,7 @@ class EnvConfig(PydanticEnvConfig):
         hide_input_in_errors = True
 
     @classmethod
-    def from_env_file(cls, filename: pathlib.Path) -> "EnvConfig":
+    def from_env_file(cls, filename: pathlib.Path | str) -> "EnvConfig":
         """Create an instance of EnvConfig from environment file.
 
         Args:
@@ -179,6 +179,24 @@ class EnvConfig(PydanticEnvConfig):
         """
         # noinspection PyArgumentList
         return cls(_env_file=filename)
+
+
+def load_kwargs(**kwargs) -> EnvConfig:
+    """Load environment configuration from kwargs, ensuring they take precedence over existing environment variables.
+
+    Returns:
+        EnvConfig:
+        Loads the ``EnvConfig`` model with the provided kwargs, resolving any conflicts with environment variables.
+    """
+    os_environ_backup = os.environ.copy()
+    kwarg_keys_lower = {k.lower() for k in kwargs.keys()}
+    keys_to_remove = (key for key in os.environ if key.lower() in kwarg_keys_lower)
+    for key in keys_to_remove:
+        os.environ.pop(key)
+    try:
+        return EnvConfig(**{k.lower(): v for k, v in kwargs.items()})
+    finally:
+        os.environ.update(os_environ_backup)
 
 
 def env_loader(**kwargs) -> EnvConfig:
@@ -198,7 +216,7 @@ def env_loader(**kwargs) -> EnvConfig:
         if env_file.suffix.lower() == ".json":
             with env_file.open() as stream:
                 env_data = json.load(stream)
-            return EnvConfig(**{k.lower(): v for k, v in env_data.items()})
+            return load_kwargs(**env_data)
         if not env_file.suffix or env_file.suffix.lower() in (
             ".text",
             ".txt",
@@ -208,7 +226,7 @@ def env_loader(**kwargs) -> EnvConfig:
             return EnvConfig.from_env_file(env_file)
         raise ValueError(f"\n\tUnsupported format for {env_file!r}, " "can be one of (.json, .txt, .text, .env)")
     # Load env config with regular kwargs
-    return EnvConfig(**kwargs)
+    return load_kwargs(**kwargs)
 
 
 env: EnvConfig
