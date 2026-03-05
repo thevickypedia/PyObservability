@@ -22,3 +22,4 @@ logging.ini
 !docker-compose-grafana.yml
 !docker-compose-server.yml
 !.github/workflows/*.yml
+!samples/secrets.json

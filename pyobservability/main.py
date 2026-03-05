@@ -29,6 +29,7 @@ logging.getLogger("uvicorn.access").addFilter(settings.HealthCheckFilter())
 async def lifespan(_: FastAPI):
     """Lifespan context manager to handle startup and shutdown events."""
     if settings.env.prometheus_enabled:
+        LOGGER.info("Prometheus metrics endpoint is enabled. Starting monitors for configured targets.")
         for target in settings.env.targets:
             mon = Monitor(target)
             LOGGER.info("Starting monitor for target [%s]", target["name"])
