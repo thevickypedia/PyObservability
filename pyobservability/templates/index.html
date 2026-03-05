@@ -17,6 +17,9 @@
 </head>
 <body>
 <header class="topbar">
+    {% if legacy_ui == true %}
+    <div class="brand">Node Monitor</div>
+    {% else %}
     <div class="brand">
         <svg class="brand-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M3 12h4l3-6 4 12 3-6h4" stroke="currentColor" stroke-width="2.2"
@@ -24,6 +27,7 @@
         </svg>
         Node Monitor
     </div>
+    {% endif %}
 
     <div class="tab-navigation">
         {% if kuma_data is not none or runners_data is not none %}

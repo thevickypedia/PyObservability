@@ -28,6 +28,8 @@ logging.getLogger("uvicorn.access").addFilter(settings.HealthCheckFilter())
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     """Lifespan context manager to handle startup and shutdown events."""
+    static_dir = root / "static_legacy" if settings.env.legacy_ui else root / "static"
+    PyObservability.mount("/static", StaticFiles(directory=static_dir), name="static")
     if settings.env.prometheus_enabled:
         LOGGER.info("Prometheus metrics endpoint is enabled. Starting monitors for configured targets.")
         for target in settings.env.targets:
@@ -52,9 +54,6 @@ root = pathlib.Path(__file__).parent
 templates_dir = root / "templates"
 templates = Jinja2Templates(directory=templates_dir)
 
-static_dir = root / "static"
-PyObservability.mount("/static", StaticFiles(directory=static_dir), name="static")
-
 
 async def index(request: Request):
     """Pass configured targets to the template so frontend can prebuild UI.
@@ -74,6 +73,7 @@ async def index(request: Request):
         runners_data=runners_data,
         targets=settings.env.targets,
         version=__version__,
+        legacy_ui=settings.env.legacy_ui,
     )
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value

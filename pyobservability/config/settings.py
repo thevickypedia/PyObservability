@@ -136,6 +136,7 @@ class EnvConfig(PydanticEnvConfig):
 
     host: str = Field(socket.gethostbyname("localhost") or "0.0.0.0", validation_alias=alias_choices("HOST", "MONITOR"))
     port: PositiveInt = Field(8080, validation_alias=alias_choices("PORT", "MONITOR"))
+    legacy_ui: bool = False
 
     targets: List[MonitorTarget] = Field(..., validation_alias=alias_choices("TARGETS", "MONITOR"))
     interval: PositiveInt = Field(3, validation_alias=alias_choices("INTERVAL", "MONITOR"))
