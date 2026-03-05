@@ -55,13 +55,30 @@ docker run \
     thevickypedia/pyobservability
 ```
 
+<details>
+<summary><strong>Grafana Dashboard powered by Prometheus</strong></summary>
+
+``PyObservability`` can optionally stream metrics through a `/metrics` endpoint in Prometheus format, which can be scraped by Prometheus and visualized in Grafana.
+The dashboard is powered by Prometheus, which is used to scrape the metrics from the targets and store them in a time-series database.
+
+Steps to set up the Grafana dashboard:
+1. Create a `config` directory in the current working directory to store the configuration files for the server and Grafana containers.
+2. Copy [samples/secrets.json] to the `config` directory and update it with the appropriate values for your environment.
+3. COPY [samples/docker-compose-server.yml] and [samples/docker-compose-grafana.yml] to current working directory.
+4. Run `./docker-launch.sh` to start the server and Grafana containers using Docker Compose.
+   > NOTE: Set env variables [OR] update the `docker-compose-*.yml` files with the desired port numbers and `config` directory location before running the script.
+5. Access the Grafana dashboard at `http://localhost:3000` and log in with the credentials specified in the `secrets.json` file.
+6. Add Prometheus as a data source in Grafana using the URL `http://host.docker.internal:9090` (or `http://localhost:9090` if running on Linux).
+7. Import the [sample Grafana dashboard JSON file](samples/dashboard.json) into Grafana to visualize the metrics.
+</details>
+
 ## Environment Variables
 
 <details>
 <summary><strong>Sourcing environment variables from an env file</strong></summary>
 
 > _By default, `PyObservability` will look for a `.env` file in the current working directory._
-> _Other file options (like JSON and YAML) are supported with a custom kwarg or env var `env_file` pointing to the filepath._
+> _JSON file format is also supported with a custom kwarg or env var `env_file` pointing to the filepath._
 </details>
 
 **Mandatory**
@@ -94,8 +111,17 @@ docker run \
 
 **GitHub Runners**
 > GitHub Runners integration can be enabled by setting the following environment variables.
-- **GIT_ORG** - GitHub organization name.
+- **GIT_ORG** - GitHub organization name or username.
 - **GIT_TOKEN** - GitHub token with `read:org` permissions.
+
+**Prometheus Metrics**
+> Enabling prometheus metrics will expose a `/metrics` endpoint in Prometheus format, which can be scraped by Prometheus and visualized in Grafana.<br>
+> This endpoint is automatically secured with the same credentials as the monitoring page if authentication is enabled.
+- **PROMETHEUS_ENABLED** - Enable Prometheus metrics endpoint. Defaults to `False`.
+
+> [!WARNING]
+> Enabling prometheus metrics will increase the resource usage in all the monitored nodes, as the metrics are constantly streamed as long as the server is running.
+> It is recommended to use this option with a high polling ``interval`` to reduce the resource usage.
 
 ## License & copyright
 
@@ -114,6 +140,9 @@ Licensed under the [MIT License][license]
 [label-pypi-format]: https://img.shields.io/pypi/format/PyObservability
 [label-pypi-status]: https://img.shields.io/pypi/status/PyObservability
 [label-actions-docker]: https://github.com/thevickypedia/PyObservability/actions/workflows/docker.yml/badge.svg
+[samples/secrets.json]: samples/secrets.json
+[samples/docker-compose-server.yml]: samples/docker-compose-server.yml
+[samples/docker-compose-grafana.yml]: samples/docker-compose-grafana.yml
 
 [3.11]: https://docs.python.org/3/whatsnew/3.11.html
 [virtual environment]: https://docs.python.org/3/tutorial/venv.html
