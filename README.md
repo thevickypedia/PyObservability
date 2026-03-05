@@ -94,6 +94,7 @@ Steps to set up the Grafana dashboard:
 - **USERNAME** - Username to authenticate the monitoring page.
 - **PASSWORD** - Password to authenticate the monitoring page.
 - **TIMEOUT** - Timeout (in seconds) for UI authentication. Defaults to 5m.
+- **LEGACY_UI** - Enable legacy UI. Defaults to `False`, displaying a Grafana like dashboard.
 
 **Logging**
 > PyObservability uses ``uvicorn`` logger by default. Following options can be used to override the default logger.
