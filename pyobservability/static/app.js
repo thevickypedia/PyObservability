@@ -10,6 +10,10 @@
     const DEFAULT_PAGE_SIZE = 10;
     const panelSpinners = {};
 
+    // Grafana-inspired Chart.js global defaults
+    Chart.defaults.color = "rgba(204,204,220,0.65)";
+    Chart.defaults.borderColor = "rgba(204,204,220,0.07)";
+
     // Tab management
     let currentTab = 'nodes';
     let ws = null;
@@ -340,7 +344,13 @@
                     });
                 }
                 state.data = state.dataRaw.map(row =>
-                    "<tr>" + state.columns.map(c => `<td>${row[c] ?? ""}</td>`).join("") + "</tr>"
+                    "<tr>" + state.columns.map(c => {
+                        const val = row[c] ?? "";
+                        if (c === "Status" || c === "Busy") {
+                            return `<td>${renderStatusBadge(val, c)}</td>`;
+                        }
+                        return `<td>${val}</td>`;
+                    }).join("") + "</tr>"
                 );
                 render();
             }
@@ -373,9 +383,11 @@
     // ------------------------------------------------------------
     // CHART HELPERS
     // ------------------------------------------------------------
-    function makeMainChart(ctx, label) {
+    function makeMainChart(ctx, label, color, fillColor) {
         const EMPTY = Array(MAX_POINTS).fill(null);
         const LABELS = Array(MAX_POINTS).fill("");
+        const lineColor = color || "#5794F2";
+        const bgColor = fillColor || "rgba(87,148,242,0.10)";
 
         return new Chart(ctx, {
             type: "line",
@@ -385,8 +397,11 @@
                     {
                         label,
                         data: [...EMPTY],
+                        borderColor: lineColor,
+                        backgroundColor: bgColor,
+                        borderWidth: 2,
                         fill: true,
-                        tension: 0.2,
+                        tension: 0.3,
                         cubicInterpolationMode: "monotone",
                         pointRadius: 0
                     }
@@ -394,7 +409,15 @@
             },
             options: {
                 animation: false, responsive: true, maintainAspectRatio: false,
-                scales: {x: {display: false}, y: {beginAtZero: true, suggestedMax: 100}},
+                scales: {
+                    x: {display: false},
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 100,
+                        grid: {color: "rgba(204,204,220,0.07)"},
+                        ticks: {color: "rgba(204,204,220,0.60)", font: {size: 11}}
+                    }
+                },
                 plugins: {legend: {display: false}}
             }
         });
@@ -431,8 +454,11 @@
                 datasets: [{
                     label: coreName,
                     data: [...EMPTY_DATA],
-                    fill: false,
-                    tension: 0.2,
+                    borderColor: "#FF9830",
+                    backgroundColor: "rgba(255,152,48,0.10)",
+                    borderWidth: 1.5,
+                    fill: true,
+                    tension: 0.3,
                     pointRadius: 0
                 }]
             },
@@ -450,9 +476,9 @@
         });
     }
 
-    const cpuAvgChart = makeMainChart(cpuAvgCtx, "CPU Avg");
-    const memChart = makeMainChart(memCtx, "Memory %");
-    const loadChart = makeMainChart(loadCtx, "CPU Load");
+    const cpuAvgChart = makeMainChart(cpuAvgCtx, "CPU Avg",   "#FF9830", "rgba(255,152,48,0.10)");
+    const memChart    = makeMainChart(memCtx,    "Memory %",  "#5794F2", "rgba(87,148,242,0.10)");
+    const loadChart   = makeMainChart(loadCtx,   "CPU Load",  "#73BF69", "rgba(115,191,105,0.10)");
 
     // Unified metrics: three parallel charts (memory, CPU, disk)
     const unifiedPanel = document.getElementById("unified-panel");
@@ -508,14 +534,14 @@
 
     let unifiedNodes = [];
     const colorPalette = [
-      "#ff0000",
-      "#ffff00",
-      "#00ff00",
-      "#0066ff",
-      "#b300ff",
-      "#ff7f00",
-      "#8b4513",
-      "#7f7f7f"
+        "#5794F2",   // blue
+        "#73BF69",   // green
+        "#FF9830",   // orange
+        "#F2495C",   // red
+        "#B877D9",   // purple
+        "#FADE2A",   // yellow
+        "#FF7383",   // pink-red
+        "#96D98D"    // light green
     ];
     const nodeColor = {};
     const unifiedCharts = {memory: null, cpu: null, disk: null};
@@ -571,7 +597,12 @@
                 },
                 scales: {
                     x: {display: false},
-                    y: {beginAtZero: true, suggestedMax: 100}
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 100,
+                        grid: {color: "rgba(204,204,220,0.07)"},
+                        ticks: {color: "rgba(204,204,220,0.60)", font: {size: 11}}
+                    }
                 },
                 plugins: {
                     legend: {display: false},
@@ -972,6 +1003,34 @@
         }
         return "—";
     };
+
+    function renderStatusBadge(val, col) {
+        const s = String(val).toLowerCase().trim();
+        if (!s || s === "—" || s === "-") return val;
+
+        if (col === "Busy") {
+            if (s === "yes") return `<span class="status-badge status-warning">${val}</span>`;
+            if (s === "no")  return `<span class="status-badge status-ok">${val}</span>`;
+            return val;
+        }
+
+        if (/\brunning\b|active.*running|^active$|^online$|\bup\s|\bhealthy\b|^idle$/.test(s)) {
+            return `<span class="status-badge status-ok">${val}</span>`;
+        }
+        if (/\bfailed\b|inactive.*dead|^dead$|^offline$|\bstopped\b/.test(s)) {
+            return `<span class="status-badge status-error">${val}</span>`;
+        }
+        if (/activating|deactivating|degraded|^unknown$|^pending$|^starting\b/.test(s)) {
+            return `<span class="status-badge status-warning">${val}</span>`;
+        }
+        if (/^up\s/.test(s)) {
+            return `<span class="status-badge status-ok">${val}</span>`;
+        }
+        if (/^exited/.test(s)) {
+            return `<span class="status-badge status-neutral">${val}</span>`;
+        }
+        return val;
+    }
 
     function showSpinner(panelOrTableId) {
         const overlay = panelSpinners[panelOrTableId];
