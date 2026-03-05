@@ -1,6 +1,26 @@
 Release Notes
 =============
 
+v4.0.0 (03/04/2026)
+-------------------
+- [0c7e67f](https://github.com/thevickypedia/PyObservability/commit/0c7e67f8b50cc6a3192340447473849f1a5c017b) chore: Release ``v4.0.0``
+- [01aea2f](https://github.com/thevickypedia/PyObservability/commit/01aea2fadcdb6559224cf21308189312d3192cb7) docs: Update README.md
+- [dd386d0](https://github.com/thevickypedia/PyObservability/commit/dd386d06425f01670d095275dc1b3b197ff1d6d4) chore: Add a log statement when prometheus is enabled, update ``.gitignore`` and include a sample ``secrets.json`` file
+- [0924fa8](https://github.com/thevickypedia/PyObservability/commit/0924fa83fa5ea291d538271f22ea1ff697528f76) fix: Secrets passed through ``json``/``kwargs`` should override conflicting env vars
+- [cac7f5d](https://github.com/thevickypedia/PyObservability/commit/cac7f5dc29f489b33b7bfa03b4e44c08ad9c509e) perf: Replace all hard-coded prometheus metric keys with a fetcher
+- [5850cbe](https://github.com/thevickypedia/PyObservability/commit/5850cbe81c738485a5c088ea31ae59a4c03e9591) refactor: Filter docker health check logs in ``uvicorn``
+- [45f92f5](https://github.com/thevickypedia/PyObservability/commit/45f92f54e57da189564728e599f37962b5af38a9) fix: Restore ``prometheus.yml`` file to avoid connectivity issues with ``grafana``
+- [6cdab9b](https://github.com/thevickypedia/PyObservability/commit/6cdab9b03b285a8afe5ca78663df3e9c2c0c7182) refactor: Remove ``yaml`` and ``yq`` dependency to improve stability
+- [e04f1c4](https://github.com/thevickypedia/PyObservability/commit/e04f1c4a4ebdc76c7c8214fb3eb44cfec0dd9eee) fix: Avoid missing metrics through UI when prometheus in not enabled
+- [9a07144](https://github.com/thevickypedia/PyObservability/commit/9a071445a5eb9e19b3c6baefd7f9595d85558d0f) perf: Remove ``prometheus.yml`` file usage and improve stability for container launches
+- [1a7e904](https://github.com/thevickypedia/PyObservability/commit/1a7e904bbecee62d45d7fd5331b80a3d6a29ce68) perf: Stream metrics to endpoint only when prometheus is enabled
+- [3569204](https://github.com/thevickypedia/PyObservability/commit/3569204c4719ab189809dce765e3e9f8b116a7be) build: Add a launch script along with samples for grafana dashboard with prometheus data source
+- [9925f38](https://github.com/thevickypedia/PyObservability/commit/9925f38bf0540d02a43f1198b26081f70fb06466) chore: Update gitignore and remove legacy compose files
+- [8a2cd41](https://github.com/thevickypedia/PyObservability/commit/8a2cd41e34c091ef2e52f85af28d8b341f793b2d) perf: Add docker compose files for ``grafana`` and ``prometheus``
+- [3a5c630](https://github.com/thevickypedia/PyObservability/commit/3a5c630c7605efa2661095fceb45a31a71d414e9) feat: Make ``/metrics`` endpoint secure through ``HTTPBasicCredentials``
+- [33aba57](https://github.com/thevickypedia/PyObservability/commit/33aba57bd60f188fb6fe75a590ee8f18c2ddda33) feat: Add a new ``/metrics`` endpoint to support ``prometheus`` plugin for ``grafana`` dashboard
+- [58f65d8](https://github.com/thevickypedia/PyObservability/commit/58f65d810f72ab2245bd490dfe4fe68e75bdcc73) chore: Update release notes for v3.2.2
+
 v3.2.2 (02/24/2026)
 -------------------
 - [2cf9448](https://github.com/thevickypedia/PyObservability/commit/2cf94482bf125d8ebba98419f1697248dcc176da) chore: Release ``v3.2.2``
