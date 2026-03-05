@@ -22,11 +22,13 @@ packages = [
     "pyobservability",
     "pyobservability.config",
     "pyobservability.static",
+    "pyobservability.static_legacy",
     "pyobservability.templates",
 ]
 [tool.setuptools.package-data]
 "pyobservability.templates" = ["*.html"]
 "pyobservability.static" = ["*.js", "*.css"]
+"pyobservability.static_legacy" = ["*.js", "*.css"]
 
 [tool.setuptools.dynamic]
 version = { attr = "pyobservability.version.__version__" }
