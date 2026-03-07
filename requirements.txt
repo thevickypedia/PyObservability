@@ -1,6 +1,6 @@
 aiohttp==3.13.*
 fastapi==0.135.*
-FastAPI-UI-Auth==0.2.*
+FastAPI-UI-Auth==0.3.*
 Jinja2==3.1.*
 prometheus_client==0.24.*
 pydantic==2.12.*

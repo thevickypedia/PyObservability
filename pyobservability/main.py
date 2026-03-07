@@ -1,6 +1,7 @@
 import logging
 import pathlib
 import warnings
+from collections.abc import Generator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from http import HTTPStatus
@@ -8,7 +9,7 @@ from typing import Dict
 
 import uiauth
 import uvicorn
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.routing import APIRoute, APIWebSocketRoute
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -17,7 +18,7 @@ from pyobservability.config import enums, settings
 from pyobservability.github import GitHub
 from pyobservability.kuma import UptimeKumaClient, extract_monitors
 from pyobservability.monitor import Monitor
-from pyobservability.prometheus import metrics_endpoint, verify_credentials
+from pyobservability.prometheus import metrics_endpoint
 from pyobservability.transport import GLOBAL_MONITORS, websocket_endpoint
 from pyobservability.version import __version__
 
@@ -124,108 +125,53 @@ async def health() -> Dict[str, str]:
     return {"status": "ok"}
 
 
-def include_routes() -> None:
-    """Include routes in the FastAPI app with or without authentication."""
-    PyObservability.routes.append(
+def gather_routes() -> Generator[APIRoute | APIWebSocketRoute]:
+    """Gather API routes based on the configuration.
+
+    Yields:
+        APIRoute | APIWebSocketRoute:
+        API routes for the application.
+    """
+    kuma_enabled = all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password))
+    runners_enabled = all((settings.env.git_org, settings.env.git_token))
+    yield from [
         APIRoute(
             path=enums.APIEndpoints.health,
             endpoint=health,
             methods=["GET"],
             include_in_schema=False,
         ),
-    )
-    secured = all((settings.env.username, settings.env.password))
-    kuma_enabled = all((settings.env.kuma_url, settings.env.kuma_username, settings.env.kuma_password))
-    runners_enabled = all((settings.env.git_org, settings.env.git_token))
-    if secured:
-        auth_endpoints = [
-            uiauth.Parameters(
-                path=enums.APIEndpoints.root,
-                function=index,
-                methods=[uiauth.enums.APIMethods.GET],
-            ),
-            uiauth.Parameters(
-                path=enums.APIEndpoints.ws,
-                function=websocket_endpoint,
-                route=APIWebSocketRoute,
-            ),
-        ]
-        if kuma_enabled:
-            auth_endpoints.append(
-                uiauth.Parameters(
-                    path=enums.APIEndpoints.kuma,
-                    function=kuma,
-                    methods=[uiauth.enums.APIMethods.GET],
-                )
-            )
-        if runners_enabled:
-            auth_endpoints.append(
-                uiauth.Parameters(
-                    path=enums.APIEndpoints.runners,
-                    function=runners,
-                    methods=[uiauth.enums.APIMethods.GET],
-                )
-            )
-        uiauth.protect(
-            app=PyObservability,
-            username=settings.env.username,
-            password=settings.env.password,
-            timeout=settings.env.timeout,
-            custom_logger=LOGGER,
-            params=auth_endpoints,
+        APIRoute(
+            path=enums.APIEndpoints.root,
+            endpoint=index,
+            methods=["GET"],
+            include_in_schema=False,
+        ),
+        APIWebSocketRoute(
+            path=enums.APIEndpoints.ws,
+            endpoint=websocket_endpoint,
+        ),
+    ]
+    if kuma_enabled:
+        yield APIRoute(
+            path=enums.APIEndpoints.kuma,
+            endpoint=kuma,
+            methods=["GET"],
+            include_in_schema=False,
         )
-    else:
-        warnings.warn("\n\tRunning PyObservability without any protection.", UserWarning)
-        PyObservability.routes.extend(
-            [
-                APIRoute(
-                    path=enums.APIEndpoints.root,
-                    endpoint=index,
-                    methods=["GET"],
-                    include_in_schema=False,
-                ),
-                APIWebSocketRoute(
-                    path=enums.APIEndpoints.ws,
-                    endpoint=websocket_endpoint,
-                ),
-            ]
+    if runners_enabled:
+        yield APIRoute(
+            path=enums.APIEndpoints.runners,
+            endpoint=runners,
+            methods=["GET"],
+            include_in_schema=False,
         )
-        if kuma_enabled:
-            PyObservability.routes.append(
-                APIRoute(
-                    path=enums.APIEndpoints.kuma,
-                    endpoint=kuma,
-                    methods=["GET"],
-                    include_in_schema=False,
-                ),
-            )
-        if runners_enabled:
-            PyObservability.routes.append(
-                APIRoute(
-                    path=enums.APIEndpoints.runners,
-                    endpoint=runners,
-                    methods=["GET"],
-                    include_in_schema=False,
-                ),
-            )
     if settings.env.prometheus_enabled:
-        if secured:
-            PyObservability.routes.append(
-                APIRoute(
-                    endpoint=metrics_endpoint,
-                    path=enums.APIEndpoints.metrics,
-                    methods=["GET"],
-                    dependencies=[Depends(verify_credentials)],
-                )
-            )
-        else:
-            PyObservability.routes.append(
-                APIRoute(
-                    endpoint=metrics_endpoint,
-                    path=enums.APIEndpoints.metrics,
-                    methods=["GET"],
-                )
-            )
+        yield APIRoute(
+            endpoint=metrics_endpoint,
+            path=enums.APIEndpoints.metrics,
+            methods=["GET"],
+        )
 
 
 # noinspection PyTypeChecker
@@ -234,7 +180,19 @@ def start(**kwargs) -> None:
     settings.env = settings.env_loader(**kwargs)
     settings.env.targets = [{k: str(v) for k, v in target.model_dump().items()} for target in settings.env.targets]
     settings.targets_by_url = {t["base_url"]: t for t in settings.env.targets}
-    include_routes()
+    routes = list(gather_routes())
+    if all((settings.env.username, settings.env.password)):
+        uiauth.protect(
+            app=PyObservability,
+            username=settings.env.username,
+            password=settings.env.password,
+            timeout=settings.env.timeout,
+            custom_logger=LOGGER,
+            routes=routes,
+        )
+    else:
+        warnings.warn("\n\tRunning PyObservability without any authentication mechanism.", UserWarning)
+        PyObservability.routes.extend(routes)
     uvicorn_args = dict(
         host=settings.env.host,
         port=settings.env.port,
