@@ -1,6 +1,16 @@
 Release Notes
 =============
 
+v5.0.0 (03/06/2026)
+-------------------
+- [e534b22](https://github.com/thevickypedia/PyObservability/commit/e534b2298234a23396c8067e4fcebe1a2b88451c) chore: Release ``v5.0.0``
+- [a29da8a](https://github.com/thevickypedia/PyObservability/commit/a29da8a01924094890b60e37aa3ce3d0d429070a) refactor: Upgrade ``FastAPI-UI-Auth`` and update API routing logic for authentication
+- [e6c2d14](https://github.com/thevickypedia/PyObservability/commit/e6c2d141292d9bc9b9976f530d013a99c987fc7b) docs: Update README.md
+- [e3b74a1](https://github.com/thevickypedia/PyObservability/commit/e3b74a1d542d9b586141873e9b7b42fadf7e1ba2) chore: Update project metadata in ``pyproject.toml``
+- [745e07a](https://github.com/thevickypedia/PyObservability/commit/745e07a1d7096d5636d55a6fae7a0c9b5371c160) feat: Include an option to switch between legacy and modern UI
+- [f9bdad6](https://github.com/thevickypedia/PyObservability/commit/f9bdad66954f424ac48e7cba3ff452aced10ee78) style: Switch UI to look like grafana dashboard with real-time metrics
+- [fc6d77b](https://github.com/thevickypedia/PyObservability/commit/fc6d77bfb002b2e6903840ea1ff79ca9160bc7f0) chore: Update release notes for v4.0.0
+
 v4.0.0 (03/04/2026)
 -------------------
 - [0c7e67f](https://github.com/thevickypedia/PyObservability/commit/0c7e67f8b50cc6a3192340447473849f1a5c017b) chore: Release ``v4.0.0``
