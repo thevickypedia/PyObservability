@@ -111,7 +111,9 @@ class GitHub:
             Returns a Runners object containing the total count and a list of Runner objects,
         """
         try:
-            response = self.SESSION.get(f"https://api.github.com/orgs/{settings.env.git_org}/actions/runners")
+            response = self.SESSION.get(
+                f"https://api.github.com/orgs/{settings.env.git_org}/actions/runners", timeout=(3, 3)
+            )
             response.raise_for_status()
             response_json = response.json()
         except (requests.RequestException, requests.JSONDecodeError) as error:

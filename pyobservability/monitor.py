@@ -158,7 +158,7 @@ class Monitor:
         """
         version = {}
         try:
-            version = requests.get(urljoin(self.base_url, "version")).json()
+            version = requests.get(urljoin(self.base_url, "version"), timeout=(3, 3)).json()
             assert version.get("python_version") and version.get("pyninja_version"), "Invalid version payload received."
         except (requests.RequestException, requests.JSONDecodeError) as error:
             LOGGER.warning(error)
