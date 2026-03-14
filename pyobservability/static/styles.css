@@ -319,6 +319,12 @@ html, body {
     font-family: "Fira Mono", "Consolas", monospace;
 }
 
+.core-mini canvas {
+    display: block;
+    width: 100% !important;
+    height: 44px !important;
+}
+
 /* ---- TABLES ROW ---- */
 .tables-row {
     display: grid;

@@ -464,8 +464,9 @@
             },
             options: {
                 animation: false,
-                responsive: false,
-                interaction: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: null },
                 events: [],
                 plugins: {legend: {display: false}},
                 scales: {
@@ -846,10 +847,10 @@
         const wrapper = document.createElement("div");
         wrapper.className = "core-mini";
         wrapper.innerHTML = `
-      <div class="label">${coreName}</div>
-      <canvas width="120" height="40"></canvas>
-      <div class="value">—</div>
-    `;
+        <div class="label">${coreName}</div>
+        <canvas></canvas>
+        <div class="value">—</div>
+        `;
         wrapper.style.display = showCoresCheckbox.checked ? "block" : "none";
         coresGrid.appendChild(wrapper);
 
