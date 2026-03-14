@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v5.0.1 (03/13/2026)
+-------------------
+- [22b8e25](https://github.com/thevickypedia/PyObservability/commit/22b8e257f37cf07964d780542ecd6104ee97a32d) chore: Release ``v5.0.1``
+- [9c98509](https://github.com/thevickypedia/PyObservability/commit/9c9850914bd3eb37b4265092c5f0cebb56d0b5cd) feat: Make ``git_url`` configurable via environment variable [OR] kwargs
+- [766fba8](https://github.com/thevickypedia/PyObservability/commit/766fba87620201ecad88b1849e466710e7243334) perf: Add request timeout for GitHub and server version checks
+- [0baa537](https://github.com/thevickypedia/PyObservability/commit/0baa537f0eb9e875db5f8d3b856cf85f928a2919) fix: Resolve inconsistent per core sparklines exceeding the window
+- [c318388](https://github.com/thevickypedia/PyObservability/commit/c3183883d7240301767c80521fb3295dab2549e0) chore: Update release notes for v5.0.0
+
 v5.0.0 (03/06/2026)
 -------------------
 - [e534b22](https://github.com/thevickypedia/PyObservability/commit/e534b2298234a23396c8067e4fcebe1a2b88451c) chore: Release ``v5.0.0``
