@@ -7,7 +7,7 @@ import requests
 from requests.auth import AuthBase
 from requests.models import PreparedRequest
 
-from pyobservability.config import settings
+from pyobservability.config import settings, squire
 
 LOGGER = logging.getLogger("uvicorn.default")
 
@@ -112,7 +112,7 @@ class GitHub:
         """
         try:
             response = self.SESSION.get(
-                f"https://api.github.com/orgs/{settings.env.git_org}/actions/runners", timeout=(3, 3)
+                squire.urljoin(settings.env.git_url, "orgs", settings.env.git_org, "actions", "runners"), timeout=(3, 3)
             )
             response.raise_for_status()
             response_json = response.json()

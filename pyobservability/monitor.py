@@ -3,13 +3,12 @@ import json
 import logging
 from asyncio import CancelledError
 from collections.abc import Generator
-from typing import Any, AsyncGenerator, Dict, List, Optional
-from urllib.parse import urlencode
+from typing import Any, AsyncGenerator, Dict, List
 
 import aiohttp
 import requests
 
-from pyobservability.config import settings
+from pyobservability.config import settings, squire
 from pyobservability.prometheus import update_metrics
 
 LOGGER = logging.getLogger("uvicorn.default")
@@ -33,25 +32,6 @@ def refine_service(service_list: List[Dict[str, Any]]) -> Generator[Dict[str, Di
             system=round(service.get("cpu", {}).get("system", 0), 2),
         )
         yield service
-
-
-def urljoin(*args, params: Optional[Dict[str, Any]] = None) -> str:
-    """Joins given arguments into a URL and optionally adds query parameters.
-
-    Args:
-        *args: URL parts to join.
-        params: Optional dictionary of query parameters.
-
-    Returns:
-        str: Joined URL with optional query string.
-    """
-    base_url = "/".join(str(x).rstrip("/").lstrip("/") for x in args)
-
-    if params:
-        query_string = urlencode(params)
-        return f"{base_url}?{query_string}"
-
-    return base_url
 
 
 class Monitor:
@@ -158,7 +138,7 @@ class Monitor:
         """
         version = {}
         try:
-            version = requests.get(urljoin(self.base_url, "version"), timeout=(3, 3)).json()
+            version = requests.get(squire.urljoin(self.base_url, "version"), timeout=(3, 3)).json()
             assert version.get("python_version") and version.get("pyninja_version"), "Invalid version payload received."
         except (requests.RequestException, requests.JSONDecodeError) as error:
             LOGGER.warning(error)
@@ -169,7 +149,7 @@ class Monitor:
         params = {"interval": settings.env.interval, "all_services": "false"}
         if self.flags["all_services"]:
             params["all_services"] = "true"
-        url = urljoin(self.base_url, OBS_PATH, params=params)
+        url = squire.urljoin(self.base_url, OBS_PATH, params=params)
         headers = {"Accept": "application/json", "Authorization": f"Bearer {self.apikey}"}
 
         async with self.session.get(

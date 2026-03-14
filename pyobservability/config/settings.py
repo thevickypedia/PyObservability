@@ -155,6 +155,7 @@ class EnvConfig(PydanticEnvConfig):
     kuma_password: str | None = Field(None, validation_alias=alias_choices("KUMA_PASSWORD", "UPTIME"))
     kuma_timeout: PositiveInt = Field(5, validation_alias=alias_choices("KUMA_TIMEOUT", "UPTIME"))
 
+    git_url: HttpUrl = Field("https://api.github.com", validation_alias=alias_choices("GIT_URL", "GITHUB_URL"))
     git_org: str | None = Field(None, validation_alias=alias_choices(choices=("GIT_ORG", "GITHUB_ORG")))
     git_token: str | None = Field(None, validation_alias=alias_choices(choices=("GIT_TOKEN", "GITHUB_TOKEN")))
 
