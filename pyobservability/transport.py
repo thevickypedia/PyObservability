@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import json
 import logging
 from typing import Dict, List
@@ -19,9 +20,12 @@ async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue) -> None:
         websocket: FastAPI WebSocket connection.
         q: asyncio.Queue to receive metrics from the monitor.
     """
-    while True:
-        payload = await q.get()
-        await websocket.send_json(payload)
+    try:
+        while True:
+            payload = await q.get()
+            await websocket.send_json(payload)
+    except Exception as debug:
+        LOGGER.debug("Forward task stopped: %s", debug)
 
 
 def _normalize_targets() -> List[Dict[str, str]]:
@@ -95,7 +99,7 @@ async def _forward_metrics_multi(
             # produced at least one metrics payload.
             merged = {
                 "type": "metrics",
-                "ts": asyncio.get_event_loop().time(),
+                "ts": asyncio.get_running_loop().time(),
                 "data": [],
             }
 
@@ -112,9 +116,31 @@ async def _forward_metrics_multi(
             if not merged["data"]:
                 continue
 
-            await websocket.send_json(merged)
+            try:
+                await websocket.send_json(merged)
+            except Exception as send_err:
+                LOGGER.error("Failed to send merged payload to WS: %s", send_err)
+                return
     except asyncio.CancelledError:
         LOGGER.debug("Unified stream task cancelled")
+
+
+async def _connection_timeout(websocket: WebSocket, timeout: int) -> None:
+    """Close the websocket connection after a timeout if Prometheus mode is not enabled.
+
+    Args:
+        websocket: WebSocket connection to close after timeout.
+        timeout: Time in seconds to wait before closing the connection.
+    """
+    if settings.env.prometheus_enabled:
+        LOGGER.info("Prometheus mode enabled, skipping WebSocket timeout")
+        return
+    await asyncio.sleep(timeout)
+    LOGGER.info("WebSocket stream timeout reached (%ss), disconnecting", timeout)
+    try:
+        await websocket.close(code=1000)
+    except Exception as debug:
+        LOGGER.debug("Error closing websocket after timeout: %s", debug)
 
 
 async def websocket_endpoint(websocket: WebSocket) -> None:
@@ -124,6 +150,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         websocket: FastAPI WebSocket connection.
     """
     await websocket.accept()
+    timeout_task = asyncio.create_task(_connection_timeout(websocket, settings.env.timeout))
 
     monitor: Monitor | None = None
     q: asyncio.Queue | None = None
@@ -175,7 +202,6 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                     multi_task.cancel()
                     multi_task = None
 
-                LOGGER.info("Unsubscribing from previous monitors") if monitor else None
                 for idx, mon in enumerate(monitors):
                     mon.unsubscribe(queues[idx])
                     await mon.stop()
@@ -222,6 +248,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     # cleanup
     if forward_task:
         forward_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await forward_task
 
     if monitor:
         if q:
@@ -229,6 +257,13 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
     if multi_task:
         multi_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await multi_task
+
+    if timeout_task:
+        timeout_task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await timeout_task
 
     for idx, mon in enumerate(monitors):
         mon.unsubscribe(queues[idx])

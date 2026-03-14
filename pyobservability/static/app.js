@@ -1234,11 +1234,19 @@
         resetTables();
         showAllSpinners();
         if (selectedBase !== "*") unifiedPanel.classList.add("hidden");
-        ws.send(JSON.stringify({type: "select_target", base_url: selectedBase}));
+        if (ws) {
+            ws.send(JSON.stringify({type: "select_target", base_url: selectedBase}));
+        } else {
+            alert("WebSocket not connected. Please refresh the page.");
+        }
     });
 
     svcGetAll.addEventListener("change", () => {
-        ws.send(JSON.stringify({type: "update_flags", all_services: svcGetAll.checked}));
+        if (ws) {
+            ws.send(JSON.stringify({type: "update_flags", all_services: svcGetAll.checked}));
+        } else {
+            alert("WebSocket not connected. Please refresh the page.");
+        }
     })
 
     showCoresCheckbox.addEventListener("change", () => {
