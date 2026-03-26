@@ -1,6 +1,13 @@
 Release Notes
 =============
 
+v5.0.2 (03/25/2026)
+-------------------
+- [d406cf6](https://github.com/thevickypedia/PyObservability/commit/d406cf6d2ddaf45ed20598615c0e7c6cc334e90d) chore: Release ``v5.0.2``
+- [884e93e](https://github.com/thevickypedia/PyObservability/commit/884e93eb99532322a5b1f7675a294fff30bcf1bc) fix: Add missing ``request`` param for ``TemplateResponse`` required by ``starlette==1.0.0``
+- [02287d1](https://github.com/thevickypedia/PyObservability/commit/02287d184e281cf5dc4ecf65f7be39f44eb2df9e) perf: Reuse auth timeout to stop streaming and gracefully close the server session
+- [5e67c7a](https://github.com/thevickypedia/PyObservability/commit/5e67c7a1010f59f8b2500e3077b0a63d564ba1d2) chore: Update release notes for v5.0.1
+
 v5.0.1 (03/13/2026)
 -------------------
 - [22b8e25](https://github.com/thevickypedia/PyObservability/commit/22b8e257f37cf07964d780542ecd6104ee97a32d) chore: Release ``v5.0.1``
