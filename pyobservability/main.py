@@ -78,7 +78,7 @@ async def index(request: Request):
     )
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
-    return templates.TemplateResponse("index.html", args)
+    return templates.TemplateResponse(request=request, name="index.html", context=args)
 
 
 async def kuma():
