@@ -1427,7 +1427,7 @@
         if (!PAG_RUNNERS_TAB) return; // Runners tab not enabled
 
         if (runnersDataLoaded) {
-            PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+            PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels", "Version"]);
             return;
         }
 
@@ -1449,10 +1449,11 @@
                 OS: runner.os || "—",
                 Status: runner.status || "—",
                 Busy: runner.busy ? "Yes" : "No",
-                Labels: Array.isArray(runner.labels) ? runner.labels.join(", ") : (runner.labels || "—")
+                Labels: Array.isArray(runner.labels) ? runner.labels.join(", ") : (runner.labels || "—"),
+                Version: runner.version || "—"
             }));
 
-            PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+            PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels", "Version"]);
         } catch (err) {
             console.error("Error loading runners data:", err);
             runnersMainThead.innerHTML = '<tr><th>Error</th></tr>';
@@ -1474,13 +1475,14 @@
                 OS: runner.os || "—",
                 Status: runner.status || "—",
                 Busy: runner.busy ? "Yes" : "No",
-                Labels: Array.isArray(runner.labels) ? runner.labels.join(", ") : (runner.labels || "—")
+                Labels: Array.isArray(runner.labels) ? runner.labels.join(", ") : (runner.labels || "—"),
+                Version: runner.version || "—"
             }));
 
             // Reapply current search filter if any
             const searchTerm = runnersSearchInput?.value?.toLowerCase() || '';
             if (!searchTerm) {
-                PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+                PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels", "Version"]);
             } else {
                 const filtered = allRunnersRows.filter(row =>
                     row.ID.toString().toLowerCase().includes(searchTerm) ||
@@ -1488,9 +1490,10 @@
                     row.OS.toLowerCase().includes(searchTerm) ||
                     row.Status.toLowerCase().includes(searchTerm) ||
                     row.Busy.toLowerCase().includes(searchTerm) ||
-                    row.Labels.toLowerCase().includes(searchTerm)
+                    row.Labels.toLowerCase().includes(searchTerm) ||
+                    row.Version.toLowerCase().includes(searchTerm)
                 );
-                PAG_RUNNERS_TAB.setData(filtered, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+                PAG_RUNNERS_TAB.setData(filtered, ["ID", "Name", "OS", "Status", "Busy", "Labels", "Version"]);
             }
         } catch (err) {
             console.error("Error refreshing runners data:", err);
@@ -1516,7 +1519,7 @@
             const searchTerm = e.target.value.toLowerCase();
 
             if (!searchTerm) {
-                PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+                PAG_RUNNERS_TAB.setData(allRunnersRows, ["ID", "Name", "OS", "Status", "Busy", "Labels", "Version"]);
             } else {
                 const filtered = allRunnersRows.filter(row =>
                     row.ID.toString().toLowerCase().includes(searchTerm) ||
@@ -1524,9 +1527,10 @@
                     row.OS.toLowerCase().includes(searchTerm) ||
                     row.Status.toLowerCase().includes(searchTerm) ||
                     row.Busy.toLowerCase().includes(searchTerm) ||
-                    row.Labels.toLowerCase().includes(searchTerm)
+                    row.Labels.toLowerCase().includes(searchTerm) ||
+                    row.Version.toLowerCase().includes(searchTerm)
                 );
-                PAG_RUNNERS_TAB.setData(filtered, ["ID", "Name", "OS", "Status", "Busy", "Labels"]);
+                PAG_RUNNERS_TAB.setData(filtered, ["ID", "Name", "OS", "Status", "Busy", "Labels", "Version"]);
             }
         });
     }

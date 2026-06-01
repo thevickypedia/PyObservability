@@ -1,6 +1,6 @@
 import logging
 from collections.abc import Generator
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import Any, Dict, List
 
 import requests
@@ -52,12 +52,19 @@ class Runner:
 
     """
 
-    id: int
-    name: str
-    os: str
-    status: str
-    busy: bool
-    labels: List[str]
+    id: int = None
+    name: str = None
+    os: str = None
+    status: str = None
+    busy: bool = None
+    labels: List[str] = None
+    version: str = None
+
+    def __post_init__(self):
+        """Add 'v' prefix only if it doesn't already exist in the version string."""
+        if self.version is not None:
+            if not self.version.startswith("v"):
+                self.version = f"v{self.version}"
 
 
 @dataclass
@@ -101,7 +108,12 @@ class GitHub:
                 (label["name"] for label in runner["labels"] if label["name"] != "self-hosted"),
                 key=lambda s: s.lower(),
             )
-            yield Runner(**{**runner, **{"labels": labels}})
+            kwargs = {**runner, **{"labels": labels}}
+            field_names = [f.name for f in fields(Runner)]
+            if missing := set(field_names) - set(kwargs.keys()):
+                LOGGER.warning("Missing field(s) in runner information: %s", missing)
+            kwargs = {k: v for k, v in kwargs.items() if k in field_names}
+            yield Runner(**kwargs)
 
     def runners(self) -> Runners | None:
         """Fetches the runners information from the GitHub API.
