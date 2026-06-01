@@ -1,6 +1,12 @@
 Release Notes
 =============
 
+v5.0.3 (06/01/2026)
+-------------------
+- [786205f](https://github.com/thevickypedia/PyObservability/commit/786205f769a750df153b6ccab813ecb3a6cd0a25) chore: Release ``v5.0.3``
+- [b6111a5](https://github.com/thevickypedia/PyObservability/commit/b6111a5b467a48f58091eb9ca255e4401cbb6a62) fix: Add missing version information for GitHub runners after launch of ``v2.334.0``
+- [2507b6e](https://github.com/thevickypedia/PyObservability/commit/2507b6ee858148083249861bb4b37cb3dd4d9f9f) chore: Update release notes for v5.0.2
+
 v5.0.2 (03/25/2026)
 -------------------
 - [d406cf6](https://github.com/thevickypedia/PyObservability/commit/d406cf6d2ddaf45ed20598615c0e7c6cc334e90d) chore: Release ``v5.0.2``
