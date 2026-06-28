@@ -137,25 +137,25 @@ def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, 
     if current_host in replacements:
         current_host = ip_address() or current_host
 
-    for monitor in payload.values():
-        if not monitor.get("active", True):
-            LOGGER.info("Skipping inactive monitor %s", monitor.get("name"))
+    for monitor_ in payload.values():
+        monitor = settings.KumaConfig(**monitor_)
+        if not monitor.active:
+            LOGGER.warning("Monitor %s is disabled", monitor.name)
             continue
-        url = monitor.get("url")
-        host = urlparse(url).hostname if url else None
+        host = urlparse(monitor.url).hostname if monitor.url else None
         if not host:
             continue
         # If any monitor has localhost, replace it with kuma host
         if host in replacements:
             # 1. Replace the host in the URL with the current host
-            url = url.replace(host, current_host)
+            monitor.url = monitor.url.replace(host, current_host)
             # 2. Update the host variable to reflect the new host
             host = current_host
         yield {
-            "name": monitor.get("name"),
-            "parent": grouped.get(monitor.get("id")),
-            "description": monitor.get("description"),
-            "url": url,
+            "name": monitor.name,
+            "parent": grouped.get(monitor.id),
+            "description": monitor.description,
+            "url": monitor.url,
             "host": host,
-            "tags": [tag.get("name") for tag in monitor.get("tags", []) if "name" in tag],
+            "tags": [tag.name for tag in monitor.tags if "name" in tag],
         }

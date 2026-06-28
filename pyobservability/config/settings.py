@@ -3,7 +3,7 @@ import logging
 import os
 import pathlib
 import socket
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, List, Optional
 
 from pydantic import BaseModel, Field, FilePath, HttpUrl, PositiveInt
 from pydantic.aliases import AliasChoices
@@ -65,6 +65,80 @@ def detailed_log_config(filename: str | None = None, debug: bool = False) -> Dic
         },
         "root": {"handlers": ["default"], "level": level},
     }
+
+
+class TagModel(BaseModel):
+    """Represents a tag associated with a monitor.
+
+    >>> TagModel
+
+    """
+
+    id: int
+    monitor_id: int
+    tag_id: int
+    value: str
+    name: str
+    color: str
+
+
+class KumaConfig(BaseModel):
+    """Configuration settings for Uptime Kuma monitors.
+
+    >>> KumaConfig
+
+    """
+
+    id: int
+    name: str
+    description: Optional[str]
+    pathName: str
+    childrenIDs: List[int]
+    url: str
+    method: str
+    maxretries: int
+    weight: int
+    active: bool
+    forceInactive: bool
+    type: str
+    timeout: int
+    interval: int
+    retryInterval: int
+    resendInterval: int
+    invertKeyword: bool
+    expiryNotification: bool
+    ignoreTls: bool
+    upsideDown: bool
+    packetSize: int
+    maxredirects: int
+    accepted_statuscodes: List[str]
+    dns_resolve_type: str
+    dns_resolve_server: str
+    docker_container: str
+    notificationIDList: Dict[str, bool]
+    tags: List[TagModel]
+    maintenance: bool
+    mqttTopic: str
+    mqttSuccessMessage: str
+    grpcEnableTls: bool
+    gamedigGivenPortOnly: bool
+    httpBodyEncoding: str
+    jsonPath: Optional[str]
+    kafkaProducerBrokers: List[str]
+    kafkaProducerSsl: bool
+    kafkaProducerAllowAutoTopicCreation: bool
+    oauth_auth_method: str
+    mqttUsername: str
+    mqttPassword: str
+    kafkaProducerSaslOptions: Dict[str, str]
+    includeSensitiveData: bool
+    parent: Optional[int]
+    authMethod: Optional[str]
+    body: Optional[str]
+    basic_auth_user: Optional[str]
+    basic_auth_pass: Optional[str]
+    authWorkstation: Optional[str]
+    authDomain: Optional[str]
 
 
 class PydanticEnvConfig(BaseSettings):
