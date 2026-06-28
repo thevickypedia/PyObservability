@@ -138,6 +138,9 @@ def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, 
         current_host = ip_address() or current_host
 
     for monitor in payload.values():
+        if not monitor.get("active", True):
+            LOGGER.info("Skipping inactive monitor %s", monitor.get("name"))
+            continue
         url = monitor.get("url")
         host = urlparse(url).hostname if url else None
         if not host:
