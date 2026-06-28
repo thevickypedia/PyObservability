@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v5.0.4 (06/28/2026)
+-------------------
+- [3d24684](https://github.com/thevickypedia/PyObservability/commit/3d246848bbd669c472e054f62819cd078645cb7a) chore: Release ``v5.0.4``
+- [8eb5ea9](https://github.com/thevickypedia/PyObservability/commit/8eb5ea9ee18cb94b646ce251bb0651a148a39274) perf: Implement a pydantic model for kuma config
+- [b3bd2ea](https://github.com/thevickypedia/PyObservability/commit/b3bd2ea674e5ac3fd37ba7d79808ecff69e72953) perf: Filter inactive Kuma monitors
+- [cbc2dd2](https://github.com/thevickypedia/PyObservability/commit/cbc2dd2a3fea1a4acd0a0d1c0d328729a3c73a05) chore: Update deps
+- [9652344](https://github.com/thevickypedia/PyObservability/commit/9652344e7ce36134dc606770c7f4660d60ddf09f) chore: Update release notes for v5.0.3
+
 v5.0.3 (06/01/2026)
 -------------------
 - [786205f](https://github.com/thevickypedia/PyObservability/commit/786205f769a750df153b6ccab813ecb3a6cd0a25) chore: Release ``v5.0.3``
