@@ -186,7 +186,7 @@ def start(**kwargs) -> None:
             app=PyObservability,
             username=settings.env.username,
             password=settings.env.password,
-            timeout=settings.env.timeout,
+            session_timeout=settings.env.timeout,
             custom_logger=LOGGER,
             routes=routes,
         )

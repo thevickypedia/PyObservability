@@ -34,7 +34,7 @@ class BearerAuth(AuthBase):
         """Override built-in.
 
         Args:
-            request: Takes prepared request as an argument.
+            request: Takes a prepared request as an argument.
 
         Returns:
             PreparedRequest:
@@ -52,13 +52,13 @@ class Runner:
 
     """
 
-    id: int = None
-    name: str = None
-    os: str = None
-    status: str = None
-    busy: bool = None
-    labels: List[str] = None
-    version: str = None
+    id: int | None = None
+    name: str | None = None
+    os: str | None = None
+    status: str | None = None
+    busy: bool | None = None
+    labels: List[str] | None = None
+    version: str | None = None
 
     def __post_init__(self):
         """Add 'v' prefix only if it doesn't already exist in the version string."""
@@ -90,11 +90,12 @@ class GitHub:
 
     def __init__(self):
         """Initializes the session and loads the bearer auth with Git token."""
+        # noinspection bad-argument-type
         self.SESSION.auth = BearerAuth(token=settings.env.git_token)
 
     @staticmethod
     def parser(runners_info: List[Dict[str, Any]]) -> Generator[Runner]:
-        """Parses the runners information from the GitHub API response.
+        """Parses the runners' information from the GitHub API response.
 
         Args:
             runners_info: Runners information as a list of dictionaries from the GitHub API response.

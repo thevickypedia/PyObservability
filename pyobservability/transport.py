@@ -30,6 +30,7 @@ async def _forward_metrics(websocket: WebSocket, q: asyncio.Queue) -> None:
 
 def _normalize_targets() -> List[Dict[str, str]]:
     """Return configuration targets sorted so legend colors are consistent."""
+    # noinspection bad-return
     return sorted(settings.env.targets, key=lambda t: t["name"].lower())
 
 
@@ -193,6 +194,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
                 if monitor:
                     LOGGER.info("Stopping previous monitor task")
+                    # noinspection bad-argument-type
                     monitor.unsubscribe(q)
                     monitor = None
                     q = None
@@ -238,6 +240,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                 q = monitor.subscribe()
 
                 # start forwarding metrics
+                # noinspection bad-argument-type
                 forward_task = asyncio.create_task(_forward_metrics(websocket, q))
     except WebSocketDisconnect:
         pass

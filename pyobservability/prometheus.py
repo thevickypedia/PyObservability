@@ -1,5 +1,5 @@
 import secrets
-from typing import Any, Dict, NoReturn
+from typing import Any, Dict, List, NoReturn
 
 from fastapi import Depends, HTTPException, Response, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -36,7 +36,7 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)) ->
         )
 
 
-def flatten_payload(node: str, data: dict, parent_keys: list[str] = None) -> None:
+def flatten_payload(node: str, data: dict, parent_keys: List[str] | None = None) -> None:
     """Recursively traverse the payload and push numeric values to Prometheus.
 
     Handles nested dicts and lists of numbers or dicts.

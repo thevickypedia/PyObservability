@@ -167,7 +167,7 @@ class Monitor:
                 try:
                     parsed = {**json.loads(line), **version}
                     try:
-                        if service_stats := parsed.get("service_stats"):
+                        if service_stats := parsed.get("service_stats", []):
                             parsed["service_stats"] = list(refine_service(service_stats))
                     except Exception as error:
                         LOGGER.error("Received [%s: %s] when parsing services for %s", type(error), error, self.name)

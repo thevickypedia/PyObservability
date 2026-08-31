@@ -30,7 +30,7 @@ class UptimeKumaClient:
         self.sio.on("monitorList", self._on_monitor_list)
 
     def _on_monitor_list(self, data):
-        """Handle incoming monitor list from Uptime Kuma server."""
+        """Handle the incoming monitor list from the Uptime Kuma server."""
         LOGGER.debug("Received monitor list from Uptime Kuma server.")
         self.monitors = data
 
@@ -90,7 +90,7 @@ class UptimeKumaClient:
 
 
 def ip_address() -> str | None:
-    """Uses simple check on network id to get the private IP address of the host machine.
+    """Uses a simple check on network id to get the private IP address of the host machine.
 
     Returns:
         str:
@@ -111,7 +111,7 @@ def ip_address() -> str | None:
 
 
 def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, Any]]:
-    """Convert raw API payload into a list of dicts with name, url, tags, host.
+    """Convert the raw API payload into a list of dicts with name, url, tags, host.
 
     Args:
         payload: Raw payload from Uptime Kuma server.
@@ -122,7 +122,7 @@ def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, 
     """
     grouped = {}
     for monitor in payload.values():
-        if children_ids := monitor.get("childrenIDs"):
+        if children_ids := monitor.get("childrenIDs", []):
             for child in children_ids:
                 grouped[child] = monitor.get("name")
 
@@ -133,6 +133,7 @@ def extract_monitors(payload: Dict[int, Dict[str, Any]]) -> Generator[Dict[str, 
         "127.0.0.1",
     )
     # If current host is a localhost IP, then replace it with internal
+    # noinspection bad-argument-type
     current_host = urlparse(settings.env.kuma_url).hostname
     if current_host in replacements:
         current_host = ip_address() or current_host
