@@ -1,6 +1,14 @@
 Release Notes
 =============
 
+v5.0.5 (08/31/2026)
+-------------------
+- [57e0ae0](https://github.com/thevickypedia/PyObservability/commit/57e0ae036abe546dbea0f7cc37c36a60f7a7d63c) chore: Release ``v5.0.5``
+- [bc224a4](https://github.com/thevickypedia/PyObservability/commit/bc224a4357c1d55948049750804193340d291f10) chore: Update dependencies
+- [7b513c0](https://github.com/thevickypedia/PyObservability/commit/7b513c076a8309219732766457f617c2d57c3bc7) refactor: Ignore auth for health check endpoint
+- [d273834](https://github.com/thevickypedia/PyObservability/commit/d2738347624830b9f770b1c0ce5b9ab1519d325b) fix: Add incorrect param for ``FastAPI-UI-Auth`` and add type hints
+- [c6ba753](https://github.com/thevickypedia/PyObservability/commit/c6ba753e0330acfcf7c951ba54d95fa90c02761b) chore: Update release notes for v5.0.4
+
 v5.0.4 (06/28/2026)
 -------------------
 - [3d24684](https://github.com/thevickypedia/PyObservability/commit/3d246848bbd669c472e054f62819cd078645cb7a) chore: Release ``v5.0.4``
