@@ -136,12 +136,6 @@ def gather_routes() -> Generator[APIRoute | APIWebSocketRoute]:
     runners_enabled = all((settings.env.git_org, settings.env.git_token))
     yield from [
         APIRoute(
-            path=enums.APIEndpoints.health,
-            endpoint=health,
-            methods=["GET"],
-            include_in_schema=False,
-        ),
-        APIRoute(
             path=enums.APIEndpoints.root,
             endpoint=index,
             methods=["GET"],
@@ -193,6 +187,14 @@ def start(**kwargs) -> None:
     else:
         warnings.warn("\n\tRunning PyObservability without any authentication mechanism.", UserWarning)
         PyObservability.routes.extend(routes)
+    PyObservability.routes.append(
+        APIRoute(
+            path=enums.APIEndpoints.health,
+            endpoint=health,
+            methods=["GET"],
+            include_in_schema=False,
+        ),
+    )
     uvicorn_args = dict(
         host=settings.env.host,
         port=settings.env.port,
