@@ -75,6 +75,7 @@ async def index(request: Request):
         targets=settings.env.targets,
         version=__version__,
         legacy_ui=settings.env.legacy_ui,
+        session_timeout=settings.env.timeout,
     )
     if settings.env.username and settings.env.password:
         args["logout"] = uiauth.enums.APIEndpoints.fastapi_logout.value
@@ -172,6 +173,9 @@ def gather_routes() -> Generator[APIRoute | APIWebSocketRoute]:
 def start(**kwargs) -> None:
     """Start the FastAPI app with Uvicorn server."""
     settings.env = settings.env_loader(**kwargs)
+    if settings.env.timeout > 10_800:
+        warnings.warn("\n\tPyNinja does not support observability timeout greater than 10800 seconds.", UserWarning)
+        settings.env.timeout = 10_800
     settings.env.targets = [{k: str(v) for k, v in target.model_dump().items()} for target in settings.env.targets]
     settings.targets_by_url = {t["base_url"]: t for t in settings.env.targets}
     routes = list(gather_routes())
