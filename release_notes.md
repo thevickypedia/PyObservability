@@ -1,6 +1,15 @@
 Release Notes
 =============
 
+v5.1.0 (10/05/2026)
+-------------------
+- [f3ddd74](https://github.com/thevickypedia/PyObservability/commit/f3ddd748d750131873a2e8e457d9c8b310c7e71c) chore: Release ``v5.1.0``
+- [a67cc58](https://github.com/thevickypedia/PyObservability/commit/a67cc582c417e3ed8e6f2bc5225a1e4b8471af6f) feat: Add a timer in the UI to indicate session timeout
+- [818fdac](https://github.com/thevickypedia/PyObservability/commit/818fdace4769fa38837da23165d579958eeb8d8c) perf: Add an upperbound for the timeout
+- [855adef](https://github.com/thevickypedia/PyObservability/commit/855adef931ef8b35d203bcd91b45cf3ae04a585c) feat: Indicate UI when the timer has elapsed
+- [c434adc](https://github.com/thevickypedia/PyObservability/commit/c434adcc9709f5d7145e8e904d948232f0df44f9) feat: Add params to control observability streaming timeout
+- [482cba2](https://github.com/thevickypedia/PyObservability/commit/482cba22003ef8f264db665e1d408c073b551c84) chore: Update release notes for v5.0.5
+
 v5.0.5 (08/31/2026)
 -------------------
 - [57e0ae0](https://github.com/thevickypedia/PyObservability/commit/57e0ae036abe546dbea0f7cc37c36a60f7a7d63c) chore: Release ``v5.0.5``
