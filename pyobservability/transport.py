@@ -138,6 +138,17 @@ async def _connection_timeout(websocket: WebSocket, timeout: int) -> None:
         return
     await asyncio.sleep(timeout)
     LOGGER.info("WebSocket stream timeout reached (%ss), disconnecting", timeout)
+    if timeout >= 3600:
+        ui_timeout = f"{timeout / 3600:.2f}".rstrip("0").rstrip(".") + "h"
+    elif timeout >= 60:
+        ui_timeout = f"{timeout / 60:.2f}".rstrip("0").rstrip(".") + "m"
+    else:
+        ui_timeout = f"{timeout:.2f}".rstrip("0").rstrip(".") + "s"
+    error_msg = {
+        "type": "error",
+        "message": f"Streaming timed out after {ui_timeout!r}",
+    }
+    await websocket.send_json(error_msg)
     try:
         await websocket.close(code=1000)
     except Exception as debug:
