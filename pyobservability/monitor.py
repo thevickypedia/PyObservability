@@ -146,7 +146,7 @@ class Monitor:
             LOGGER.debug(debug)
             LOGGER.info("Please ensure the host [%s], has the latest PyNinja [4.9.92+] installed.", self.name)
 
-        params = {"interval": settings.env.interval, "all_services": "false"}
+        params = {"interval": settings.env.interval, "all_services": "false", "session_duration": settings.env.timeout}
         if self.flags["all_services"]:
             params["all_services"] = "true"
         url = squire.urljoin(self.base_url, OBS_PATH, params=params)
